@@ -57,15 +57,10 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public LoginResponseDTO createUsers(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+    public void createUsers(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException {
         validatePojo(bindingResult);
         UserRepresentation registerResponseDTO = mapper.convertValue(requestDTO.getRequest().get("person"), UserRepresentation.class);
         try {
-            String userToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
-            UserRepresentation userRepresentation= keycloakService.getUserByUsername(userToken, registerResponseDTO.getUsername(), appContext.getRealm());
-            if (null!=userRepresentation){
-                throw new  UserAlreadyExistsException("User already exists");
-            }
             CredentialRepresentation credential = new CredentialRepresentation();
             credential.setType(CredentialRepresentation.PASSWORD);
             credential.setValue("password");
@@ -77,7 +72,6 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {
             System.out.println("exception"+e);
         }
-        return null;
     }
 
 

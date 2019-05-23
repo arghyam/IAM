@@ -45,14 +45,14 @@ dependencies {
     compile('com.squareup.retrofit2:converter-jackson:2.3.0')
 
 
-    compile group: 'org.keycloak', name: 'keycloak-spring-security-adapter', version: '4.7.0.Final'
+   // compile group: 'org.keycloak', name: 'keycloak-spring-security-adapter', version: '4.7.0.Final'
 
 
     // https://mvnrepository.com/artifact/org.springframework.security/spring-security-web
-    compile group: 'org.springframework.security', name: 'spring-security-web', version: '5.1.2.RELEASE'
+    //compile group: 'org.springframework.security', name: 'spring-security-web', version: '5.1.2.RELEASE'
 
     // https://mvnrepository.com/artifact/org.springframework.security/spring-security-config
-    compile group: 'org.springframework.security', name: 'spring-security-config', version: '3.2.0.RELEASE'
+    //compile group: 'org.springframework.security', name: 'spring-security-config', version: '3.2.0.RELEASE'
 
     // https://mvnrepository.com/artifact/io.swagger/swagger-core
     compile group: 'io.swagger', name: 'swagger-core', version: '1.5.0'

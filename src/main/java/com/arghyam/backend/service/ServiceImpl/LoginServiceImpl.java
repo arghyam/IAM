@@ -51,9 +51,11 @@ public class LoginServiceImpl implements LoginService {
     ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    public UserLoginResponseDTO login(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+    public LoginAndRegisterResponseMap login(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
         userService.validatePojo(bindingResult);
-        UserLoginResponseDTO userLoginResponseDTO = new UserLoginResponseDTO();
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        Map<String, Object> responseMap = new HashMap<>();
+        LoginAndRegisterResponseBody response = new LoginAndRegisterResponseBody();
         if(requestDTO.getRequest().keySet().contains("person")) {
             UserResponseDTO userResponseDTO = new UserResponseDTO();
             //map person object (part of request map) to LoginDTO object
@@ -63,31 +65,36 @@ public class LoginServiceImpl implements LoginService {
             } else {
                 loginDTO.setPassword("password");
                 AccessTokenResponseDTO accessTokenResponseDTO = userLogin(loginDTO);
+                String userToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
                 if (accessTokenResponseDTO !=null) {
-                    String userToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
-                    UserRepresentation userRepresentation = keycloakService.getUserByUsername(userToken, loginDTO.getUsername(), appContext.getRealm());
-
-                    if (loginDTO.getUsername().matches("[0-9]+")) {
-                            String otp = generateOtp();
-                            List<String> otpList = new ArrayList<>();
-                            otpList.add(otp);
-                            Map<String, List<String>> attributes = new HashMap<>();
-                            attributes.put("otp", otpList);
-                            messageService.sendMessage("OTP for login is " + otp, loginDTO.getUsername());
-                            userRepresentation.setAttributes(attributes);
-                            keycloakService.updateUser(userToken, userRepresentation.getId(), userRepresentation, appContext.getRealm());
-                    }
-
-                    userResponseDTO.setAccessTokenResponseDTO(accessTokenResponseDTO);
-                    userLoginResponseDTO.setMessage("OK");
-                    userLoginResponseDTO.setResponseCode(200);
-                    userLoginResponseDTO.setResponse(userResponseDTO);
+                    response.setMessage("Otp is sent to the registered mobile number");
+                    response.setNewUserCreated(false);
                 } else {
-                    throw new UnauthorizedException("User not registered.");
+                    userService.createUsers(requestDTO, userToken, bindingResult);
+                    response.setMessage("Otp is sent to the registered mobile number");
+                    response.setNewUserCreated(true);
                 }
+
+                UserRepresentation userRepresentation = keycloakService.getUserByUsername(userToken, loginDTO.getUsername(), appContext.getRealm());
+                updateOtpForUser(loginDTO, userToken, userRepresentation);
+                updateLoginResponseBody(response, loginAndRegisterResponseMap, requestDTO, "200", "Login successfull", "login");
             }
         }
-        return userLoginResponseDTO;
+        return loginAndRegisterResponseMap;
+    }
+
+
+    private void updateOtpForUser (LoginDTO loginDTO, String userToken, UserRepresentation userRepresentation)  throws IOException {
+        if (loginDTO.getUsername().matches("[0-9]+") && userRepresentation != null) {
+            String otp = generateOtp();
+            List<String> otpList = new ArrayList<>();
+            otpList.add(otp);
+            Map<String, List<String>> attributes = new HashMap<>();
+            attributes.put("otp", otpList);
+            messageService.sendMessage("OTP for login is " + otp, loginDTO.getUsername());
+            userRepresentation.setAttributes(attributes);
+            keycloakService.updateUser(userToken, userRepresentation.getId(), userRepresentation, appContext.getRealm());
+        }
     }
 
 
@@ -97,7 +104,7 @@ public class LoginServiceImpl implements LoginService {
         loginDTO.setClientId(appContext.getClientId());
         try {
             Call<AccessTokenResponseDTO> loginResponseDTOCall = keycloakDAO.login(appContext.getRealm(), loginDTO.getUsername(),
-                    loginDTO.getPassword(),loginDTO.getClientId(),loginDTO.getGrantType(),loginDTO.getClientSecret());
+                    loginDTO.getPassword(),appContext.getClientId(),appContext.getGrantType(),appContext.getClientSecret());
             Response<AccessTokenResponseDTO> loginResponseDTOResponse = loginResponseDTOCall.execute();
             accessTokenResponseDTO = loginResponseDTOResponse.body();
 
@@ -113,12 +120,8 @@ public class LoginServiceImpl implements LoginService {
     public void genarateOtp(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
         userService.validatePojo(bindingResult);
         LoginWithPhonenumber loginWithPhonenumber = mapper.convertValue(requestDTO.getRequest().get("person"), LoginWithPhonenumber.class);
-
         String token = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
-
-
         UserRepresentation userRepresentation = keycloakService.getUserByUsername(token,loginWithPhonenumber.getPhoneNumber(),appContext.getRealm());
-
         List<String> otp = new ArrayList<>();
 
         if(loginWithPhonenumber.getPhoneNumber().equals("+919999999999")) {
@@ -130,7 +133,6 @@ public class LoginServiceImpl implements LoginService {
         keycloakService.updateUser("Bearer " + token, userRepresentation.getId(), userRepresentation, appContext.getRealm());
 
         try {
-           // awsService.sendMessage("Use this OTP to confirm: " + otp.get(0),loginWithPhonenumber.getPhoneNumber());
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -138,12 +140,18 @@ public class LoginServiceImpl implements LoginService {
 
 
     @Override
-    public AccessTokenResponseDTO refreshAccessToken(RequestDTO requestDTO){
+    public LoginAndRegisterResponseMap refreshAccessToken(RequestDTO requestDTO){
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         LoginDTO loginDTO = mapper.convertValue(requestDTO.getRequest().get("person"), LoginDTO.class);
         if((Constants.PASSWORD.equalsIgnoreCase(loginDTO.getGrantType()) && loginDTO.getUsername() != null && loginDTO.getPassword() != null) ||
                 (Constants.REFRESH_TOKEN.equalsIgnoreCase(loginDTO.getGrantType()) && loginDTO.getRefreshToken() != null)) {
             AccessTokenResponseDTO accessTokenResponseDTO = keycloakService.refreshAccessToken(loginDTO);
-            return accessTokenResponseDTO;
+            if (accessTokenResponseDTO != null) {
+                updateLoginResponseBody(accessTokenResponseDTO,loginAndRegisterResponseMap, requestDTO, "200", "Accesstoken generated", "refreshToken");
+            } else {
+                updateLoginResponseBody(accessTokenResponseDTO,loginAndRegisterResponseMap, requestDTO, "401", "Accesstoken not generated", "refreshToken");
+            }
+            return loginAndRegisterResponseMap;
         }  else{
             throw new UnauthorizedException("Required params are missing. Combination of {username, password, grantType=password} OR {grantType=refresh_token, refreshToken} to be provided");
         }
@@ -165,32 +173,56 @@ public class LoginServiceImpl implements LoginService {
 
 
     @Override
-    public UserLoginResponseDTO verifyOtp(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+    public LoginAndRegisterResponseMap verifyOtp(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
         userService.validatePojo(bindingResult);
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         VerifyOtpDTO verifyOtpDTO = mapper.convertValue(requestDTO.getRequest().get("person"), VerifyOtpDTO.class);
         String token = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         UserRepresentation userRepresentation = keycloakService.getUserByUsername(token,verifyOtpDTO.getPhoneNumber(),appContext.getRealm());
         if (null!=userRepresentation && !userRepresentation.getAttributes().isEmpty()){
             List<String> otpList=userRepresentation.getAttributes().get("otp");
             String otp=otpList.get(0);
+            LoginResponseDTO loginResponseDTO=keycloakService.login(userRepresentation,bindingResult);
+            UserResponseDTO userResponseDTO = new UserResponseDTO();
+            AccessTokenResponseDTO accessTokenResponseDTO = new AccessTokenResponseDTO();
             if (otp.equals(verifyOtpDTO.getOtp())){
-                LoginResponseDTO loginResponseDTO=keycloakService.login(userRepresentation,bindingResult);
-                UserLoginResponseDTO userLoginResponseDTO = new UserLoginResponseDTO();
-                UserResponseDTO userResponseDTO = new UserResponseDTO();
-                AccessTokenResponseDTO accessTokenResponseDTO = new AccessTokenResponseDTO();
                 accessTokenResponseDTO.setAccessToken(loginResponseDTO.getAccessToken());
                 accessTokenResponseDTO.setRefreshToken(loginResponseDTO.getRefreshToken());
                 userResponseDTO.setAccessTokenResponseDTO(accessTokenResponseDTO);
-                userLoginResponseDTO.setResponse(userResponseDTO);
-                userLoginResponseDTO.setResponseCode(200);
-                return userLoginResponseDTO;
+                updateLoginResponseBody(userResponseDTO, loginAndRegisterResponseMap, requestDTO, "200", "Otp verified", "verifyOtp");
+                return loginAndRegisterResponseMap;
             }else {
-                throw new UnauthorizedException("Otp doesn't match");
+                accessTokenResponseDTO.setAccessToken("");
+                accessTokenResponseDTO.setRefreshToken("");
+                userResponseDTO.setAccessTokenResponseDTO(accessTokenResponseDTO);
+                updateLoginResponseBody(userResponseDTO, loginAndRegisterResponseMap, requestDTO, "401", "Otp not verified", "verifyOtp");
+                return loginAndRegisterResponseMap;
             }
         }else {
             throw new UnauthorizedException("User doesn't exist");
         }
+    }
 
 
+    private void updateLoginResponseBody(Object object,
+                              LoginAndRegisterResponseMap loginAndRegisterResponseMap, RequestDTO requestDTO, String responseCode, String responseStatus, String type) {
+        Map<String, Object> responseMap = new HashMap<>();
+        if (type.equals("verifyOtp")){
+            UserResponseDTO response = mapper.convertValue(object, UserResponseDTO.class);
+            responseMap.put("responseObject", response);
+        } else if (type.equals("refreshToken")) {
+            AccessTokenResponseDTO response = mapper.convertValue(object, AccessTokenResponseDTO.class);
+            responseMap.put("responseObject", response);
+        } else if (type.equals("login")) {
+            LoginAndRegisterResponseBody response = mapper.convertValue(object, LoginAndRegisterResponseBody.class);
+            responseMap.put("responseObject", response);
+        }
+        loginAndRegisterResponseMap.setVer(requestDTO.getVer());
+        loginAndRegisterResponseMap.setParams(requestDTO.getParams());
+        loginAndRegisterResponseMap.setId(requestDTO.getId());
+        loginAndRegisterResponseMap.setEts(requestDTO.getEts());
+        responseMap.put("responseCode", responseCode);
+        responseMap.put("reponseStatus", responseStatus);
+        loginAndRegisterResponseMap.setResponse(responseMap);
     }
 }

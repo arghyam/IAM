@@ -7,13 +7,13 @@ import java.io.IOException;
 
 public interface LoginService {
 
-    public UserLoginResponseDTO login(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
+    public LoginAndRegisterResponseMap login(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
-    public AccessTokenResponseDTO refreshAccessToken(RequestDTO requestDTO);
+    public LoginAndRegisterResponseMap refreshAccessToken(RequestDTO requestDTO);
 
     public void genarateOtp(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
     public ResponseDTO logout(String id) throws IOException;
 
-    public UserLoginResponseDTO verifyOtp(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
+    public LoginAndRegisterResponseMap verifyOtp(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 }
