@@ -32,6 +32,8 @@ dependencies {
 
     compile group: 'org.keycloak', name: 'keycloak-spring-boot-starter', version: '4.7.0.Final'
 
+    compile("org.springframework.boot:spring-boot-starter-data-neo4j")
+
     // https://mvnrepository.com/artifact/postgresql/postgresql
     compile group: 'org.postgresql', name: 'postgresql', version: '42.2.5'
 

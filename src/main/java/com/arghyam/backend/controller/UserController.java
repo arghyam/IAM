@@ -27,9 +27,9 @@ public class UserController {
 
 
     @PostMapping(value = "/user/register")
-    public LoginResponseDTO createUser(@Validated @RequestBody RequestDTO requestDTO,
+    public void createUser(@Validated @RequestBody RequestDTO requestDTO, String userToken,
                                        BindingResult bindingResult) throws IOException {
-        return userService.createUsers(requestDTO,bindingResult);
+          userService.createUsers(requestDTO, userToken, bindingResult);
     }
 
 }

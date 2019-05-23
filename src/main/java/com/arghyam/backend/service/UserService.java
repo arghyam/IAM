@@ -21,7 +21,7 @@ public interface UserService {
 
     public void validatePojo(BindingResult bindingResult);
 
-    public LoginResponseDTO createUsers(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
+    public void createUsers(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException;
 
     public String otpgenerator();
 

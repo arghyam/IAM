@@ -39,24 +39,23 @@ public class LoginController {
 
 
     @RequestMapping(value = "/user/login", method = RequestMethod.POST)
-    public UserLoginResponseDTO login(@Validated @RequestBody RequestDTO requestDTO,
+    public LoginAndRegisterResponseMap login(@Validated @RequestBody RequestDTO requestDTO,
                         BindingResult bindingResult) throws IOException {
-        UserLoginResponseDTO response = loginService.login(requestDTO, bindingResult);
-        return response;
+        return loginService.login(requestDTO, bindingResult);
     }
 
 
 
     @RequestMapping(value = "/user/generate-accesstoken", method = RequestMethod.POST,
             consumes = MediaType.APPLICATION_JSON_VALUE, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_FORM_URLENCODED_VALUE})
-    public AccessTokenResponseDTO generateAccessToken(@RequestBody RequestDTO requestDTO) throws Exception {
+    public LoginAndRegisterResponseMap generateAccessToken(@RequestBody RequestDTO requestDTO) throws Exception {
             return loginService.refreshAccessToken(requestDTO);
     }
 
 
 
     @RequestMapping(value = "/user/verifyOtp", method = RequestMethod.POST)
-    UserLoginResponseDTO verifyOtp(@Validated @RequestBody RequestDTO requestDTO, BindingResult bindingResult)throws IOException {
+    LoginAndRegisterResponseMap verifyOtp(@Validated @RequestBody RequestDTO requestDTO, BindingResult bindingResult)throws IOException {
 
         return loginService.verifyOtp(requestDTO,bindingResult);
     }
