@@ -1,12 +1,12 @@
 package com.arghyam.backend.controller;
 
 import com.arghyam.backend.config.AppContext;
-import com.arghyam.backend.dto.*;
-import com.arghyam.backend.entity.Springuser;
+import com.arghyam.backend.dto.AccessTokenResponseDTO;
+import com.arghyam.backend.dto.RequestDTO;
+import com.arghyam.backend.dto.ResponseDTO;
+import com.arghyam.backend.dto.UserLoginResponseDTO;
 import com.arghyam.backend.exceptions.UserCreateException;
 import com.arghyam.backend.service.LoginService;
-import com.arghyam.backend.service.UserService;
-import com.arghyam.backend.utils.Constants;
 import com.arghyam.backend.utils.KeycloakUtil;
 import org.keycloak.common.VerificationException;
 import org.keycloak.exceptions.TokenNotActiveException;
@@ -20,9 +20,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpUtils;
 import java.io.IOException;
-import java.util.List;
 
 
 @RestController

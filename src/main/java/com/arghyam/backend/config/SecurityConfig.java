@@ -1,3 +1,4 @@
+/*
 package com.arghyam.backend.config;
 
 import org.keycloak.adapters.springboot.KeycloakSpringBootConfigResolver;
@@ -90,3 +91,4 @@ class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
     }
 }
 
+*/

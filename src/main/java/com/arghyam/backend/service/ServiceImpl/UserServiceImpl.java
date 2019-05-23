@@ -2,38 +2,29 @@ package com.arghyam.backend.service.ServiceImpl;
 
 import com.arghyam.backend.config.AppContext;
 import com.arghyam.backend.dao.KeycloakDAO;
-import com.arghyam.backend.dao.RegistryDAO;
-import com.arghyam.backend.dto.*;
-import com.arghyam.backend.entity.RegistryUser;
-import com.arghyam.backend.entity.Springuser;
-import com.arghyam.backend.exceptions.*;
-import com.arghyam.backend.repositories.UserRepository;
 import com.arghyam.backend.dao.KeycloakService;
+import com.arghyam.backend.dao.RegistryDAO;
+import com.arghyam.backend.dto.LoginResponseDTO;
+import com.arghyam.backend.dto.RequestDTO;
+import com.arghyam.backend.exceptions.UnprocessableEntitiesException;
+import com.arghyam.backend.exceptions.UserAlreadyExistsException;
+import com.arghyam.backend.exceptions.ValidationError;
 import com.arghyam.backend.service.UserService;
-import com.arghyam.backend.utils.Constants;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.http.HttpStatus;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
-import org.keycloak.admin.client.resource.RealmResource;
-import org.keycloak.admin.client.resource.UsersResource;
-import org.keycloak.representations.AccessToken;
-import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.CredentialRepresentation;
-import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.keycloak.admin.client.Keycloak;
-import org.springframework.web.bind.annotation.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Response;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.util.Arrays.asList;
 
@@ -45,8 +36,6 @@ public class UserServiceImpl implements UserService {
     @Autowired
     AppContext appContext;
 
-    @Autowired
-    UserRepository userRepository;
 
     @Autowired
     ObjectMapper objectMapper;
@@ -89,11 +78,6 @@ public class UserServiceImpl implements UserService {
             System.out.println("exception"+e);
         }
         return null;
-    }
-
-    @Override
-    public List<Springuser> fetchSpringUsers() {
-      return userRepository.findAll();
     }
 
 

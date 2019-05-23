@@ -25,16 +25,11 @@ repositories {
 
 dependencies {
     implementation('org.springframework.boot:spring-boot-starter-actuator')
-    implementation('org.springframework.boot:spring-boot-starter-data-jpa')
     implementation('org.springframework.boot:spring-boot-starter-web')
     testImplementation('org.springframework.boot:spring-boot-starter-test')
     compile('org.springframework.boot:spring-boot-starter-validation')
-
+    compile("org.springframework.boot:spring-boot-starter-data-neo4j")
     compile group: 'org.keycloak', name: 'keycloak-spring-boot-starter', version: '4.7.0.Final'
-
-    // https://mvnrepository.com/artifact/postgresql/postgresql
-    compile group: 'org.postgresql', name: 'postgresql', version: '42.2.5'
-
 
     // https://mvnrepository.com/artifact/org.keycloak/keycloak-admin-client
     compile group: 'org.keycloak', name: 'keycloak-admin-client', version: '4.7.0.Final'
@@ -88,10 +83,7 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.keycloak/keycloak-core
     compile group: 'org.keycloak', name: 'keycloak-core', version: '5.0.0'
-
-    // https://mvnrepository.com/artifact/net.postgis/postgis-jdbc
-    compile group: 'net.postgis', name: 'postgis-jdbc', version: '2.1.7.2'
-
+    
     // https://mvnrepository.com/artifact/com.mashape.unirest/unirest-java
     compile group: 'com.mashape.unirest', name: 'unirest-java', version: '1.4.9'
 }

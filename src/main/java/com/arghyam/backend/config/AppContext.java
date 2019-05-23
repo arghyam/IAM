@@ -28,19 +28,52 @@ public class AppContext {
     private String grantType;
 
     @Value("${default-user-password}")
-    public String defaultUserPassword;
+    private String defaultUserPassword;
 
     @Value("${default-user-role}")
-    public String defaultUserRole;
+    private String defaultUserRole;
 
     @Value("${arghyam.app.client.id}")
-    public String arghyamKeyCloakAppClient;
+    private String arghyamKeyCloakAppClient;
 
     @Value("${arghyam.app.client.secret}")
-    public String arghyamKeyCloakAppClientSecret;
+    private String arghyamKeyCloakAppClientSecret;
 
     @Value("${registry-base-url}")
     private String registryBaseUrl;
+
+    @Value("${spring.data.neo4j.uri}")
+    private String neo4jBaseUri;
+
+    @Value("${spring.data.neo4j.username}")
+    private String neo4jUsername;
+
+    @Value("${spring.data.neo4j.password}")
+    private String neo4jPassword;
+
+    public String getNeo4jBaseUri() {
+        return neo4jBaseUri;
+    }
+
+    public void setNeo4jBaseUri(String neo4jBaseUri) {
+        this.neo4jBaseUri = neo4jBaseUri;
+    }
+
+    public String getNeo4jUsername() {
+        return neo4jUsername;
+    }
+
+    public void setNeo4jUsername(String neo4jUsername) {
+        this.neo4jUsername = neo4jUsername;
+    }
+
+    public String getNeo4jPassword() {
+        return neo4jPassword;
+    }
+
+    public void setNeo4jPassword(String neo4jPassword) {
+        this.neo4jPassword = neo4jPassword;
+    }
 
     public String getArghyamKeyCloakAppClient() {
         return arghyamKeyCloakAppClient;

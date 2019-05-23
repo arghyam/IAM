@@ -1,22 +1,16 @@
 package com.arghyam.backend.entity;
 
-import javax.persistence.*;
+
 import java.io.Serializable;
 import java.util.UUID;
 
-@Entity
-@Table(name = "springuser")
-public class Springuser implements Serializable {
 
-    @Id
-    @GeneratedValue
-    @Column(name = "userid")
+public class Springuser implements Serializable {
     private UUID userid;
 
-    @Column(name = "name")
+
     private String name;
 
-    @Column(name = "phonenumber")
     private String phonenumber;
 
     public UUID getUserid() {
