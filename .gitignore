@@ -65,7 +65,9 @@ classes/
 transaction-logs/
 .idea/
 .gradle/
-
+gradlew
+gradlew.bat
+gradle/
 !libraries/appdynamics.zip
 out/
 
