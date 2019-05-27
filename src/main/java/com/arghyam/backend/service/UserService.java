@@ -19,5 +19,7 @@ public interface UserService {
 
     public String otpgenerator();
 
+    public LoginAndRegisterResponseMap getUserProfile(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
+
     LoginAndRegisterResponseMap reSendOtp(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 }

@@ -7,10 +7,7 @@ import com.arghyam.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
@@ -39,6 +36,12 @@ public class UserController {
     public LoginAndRegisterResponseMap updateUser(@Validated @RequestBody RequestDTO requestDTO,
                                                   BindingResult bindingResult) throws IOException {
           return userService.updateUserProfile(requestDTO, bindingResult);
+    }
+
+    @GetMapping(value = "/user/getUserProfile")
+    public LoginAndRegisterResponseMap getUser(@Validated @RequestBody RequestDTO requestDTO,
+                                                  BindingResult bindingResult) throws IOException {
+        return userService.getUserProfile(requestDTO, bindingResult);
     }
 
 }

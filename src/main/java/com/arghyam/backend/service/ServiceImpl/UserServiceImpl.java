@@ -126,6 +126,26 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public LoginAndRegisterResponseMap getUserProfile(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        UserRepresentation userRepresentation = getUserFromKeycloak(requestDTO);
+        Map<String, Object> springUser = new HashMap<>();
+        if (userRepresentation != null) {
+            springUser.put("responseObject", userRepresentation);
+            springUser.put("responseCode", 200);
+            springUser.put("responseStatus", "user profile fetched");
+        } else {
+            springUser.put("responseObject", userRepresentation);
+            springUser.put("responseCode", 404);
+            springUser.put("responseStatus", "user profile not found");
+        }
+        BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+        loginAndRegisterResponseMap.setResponse(springUser);
+        return loginAndRegisterResponseMap;
+    }
+
+
+    @Override
     public LoginAndRegisterResponseMap reSendOtp(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
         UserRepresentation userRepresentation=null;
         validatePojo(bindingResult);
@@ -151,11 +171,21 @@ public class UserServiceImpl implements UserService {
     }
 
 
+    private UserRepresentation getUserFromKeycloak(RequestDTO requestDTO) throws IOException {
+        String userToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        Springuser springuser = new Springuser();
+        if(requestDTO.getRequest().keySet().contains("person")) {
+            springuser = mapper.convertValue(requestDTO.getRequest().get("person"), Springuser.class);
+        }
+        return keycloakService.getUserByUsername(userToken, springuser.getPhonenumber(), appContext.getRealm());
+    }
+
+
     @Override
     public LoginAndRegisterResponseMap updateUserProfile(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
         validatePojo(bindingResult);
-        String userToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        String userToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         Springuser springuser = new Springuser();
         if(requestDTO.getRequest().keySet().contains("person")) {
             springuser = mapper.convertValue(requestDTO.getRequest().get("person"), Springuser.class);
