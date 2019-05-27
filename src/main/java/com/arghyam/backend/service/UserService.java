@@ -1,6 +1,6 @@
 package com.arghyam.backend.service;
 
-import com.arghyam.backend.dto.LoginResponseDTO;
+import com.arghyam.backend.dto.LoginAndRegisterResponseMap;
 import com.arghyam.backend.dto.RequestDTO;
 import org.keycloak.admin.client.Keycloak;
 import org.springframework.validation.BindingResult;
@@ -17,4 +17,5 @@ public interface UserService {
 
     public String otpgenerator();
 
+    LoginAndRegisterResponseMap reSendOtp(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 }
