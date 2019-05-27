@@ -167,7 +167,9 @@ public class UserServiceImpl implements UserService {
         }
         keycloakService.updateUser(userToken, userRepresentation.getId(), userRepresentation, appContext.getRealm());
         Map<String, Object> springUser = new HashMap<>();
-        springUser.put("responseObject", userRepresentation);
+        springUser.put("responseObject", null);
+        springUser.put("responseCode", 200);
+        springUser.put("responseStatus", "user profile updated");
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         loginAndRegisterResponseMap.setResponse(springUser);
         return loginAndRegisterResponseMap;

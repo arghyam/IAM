@@ -65,16 +65,17 @@ public class LoginServiceImpl implements LoginService {
                 loginDTO.setPassword("password");
                 AccessTokenResponseDTO accessTokenResponseDTO = userLogin(loginDTO);
                 String userToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+                UserRepresentation userRepresentation = keycloakService.getUserByUsername(userToken, loginDTO.getUsername(), appContext.getRealm());
                 if (accessTokenResponseDTO !=null) {
+                    response.setUserId(userRepresentation.getId());
                     response.setMessage("Otp is sent to the registered mobile number");
                     response.setNewUserCreated(false);
                 } else {
                     userService.createUsers(requestDTO, userToken, bindingResult);
+                    response.setUserId(userRepresentation.getId());
                     response.setMessage("Otp is sent to the registered mobile number");
                     response.setNewUserCreated(true);
                 }
-
-                UserRepresentation userRepresentation = keycloakService.getUserByUsername(userToken, loginDTO.getUsername(), appContext.getRealm());
                 updateOtpForUser(loginDTO, userToken, userRepresentation);
                 updateLoginResponseBody(response, loginAndRegisterResponseMap, requestDTO, "200", "Login successfull", "login");
             }
