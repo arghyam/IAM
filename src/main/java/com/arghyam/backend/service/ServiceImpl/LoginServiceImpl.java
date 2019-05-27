@@ -65,16 +65,17 @@ public class LoginServiceImpl implements LoginService {
                 loginDTO.setPassword("password");
                 AccessTokenResponseDTO accessTokenResponseDTO = userLogin(loginDTO);
                 String userToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+                UserRepresentation userRepresentation = keycloakService.getUserByUsername(userToken, loginDTO.getUsername(), appContext.getRealm());
                 if (accessTokenResponseDTO !=null) {
+                    response.setUserId(userRepresentation.getId());
                     response.setMessage("Otp is sent to the registered mobile number");
                     response.setNewUserCreated(false);
                 } else {
                     userService.createUsers(requestDTO, userToken, bindingResult);
+                    response.setUserId(userRepresentation.getId());
                     response.setMessage("Otp is sent to the registered mobile number");
                     response.setNewUserCreated(true);
                 }
-
-                UserRepresentation userRepresentation = keycloakService.getUserByUsername(userToken, loginDTO.getUsername(), appContext.getRealm());
                 updateOtpForUser(loginDTO, userToken, userRepresentation);
                 updateLoginResponseBody(response, loginAndRegisterResponseMap, requestDTO, "200", "Login successfull", "login");
             }
@@ -90,7 +91,7 @@ public class LoginServiceImpl implements LoginService {
             otpList.add(otp);
             Map<String, List<String>> attributes = new HashMap<>();
             attributes.put("otp", otpList);
-            messageService.sendMessage("<#> OTP for login is " + otp + "\nP9He0xQtBTT", loginDTO.getUsername());
+            messageService.sendMessage("OTP for login is " + otp , loginDTO.getUsername());
             userRepresentation.setAttributes(attributes);
             keycloakService.updateUser(userToken, userRepresentation.getId(), userRepresentation, appContext.getRealm());
         }
