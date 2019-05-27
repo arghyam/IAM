@@ -84,14 +84,14 @@ public class LoginServiceImpl implements LoginService {
     }
 
 
-    private void updateOtpForUser (LoginDTO loginDTO, String userToken, UserRepresentation userRepresentation)  throws IOException {
+    public void updateOtpForUser (LoginDTO loginDTO, String userToken, UserRepresentation userRepresentation)  throws IOException {
         if (loginDTO.getUsername().matches("[0-9]+") && userRepresentation != null) {
             String otp = generateOtp();
             List<String> otpList = new ArrayList<>();
             otpList.add(otp);
             Map<String, List<String>> attributes = new HashMap<>();
             attributes.put("otp", otpList);
-            messageService.sendMessage("OTP for login is " + otp , loginDTO.getUsername());
+            messageService.sendMessage(" OTP for login is " + otp + "", loginDTO.getUsername());
             userRepresentation.setAttributes(attributes);
             keycloakService.updateUser(userToken, userRepresentation.getId(), userRepresentation, appContext.getRealm());
         }
