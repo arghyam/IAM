@@ -38,7 +38,7 @@ public class UserController {
           return userService.updateUserProfile(requestDTO, bindingResult);
     }
 
-    @GetMapping(value = "/user/getUserProfile")
+    @PostMapping(value = "/user/getUserProfile")
     public LoginAndRegisterResponseMap getUser(@Validated @RequestBody RequestDTO requestDTO,
                                                   BindingResult bindingResult) throws IOException {
         return userService.getUserProfile(requestDTO, bindingResult);
