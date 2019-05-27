@@ -4,10 +4,11 @@ import com.arghyam.backend.config.AppContext;
 import com.arghyam.backend.dao.KeycloakDAO;
 import com.arghyam.backend.dao.KeycloakService;
 import com.arghyam.backend.dao.RegistryDAO;
-import com.arghyam.backend.dto.*;
+import com.arghyam.backend.dto.LoginAndRegisterResponseMap;
+import com.arghyam.backend.dto.LoginDTO;
+import com.arghyam.backend.dto.RequestDTO;
 import com.arghyam.backend.entity.Springuser;
 import com.arghyam.backend.exceptions.UnprocessableEntitiesException;
-import com.arghyam.backend.exceptions.UserAlreadyExistsException;
 import com.arghyam.backend.exceptions.ValidationError;
 import com.arghyam.backend.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,6 +57,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     RegistryDAO registryDao;
 
+    @Autowired
+    LoginServiceImpl loginServiceImpl;
+
     ObjectMapper mapper = new ObjectMapper();
 
 
@@ -70,12 +74,11 @@ public class UserServiceImpl implements UserService {
             credential.setTemporary(false);
             registerResponseDTO.setEnabled(Boolean.TRUE);      // A disabled user cannot login.
             registerResponseDTO.setCredentials(asList(credential));
-            keycloakService.register(userToken,registerResponseDTO);
+            keycloakService.register(userToken, registerResponseDTO);
         } catch (Exception e) {
-            System.out.println("exception"+e);
+            System.out.println("exception" + e);
         }
     }
-
 
 
     public CredentialRepresentation setCredentialPassword(String password) {
@@ -85,8 +88,6 @@ public class UserServiceImpl implements UserService {
         credential.setTemporary(false);
         return credential;
     }
-
-
 
     @Override
     public Keycloak getKeycloak() {
@@ -124,6 +125,30 @@ public class UserServiceImpl implements UserService {
         return String.valueOf(randomPIN);
     }
 
+    @Override
+    public LoginAndRegisterResponseMap reSendOtp(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+        UserRepresentation userRepresentation=null;
+        validatePojo(bindingResult);
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        if (null!=requestDTO.getRequest()&& requestDTO.getRequest().keySet().contains("person")){
+            LoginDTO loginDTO=mapper.convertValue(requestDTO.getRequest().get("person"), LoginDTO.class);
+            userRepresentation= keycloakService.getUserByUsername(adminToken, loginDTO.getUsername(), appContext.getRealm());
+            loginServiceImpl.updateOtpForUser(loginDTO,adminToken,userRepresentation);
+        }
+        LoginAndRegisterResponseMap responseDTO=new LoginAndRegisterResponseMap();
+        responseDTO.setId(requestDTO.getId());
+        responseDTO.setEts(requestDTO.getEts());
+        responseDTO.setVer(requestDTO.getVer());
+        responseDTO.
+                setParams(requestDTO.getParams());
+        HashMap<String,Object> map=new HashMap<>();
+        map.put("responseCode",200);
+        map.put("responseStatus","Otp sent successfully");
+        map.put("response",null);
+
+        responseDTO.setResponse(map);
+        return responseDTO;
+    }
 
 
     @Override
@@ -138,7 +163,7 @@ public class UserServiceImpl implements UserService {
 
         UserRepresentation userRepresentation = keycloakService.getUserByUsername(userToken, springuser.getPhonenumber(), appContext.getRealm());
         if (userRepresentation != null) {
-          userRepresentation.setFirstName(springuser.getName());
+            userRepresentation.setFirstName(springuser.getName());
         }
         keycloakService.updateUser(userToken, userRepresentation.getId(), userRepresentation, appContext.getRealm());
         Map<String, Object> springUser = new HashMap<>();
@@ -146,6 +171,8 @@ public class UserServiceImpl implements UserService {
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         loginAndRegisterResponseMap.setResponse(springUser);
         return loginAndRegisterResponseMap;
-       }
-
     }
+
+}
+
+
