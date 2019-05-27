@@ -142,8 +142,10 @@ public class UserServiceImpl implements UserService {
         responseDTO.
                 setParams(requestDTO.getParams());
         HashMap<String,Object> map=new HashMap<>();
-        map.put("username",userRepresentation.getUsername());
-        map.put("userId",userRepresentation.getId());
+        map.put("responseCode",200);
+        map.put("responseStatus","Otp sent successfully");
+        map.put("response",null);
+
         responseDTO.setResponse(map);
         return responseDTO;
     }
