@@ -1,5 +1,6 @@
 package com.arghyam.backend.service;
 
+import com.arghyam.backend.dto.LoginAndRegisterResponseMap;
 import com.arghyam.backend.dto.LoginResponseDTO;
 import com.arghyam.backend.dto.RequestDTO;
 import org.keycloak.admin.client.Keycloak;
@@ -14,6 +15,8 @@ public interface UserService {
     public void validatePojo(BindingResult bindingResult);
 
     public void createUsers(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException;
+
+    public LoginAndRegisterResponseMap updateUserProfile(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
     public String otpgenerator();
 

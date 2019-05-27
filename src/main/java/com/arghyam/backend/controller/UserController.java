@@ -1,6 +1,7 @@
 package com.arghyam.backend.controller;
 
 
+import com.arghyam.backend.dto.LoginAndRegisterResponseMap;
 import com.arghyam.backend.dto.LoginResponseDTO;
 import com.arghyam.backend.dto.RequestDTO;
 import com.arghyam.backend.service.UserService;
@@ -26,6 +27,13 @@ public class UserController {
     public void createUser(@Validated @RequestBody RequestDTO requestDTO, String userToken,
                                        BindingResult bindingResult) throws IOException {
           userService.createUsers(requestDTO, userToken, bindingResult);
+    }
+
+
+    @PostMapping(value = "/user/updateUserProfile")
+    public LoginAndRegisterResponseMap updateUser(@Validated @RequestBody RequestDTO requestDTO,
+                                                  BindingResult bindingResult) throws IOException {
+          return userService.updateUserProfile(requestDTO, bindingResult);
     }
 
 }

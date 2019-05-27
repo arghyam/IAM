@@ -13,6 +13,7 @@ import com.arghyam.backend.utils.Constants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -54,10 +55,8 @@ public class LoginServiceImpl implements LoginService {
     public LoginAndRegisterResponseMap login(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
         userService.validatePojo(bindingResult);
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
-        Map<String, Object> responseMap = new HashMap<>();
         LoginAndRegisterResponseBody response = new LoginAndRegisterResponseBody();
         if(requestDTO.getRequest().keySet().contains("person")) {
-            UserResponseDTO userResponseDTO = new UserResponseDTO();
             //map person object (part of request map) to LoginDTO object
             LoginDTO loginDTO = mapper.convertValue(requestDTO.getRequest().get("person"), LoginDTO.class);
             if (loginDTO.getUsername() == null || loginDTO.getUsername().equals(null)) {
@@ -91,7 +90,7 @@ public class LoginServiceImpl implements LoginService {
             otpList.add(otp);
             Map<String, List<String>> attributes = new HashMap<>();
             attributes.put("otp", otpList);
-            messageService.sendMessage("OTP for login is " + otp, loginDTO.getUsername());
+            messageService.sendMessage("<#> OTP for login is " + otp + "\nP9He0xQtBTT", loginDTO.getUsername());
             userRepresentation.setAttributes(attributes);
             keycloakService.updateUser(userToken, userRepresentation.getId(), userRepresentation, appContext.getRealm());
         }
@@ -217,10 +216,7 @@ public class LoginServiceImpl implements LoginService {
             LoginAndRegisterResponseBody response = mapper.convertValue(object, LoginAndRegisterResponseBody.class);
             responseMap.put("responseObject", response);
         }
-        loginAndRegisterResponseMap.setVer(requestDTO.getVer());
-        loginAndRegisterResponseMap.setParams(requestDTO.getParams());
-        loginAndRegisterResponseMap.setId(requestDTO.getId());
-        loginAndRegisterResponseMap.setEts(requestDTO.getEts());
+        BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         responseMap.put("responseCode", responseCode);
         responseMap.put("reponseStatus", responseStatus);
         loginAndRegisterResponseMap.setResponse(responseMap);
