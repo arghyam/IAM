@@ -37,9 +37,6 @@ dependencies {
     // https://mvnrepository.com/artifact/javax.ws.rs/javax.ws.rs-api
     compile group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
 
-    // https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk
-    compile group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.470'
-
     //Retrofit dependencies
     compile('com.squareup.retrofit2:retrofit:2.3.0')
     compile('com.squareup.retrofit2:converter-jackson:2.3.0')
