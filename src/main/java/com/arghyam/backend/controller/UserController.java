@@ -2,11 +2,8 @@ package com.arghyam.backend.controller;
 
 
 import com.arghyam.backend.dto.LoginAndRegisterResponseMap;
-import com.arghyam.backend.dto.LoginResponseDTO;
 import com.arghyam.backend.dto.RequestDTO;
-import com.arghyam.backend.dto.ResponseDTO;
 import com.arghyam.backend.service.UserService;
-import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
@@ -33,9 +30,15 @@ public class UserController {
 
 
     @PostMapping(value = "/sendOTP")
-    public LoginAndRegisterResponseMap reSendOTP(@Validated @RequestBody RequestDTO requestDTO, BindingResult bindingResult) throws IOException{
+    public LoginAndRegisterResponseMap reSendOTP(@Validated @RequestBody RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
 
-        return userService.reSendOtp(requestDTO,bindingResult);
+        return userService.reSendOtp(requestDTO, bindingResult);
+    }
+
+    @PostMapping(value = "/user/updateUserProfile")
+    public LoginAndRegisterResponseMap updateUser(@Validated @RequestBody RequestDTO requestDTO,
+                                                  BindingResult bindingResult) throws IOException {
+          return userService.updateUserProfile(requestDTO, bindingResult);
     }
 
 }

@@ -1,13 +1,15 @@
 package com.arghyam.backend.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.io.Serializable;
 import java.util.UUID;
 
-
+@JsonIgnoreProperties
 public class Springuser implements Serializable {
-    private UUID userid;
 
+    private UUID userid;
 
     private String name;
 
@@ -24,6 +26,7 @@ public class Springuser implements Serializable {
     public String getName() {
         return name;
     }
+
     public void setName(String name) {
         this.name = name;
     }

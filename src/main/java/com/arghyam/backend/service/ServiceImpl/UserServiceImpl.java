@@ -7,7 +7,7 @@ import com.arghyam.backend.dao.RegistryDAO;
 import com.arghyam.backend.dto.LoginAndRegisterResponseMap;
 import com.arghyam.backend.dto.LoginDTO;
 import com.arghyam.backend.dto.RequestDTO;
-import com.arghyam.backend.dto.ResponseDTO;
+import com.arghyam.backend.entity.Springuser;
 import com.arghyam.backend.exceptions.UnprocessableEntitiesException;
 import com.arghyam.backend.exceptions.ValidationError;
 import com.arghyam.backend.service.UserService;
@@ -17,6 +17,7 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static java.util.Arrays.asList;
 
@@ -73,7 +75,6 @@ public class UserServiceImpl implements UserService {
             registerResponseDTO.setEnabled(Boolean.TRUE);      // A disabled user cannot login.
             registerResponseDTO.setCredentials(asList(credential));
             keycloakService.register(userToken, registerResponseDTO);
-
         } catch (Exception e) {
             System.out.println("exception" + e);
         }
@@ -87,7 +88,6 @@ public class UserServiceImpl implements UserService {
         credential.setTemporary(false);
         return credential;
     }
-
 
     @Override
     public Keycloak getKeycloak() {
@@ -149,4 +149,30 @@ public class UserServiceImpl implements UserService {
         responseDTO.setResponse(map);
         return responseDTO;
     }
+
+
+    @Override
+    public LoginAndRegisterResponseMap updateUserProfile(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+        validatePojo(bindingResult);
+        String userToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        Springuser springuser = new Springuser();
+        if(requestDTO.getRequest().keySet().contains("person")) {
+            springuser = mapper.convertValue(requestDTO.getRequest().get("person"), Springuser.class);
+        }
+
+        UserRepresentation userRepresentation = keycloakService.getUserByUsername(userToken, springuser.getPhonenumber(), appContext.getRealm());
+        if (userRepresentation != null) {
+            userRepresentation.setFirstName(springuser.getName());
+        }
+        keycloakService.updateUser(userToken, userRepresentation.getId(), userRepresentation, appContext.getRealm());
+        Map<String, Object> springUser = new HashMap<>();
+        springUser.put("responseObject", userRepresentation);
+        BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+        loginAndRegisterResponseMap.setResponse(springUser);
+        return loginAndRegisterResponseMap;
+    }
+
 }
+
+

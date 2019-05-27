@@ -15,6 +15,8 @@ public interface UserService {
 
     public void createUsers(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException;
 
+    public LoginAndRegisterResponseMap updateUserProfile(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
+
     public String otpgenerator();
 
     LoginAndRegisterResponseMap reSendOtp(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
