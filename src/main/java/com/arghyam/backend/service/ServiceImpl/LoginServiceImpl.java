@@ -91,7 +91,7 @@ public class LoginServiceImpl implements LoginService {
             otpList.add(otp);
             Map<String, List<String>> attributes = new HashMap<>();
             attributes.put("otp", otpList);
-            messageService.sendMessage(" OTP for login is " + otp + "", loginDTO.getUsername());
+            messageService.sendMessage("<#> OTP for login is :" + otp + "\n" +" P9He0xQtBTT", loginDTO.getUsername());
             userRepresentation.setAttributes(attributes);
             keycloakService.updateUser(userToken, userRepresentation.getId(), userRepresentation, appContext.getRealm());
         }
