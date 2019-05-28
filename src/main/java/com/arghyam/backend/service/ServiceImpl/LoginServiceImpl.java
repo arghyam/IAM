@@ -70,14 +70,15 @@ public class LoginServiceImpl implements LoginService {
                     response.setUserId(userRepresentation.getId());
                     response.setMessage("Otp is sent to the registered mobile number");
                     response.setNewUserCreated(false);
+                    updateOtpForUser(loginDTO, userToken, userRepresentation);
                 } else {
                     userService.createUsers(requestDTO, userToken, bindingResult);
                     UserRepresentation newUserCreatedRepresentation = keycloakService.getUserByUsername(userToken, loginDTO.getUsername(), appContext.getRealm());
                     response.setUserId(newUserCreatedRepresentation.getId());
                     response.setMessage("Otp is sent to the registered mobile number");
                     response.setNewUserCreated(true);
+                    updateOtpForUser(loginDTO, userToken, newUserCreatedRepresentation);
                 }
-                updateOtpForUser(loginDTO, userToken, userRepresentation);
                 updateLoginResponseBody(response, loginAndRegisterResponseMap, requestDTO, "200", "Login successfull", "login");
             }
         }
