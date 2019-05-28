@@ -153,7 +153,7 @@ public class UserServiceImpl implements UserService {
         if (null!=requestDTO.getRequest()&& requestDTO.getRequest().keySet().contains("person")){
             LoginDTO loginDTO=mapper.convertValue(requestDTO.getRequest().get("person"), LoginDTO.class);
             userRepresentation= keycloakService.getUserByUsername(adminToken, loginDTO.getUsername(), appContext.getRealm());
-            loginServiceImpl.updateOtpForUser(loginDTO,adminToken,userRepresentation);
+            loginServiceImpl.updateOtpForUser(loginDTO,adminToken,userRepresentation, "resendOtp");
         }
         LoginAndRegisterResponseMap responseDTO=new LoginAndRegisterResponseMap();
         responseDTO.setId(requestDTO.getId());

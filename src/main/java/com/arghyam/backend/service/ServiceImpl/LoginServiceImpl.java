@@ -75,7 +75,7 @@ public class LoginServiceImpl implements LoginService {
                 }
                 UserRepresentation userRepresentation = keycloakService.getUserByUsername(userToken, loginDTO.getUsername(), appContext.getRealm());
                 response.setUserId(userRepresentation.getId());
-                updateOtpForUser(loginDTO, userToken, userRepresentation);
+                updateOtpForUser(loginDTO, userToken, userRepresentation, "login");
                 updateLoginResponseBody(response, loginAndRegisterResponseMap, requestDTO, "200", "Login successfull", "login");
             }
         }
@@ -83,9 +83,14 @@ public class LoginServiceImpl implements LoginService {
     }
 
 
-    public void updateOtpForUser (LoginDTO loginDTO, String userToken, UserRepresentation userRepresentation)  throws IOException {
+    public void updateOtpForUser (LoginDTO loginDTO, String userToken, UserRepresentation userRepresentation, String type)  throws IOException {
         if (loginDTO.getUsername().matches("[0-9]+") && userRepresentation != null) {
-            String otp = generateOtp();
+            String otp;
+            if (type.equals("login")) {
+                otp = generateOtp();
+            } else {
+                otp = userRepresentation.getAttributes().get("otp").toString().replaceAll("\\p{P}","");
+            }
             List<String> otpList = new ArrayList<>();
             otpList.add(otp);
             Map<String, List<String>> attributes = new HashMap<>();
