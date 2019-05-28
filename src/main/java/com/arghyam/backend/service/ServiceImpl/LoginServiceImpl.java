@@ -86,7 +86,7 @@ public class LoginServiceImpl implements LoginService {
 
 
     public void updateOtpForUser (LoginDTO loginDTO, String userToken, UserRepresentation userRepresentation)  throws IOException {
-        if (loginDTO.getUsername().matches("[0-9]+")) {
+        if (loginDTO.getUsername().matches("[0-9]+") && userRepresentation != null) {
             String otp = generateOtp();
             List<String> otpList = new ArrayList<>();
             otpList.add(otp);
