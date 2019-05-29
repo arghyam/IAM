@@ -12,6 +12,8 @@ import com.arghyam.backend.service.UserService;
 import com.arghyam.backend.utils.Constants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
+import org.joda.time.Instant;
+import org.joda.time.LocalTime;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,10 +25,9 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Component
 @Service
@@ -64,6 +65,7 @@ public class LoginServiceImpl implements LoginService {
             } else {
                 loginDTO.setPassword("password");
                 AccessTokenResponseDTO accessTokenResponseDTO = userLogin(loginDTO);
+                //admin user token
                 String userToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
                 if (accessTokenResponseDTO !=null) {
                     response.setMessage("Otp is sent to the registered mobile number");
@@ -93,8 +95,11 @@ public class LoginServiceImpl implements LoginService {
             }
             List<String> otpList = new ArrayList<>();
             otpList.add(otp);
+            List<String> createdAtList=new ArrayList<>();
+            createdAtList.add(String.valueOf(Instant.now().getMillis()));
             Map<String, List<String>> attributes = new HashMap<>();
             attributes.put("otp", otpList);
+            attributes.put("createdAt",createdAtList);
             messageService.sendMessage("<#> OTP for login is :" + otp + "\n" +" P9He0xQtBTT", loginDTO.getUsername());
             userRepresentation.setAttributes(attributes);
             keycloakService.updateUser(userToken, userRepresentation.getId(), userRepresentation, appContext.getRealm());
@@ -189,27 +194,54 @@ public class LoginServiceImpl implements LoginService {
             LoginResponseDTO loginResponseDTO=keycloakService.login(userRepresentation,bindingResult);
             UserResponseDTO userResponseDTO = new UserResponseDTO();
             AccessTokenResponseDTO accessTokenResponseDTO = new AccessTokenResponseDTO();
-            if (otp.equals(verifyOtpDTO.getOtp())){
-                accessTokenResponseDTO.setAccessToken(loginResponseDTO.getAccessToken());
-                accessTokenResponseDTO.setRefreshToken(loginResponseDTO.getRefreshToken());
-                userResponseDTO.setAccessTokenResponseDTO(accessTokenResponseDTO);
-                updateLoginResponseBody(userResponseDTO, loginAndRegisterResponseMap, requestDTO, "200", "Otp verified", "verifyOtp");
-                return loginAndRegisterResponseMap;
-            }else {
-                accessTokenResponseDTO.setAccessToken("");
-                accessTokenResponseDTO.setRefreshToken("");
-                userResponseDTO.setAccessTokenResponseDTO(accessTokenResponseDTO);
-                updateLoginResponseBody(userResponseDTO, loginAndRegisterResponseMap, requestDTO, "401", "Otp not verified", "verifyOtp");
-                return loginAndRegisterResponseMap;
+            try {
+                String createdAtList=userRepresentation.getAttributes().get("createdAt").get(0);
+                if (otp.equals(verifyOtpDTO.getOtp()) && compareTime(createdAtList)){
+                    accessTokenResponseDTO.setAccessToken(loginResponseDTO.getAccessToken());
+                    accessTokenResponseDTO.setRefreshToken(loginResponseDTO.getRefreshToken());
+                    userResponseDTO.setAccessTokenResponseDTO(accessTokenResponseDTO);
+                    updateLoginResponseBody(userResponseDTO, loginAndRegisterResponseMap, requestDTO, "200", "Otp verified", "verifyOtp");
+                    return loginAndRegisterResponseMap;
+                }else {
+                    accessTokenResponseDTO.setAccessToken("");
+                    accessTokenResponseDTO.setRefreshToken("");
+                    userResponseDTO.setAccessTokenResponseDTO(accessTokenResponseDTO);
+                    if (compareTime(createdAtList)){
+                        updateLoginResponseBody(userResponseDTO, loginAndRegisterResponseMap, requestDTO, "401", "Otp not verified", "verifyOtp");
+                    }else {
+                        updateLoginResponseBody(userResponseDTO, loginAndRegisterResponseMap, requestDTO, "401", "Otp expired", "verifyOtp");
+                    }
+
+                    return loginAndRegisterResponseMap;
+                }
+            } catch (ParseException e) {
+                System.out.println("error due to :"+e);
+                e.printStackTrace();
+                return null;
             }
         }else {
             throw new UnauthorizedException("User doesn't exist");
         }
     }
 
+    private boolean compareTime(String createdAt) throws ParseException {
+        Date createdDate=new Date(Long.parseLong(createdAt));
+        Calendar calendar=Calendar.getInstance();
+        calendar.setTime(createdDate);
+        calendar.add(Calendar.MINUTE,15);
+        // cal.getTime() will give the created date + 15 minutes
+        Date currentDateTime=new Date();
+        if (currentDateTime.after(calendar.getTime())){
+            return false;
+        }else {
+            return true;
+        }
+    }
+
 
     private void updateLoginResponseBody(Object object,
-                              LoginAndRegisterResponseMap loginAndRegisterResponseMap, RequestDTO requestDTO, String responseCode, String responseStatus, String type) {
+                              LoginAndRegisterResponseMap loginAndRegisterResponseMap, RequestDTO requestDTO,
+                                         String responseCode, String responseStatus, String type) {
         Map<String, Object> responseMap = new HashMap<>();
         if (type.equals("verifyOtp")){
             UserResponseDTO response = mapper.convertValue(object, UserResponseDTO.class);
