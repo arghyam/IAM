@@ -209,7 +209,7 @@ public class LoginServiceImpl implements LoginService {
                     if (compareTime(createdAtList)){
                         updateLoginResponseBody(userResponseDTO, loginAndRegisterResponseMap, requestDTO, "401", "Otp not verified", "verifyOtp");
                     }else {
-                        updateLoginResponseBody(userResponseDTO, loginAndRegisterResponseMap, requestDTO, "401", "Otp expired", "verifyOtp");
+                        updateLoginResponseBody(userResponseDTO, loginAndRegisterResponseMap, requestDTO, "422", "Otp expired", "verifyOtp");
                     }
 
                     return loginAndRegisterResponseMap;
