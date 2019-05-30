@@ -2,22 +2,19 @@ package com.arghyam.backend.service.ServiceImpl;
 
 import com.arghyam.backend.config.AppContext;
 import com.arghyam.backend.dao.KeycloakDAO;
+import com.arghyam.backend.dao.KeycloakService;
 import com.arghyam.backend.dao.MessageService;
 import com.arghyam.backend.dto.*;
 import com.arghyam.backend.exceptions.BadRequestException;
 import com.arghyam.backend.exceptions.UnauthorizedException;
-import com.arghyam.backend.dao.KeycloakService;
 import com.arghyam.backend.service.LoginService;
 import com.arghyam.backend.service.UserService;
 import com.arghyam.backend.utils.Constants;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 import org.joda.time.Instant;
-import org.joda.time.LocalTime;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
@@ -26,7 +23,6 @@ import retrofit2.Response;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Component
@@ -60,9 +56,13 @@ public class LoginServiceImpl implements LoginService {
         if(requestDTO.getRequest().keySet().contains("person")) {
             //map person object (part of request map) to LoginDTO object
             LoginDTO loginDTO = mapper.convertValue(requestDTO.getRequest().get("person"), LoginDTO.class);
-            if (loginDTO.getUsername() == null || loginDTO.getUsername().equals(null)) {
+            if (loginDTO.getUsername() == null || loginDTO.getUsername().equals("") ) {
                 throw new BadRequestException("Username is missing");
-            } else {
+            }
+            else if(loginDTO.getUsername().length()<10 || loginDTO.getUsername().length()>10){
+                throw new BadRequestException("Username is invalid");
+            }
+            else {
                 loginDTO.setPassword("password");
                 AccessTokenResponseDTO accessTokenResponseDTO = userLogin(loginDTO);
                 //admin user token
@@ -135,7 +135,8 @@ public class LoginServiceImpl implements LoginService {
 
         if(loginWithPhonenumber.getPhoneNumber().equals("+919999999999")) {
             otp.add("0123");
-        } else {
+        }
+        else {
             otp.add(userService.otpgenerator());
         }
         userRepresentation.getAttributes().put("otp", otp);
@@ -196,7 +197,11 @@ public class LoginServiceImpl implements LoginService {
             AccessTokenResponseDTO accessTokenResponseDTO = new AccessTokenResponseDTO();
             try {
                 String createdAtList=userRepresentation.getAttributes().get("createdAt").get(0);
+                if(verifyOtpDTO.getOtp().length()!=4){
+                    throw new BadRequestException("Invalid Otp");
+                }
                 if (otp.equals(verifyOtpDTO.getOtp()) && compareTime(createdAtList)){
+
                     accessTokenResponseDTO.setAccessToken(loginResponseDTO.getAccessToken());
                     accessTokenResponseDTO.setRefreshToken(loginResponseDTO.getRefreshToken());
                     userResponseDTO.setAccessTokenResponseDTO(accessTokenResponseDTO);
