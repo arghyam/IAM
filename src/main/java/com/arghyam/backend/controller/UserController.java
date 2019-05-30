@@ -3,12 +3,16 @@ package com.arghyam.backend.controller;
 
 import com.arghyam.backend.dto.LoginAndRegisterResponseMap;
 import com.arghyam.backend.dto.RequestDTO;
+import com.arghyam.backend.dto.ResponseDTO;
 import com.arghyam.backend.service.UserService;
+import com.arghyam.backend.utils.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.ws.rs.QueryParam;
 import java.io.IOException;
 
 @RequestMapping(path = "/api/v1")
@@ -42,6 +46,13 @@ public class UserController {
     public LoginAndRegisterResponseMap getUser(@Validated @RequestBody RequestDTO requestDTO,
                                                   BindingResult bindingResult) throws IOException {
         return userService.getUserProfile(requestDTO, bindingResult);
+    }
+
+
+    @PostMapping(value = "/createRegistryUser", consumes = MediaType.ALL_VALUE, produces = MediaType.ALL_VALUE)
+    public LoginAndRegisterResponseMap completeSignUp(@Validated @RequestBody RequestDTO requestDTO,
+                                 BindingResult bindingResult) throws IOException {
+        return userService.createRegistryUser(requestDTO, bindingResult);
     }
 
 }

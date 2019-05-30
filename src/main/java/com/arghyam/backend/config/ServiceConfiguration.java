@@ -59,4 +59,16 @@ public class ServiceConfiguration {
                 .build();
         return retrofit.create(RegistryDAO.class);
     }
+
+
+//    @Bean
+//    public SessionFactory getSessionFactory() {
+//    return new SessionFactory(getConfiguration(),
+//                      "com.baeldung.spring.data.neo4j.domain");
+//    }
+//
+//    @Bean
+//    public Neo4jTransactionManager transactionManager() {
+//        return new Neo4jTransactionManager(getSessionFactory());
+//    }
 }

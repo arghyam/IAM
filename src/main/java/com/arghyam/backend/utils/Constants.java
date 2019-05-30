@@ -44,9 +44,19 @@ public class Constants {
 
     public static final String REGISRY_ADD_USER = "add";
 
+    public static final String REGISRY_SEARCH_USER = "search";
+
+    public static final String REG_ENTRY_CREATED = "registry_entry_created";
+
+    public static final String REGISTRY_UPDATE_USER = "update";
+
     public static final String PASSWORD = "password";
 
     public static final String REFRESH_TOKEN = "refresh_token";
+
+    public static final String USER_CREATEDIN_REGISTRY = "You successfully created user in registry";
+
+    public static final String ERROR_WHILE_CREATING_USER = "Failed to create user in registry";
 
 
 

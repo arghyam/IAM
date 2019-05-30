@@ -4,25 +4,28 @@ import com.arghyam.backend.config.AppContext;
 import com.arghyam.backend.dao.KeycloakDAO;
 import com.arghyam.backend.dao.KeycloakService;
 import com.arghyam.backend.dao.RegistryDAO;
-import com.arghyam.backend.dto.LoginAndRegisterResponseMap;
-import com.arghyam.backend.dto.LoginDTO;
-import com.arghyam.backend.dto.RequestDTO;
+import com.arghyam.backend.dto.*;
+import com.arghyam.backend.entity.RegistryUser;
 import com.arghyam.backend.entity.Springuser;
 import com.arghyam.backend.exceptions.UnprocessableEntitiesException;
 import com.arghyam.backend.exceptions.ValidationError;
 import com.arghyam.backend.service.UserService;
+import com.arghyam.backend.utils.Constants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import retrofit2.Call;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -61,6 +64,8 @@ public class UserServiceImpl implements UserService {
     LoginServiceImpl loginServiceImpl;
 
     ObjectMapper mapper = new ObjectMapper();
+
+    private static Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
 
     @Override
@@ -203,6 +208,45 @@ public class UserServiceImpl implements UserService {
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         loginAndRegisterResponseMap.setResponse(springUser);
         return loginAndRegisterResponseMap;
+    }
+
+
+
+    @Override
+    public LoginAndRegisterResponseMap createRegistryUser(RequestDTO requestDTO, BindingResult bindingResult) throws IOException{
+        String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        Springuser springuser = new Springuser();
+        if(requestDTO.getRequest().keySet().contains("Person")) {
+            springuser = mapper.convertValue(requestDTO.getRequest().get("Person"), Springuser.class);
+        }
+        UserRepresentation userRepresentation = keycloakService.getUserByUsername(adminAccessToken, springuser.getPhonenumber(), appContext.getRealm());
+        RegistryUser Person = new RegistryUser(springuser.getName(), userRepresentation.getLastName(), userRepresentation.getEmail(),
+                "", userRepresentation.getId(), new java.util.Date().toString(), new java.util.Date().toString(), springuser.getPhonenumber());
+
+        Request request = new Request();
+        request.setPerson(Person);
+        String stringRequest = objectMapper.writeValueAsString(request);
+        stringRequest.replaceAll("person", "Person");
+        RegistryRequest registryRequest = new RegistryRequest(null, request, com.arghyam.backend.dto.RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+
+        try {
+            Call<RegistryResponse> createRegistryEntryCall = registryDao.createUser(adminAccessToken, registryRequest);
+            retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
+            if (!registryUserCreationResponse.isSuccessful()) {
+                logger.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+            }
+
+            userRepresentation.getAttributes().put(Constants.REG_ENTRY_CREATED, asList(Boolean.TRUE.toString()));
+            retrofit2.Response updateKeycloakUser = keycloakDAO.updateUser("Bearer" + adminAccessToken, userRepresentation.getId(), userRepresentation, appContext.getRealm()).execute();
+            if (!updateKeycloakUser.isSuccessful()) {
+                logger.error("Error Updating user {} ", updateKeycloakUser.errorBody().string());
+            }
+            logger.info("Registry entry created and user is successfully logged in");
+
+        } catch (IOException e) {
+            logger.error("Error creating registry entry : {} ", e.getMessage());
+        }
+        return null;
     }
 
 }
