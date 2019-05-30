@@ -14,4 +14,3 @@ RUN gradle clean build -x test
 
 
 ENTRYPOINT ["java","-jar", "./build/libs/Arghyam-backend-0.0.1-SNAPSHOT.jar", "-Dspring.profiles.active=dev", "--spring.config.location=application.properties"]
-~
