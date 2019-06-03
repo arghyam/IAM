@@ -17,13 +17,4 @@ public interface RegistryDAO {
     Call<RegistryResponse> createUser(@Header("x-authenticated-user-token") String adminAccessToken,
                                       @Body RegistryRequest registryRequest) throws IOException;
 
-
-//    @POST(Constants.REGISRY_SEARCH_USER)
-//    Call<RegistryResponse> searchUser(@Header("x-authenticated-user-token") String accessToken,
-//                                      @Body SlimRegistryUserDto slimRegistryUserDto ) throws IOException;
-//
-//    @POST(Constants.REGISTRY_UPDATE_USER)
-//    Call<RegistryResponse> updateUser(@Header("x-authenticated-user-token") String accessToken,
-//                                      @Body RegistryRequestWithOsId registryRequestWithOsId) throws IOException;
-
 }
