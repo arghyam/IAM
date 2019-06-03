@@ -48,6 +48,8 @@ public class Constants {
 
     public static final String REFRESH_TOKEN = "refresh_token";
 
+    public static final String ARGHYAM_S3_FOLDER_LOCATION = "arghyam/";
 
 
+    public static final String IMAGE_UPLOAD_SUCCESS_MESSAGE="Uploaded successfully";
 }
