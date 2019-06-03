@@ -73,4 +73,10 @@ public class UserController {
          return userService.updateProfilePicture(file);
     }
 
+
+    @PostMapping(value = "/createSpring")
+    public LoginAndRegisterResponseMap createSpring(@Validated @RequestBody RequestDTO requestDTO,
+                                                           BindingResult bindingResult) throws IOException {
+        return userService.createSpring(requestDTO, bindingResult);
+    }
 }

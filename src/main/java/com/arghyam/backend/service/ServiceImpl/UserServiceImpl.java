@@ -13,6 +13,7 @@ import com.arghyam.backend.dto.LoginAndRegisterResponseMap;
 import com.arghyam.backend.dto.LoginDTO;
 import com.arghyam.backend.dto.RequestDTO;
 import com.arghyam.backend.dto.ResponseDTO;
+import com.arghyam.backend.entity.Springs;
 import com.arghyam.backend.entity.Springuser;
 import com.arghyam.backend.exceptions.UnprocessableEntitiesException;
 import com.arghyam.backend.exceptions.ValidationError;
@@ -21,7 +22,6 @@ import com.arghyam.backend.utils.Constants;
 import com.arghyam.backend.utils.AmazonUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import okhttp3.internal.http.HttpMethod;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -324,7 +324,7 @@ public class UserServiceImpl implements UserService {
         discharge.setDischargeTime(dischargeData.getDischargeTime());
         discharge.setSpringCode(getAlphaNumericString(6));
         discharge.setSpringName(dischargeData.getSpringName());
-        discharge.setCreatedDate(new java.util.Date().toString());
+        discharge.setCreatedDate(new Date().toString());
         discharge.setUserId(UUID.randomUUID().toString());
 
         Map<String, Object> dischargrMap = new HashMap<>();
@@ -352,41 +352,72 @@ public class UserServiceImpl implements UserService {
         return loginAndRegisterResponseMap;
     }
 
+    @Override
+    public LoginAndRegisterResponseMap createSpring(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+        String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        Springs springs = mapper.convertValue(requestDTO.getRequest().get("springs"), Springs.class);
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+
+        Springs springDto = new Springs();
+        BeanUtils.copyProperties(springs, springDto);
+        springDto.setSpringCode(getAlphaNumericString(6));
+        springDto.setElevation("");
+        springDto.setCrtdDttm(new Date().toString());
+        springDto.setUpdtDttm("");
+        springDto.setOrganization(Arrays.asList("organisation1"));
+        springDto.setTenantId("");
+        springDto.setUploadedBy("");
+        springDto.setUsage(Arrays.asList("usage-short"));
+        springDto.setVillage(Arrays.asList("village1"));
+
+        Map<String, Object> springMap = new HashMap<>();
+        springMap.put("springs", springDto);
+        String stringRequest = objectMapper.writeValueAsString(springMap);
+        RegistryRequest registryRequest = new RegistryRequest(null, springMap, com.arghyam.backend.dto.RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+
+        try {
+            Call<RegistryResponse> createRegistryEntryCall = registryDao.createUser(adminAccessToken, registryRequest);
+            retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
+            if (!registryUserCreationResponse.isSuccessful()) {
+                logger.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+            }
+
+        } catch (IOException e) {
+            logger.error("Error creating registry entry : {} ", e.getMessage());
+        }
+
+        BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+        Map<String, Object> response = new HashMap<>();
+        response.put("responseCode", 200);
+        response.put("responseStatus", "created discharge data successfully");
+        response.put("responseObject", springDto);
+        loginAndRegisterResponseMap.setResponse(response);
+        return loginAndRegisterResponseMap;
+    }
 
 
-      public static String getAlphaNumericString(int n)
+    public static String getAlphaNumericString(int n)
         {
-
-            // length is bounded by 256 Character
             byte[] array = new byte[256];
             new Random().nextBytes(array);
 
             String randomString
                     = new String(array, Charset.forName("UTF-8"));
-
-            // Create a StringBuffer to store the result
             StringBuffer r = new StringBuffer();
 
-            // remove all spacial char
             String  AlphaNumericString
                     = randomString
                     .replaceAll("[^A-Za-z0-9]", "");
 
-            // Append first 20 alphanumeric characters
-            // from the generated random String into the result
             for (int k = 0; k < AlphaNumericString.length(); k++) {
-
                 if (Character.isLetter(AlphaNumericString.charAt(k))
                         && (n > 0)
                         || Character.isDigit(AlphaNumericString.charAt(k))
                         && (n > 0)) {
-
                     r.append(AlphaNumericString.charAt(k));
                     n--;
                 }
             }
-
-            // return the resultant string
             return r.toString();
         }
 
