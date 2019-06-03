@@ -48,11 +48,29 @@ public class UserController {
     }
 
 
+    @PostMapping(value = "/createRegistryUser")
+    public LoginAndRegisterResponseMap completeSignUp(@Validated @RequestBody RequestDTO requestDTO,
+                                 BindingResult bindingResult) throws IOException {
+        return userService.createRegistryUser(requestDTO, bindingResult);
+    }
+
+
+    @GetMapping(value = "/getRegisteredUsers")
+    public LoginAndRegisterResponseMap getRegistereUsers() throws IOException {
+        return userService.getRegistereUsers();
+    }
+
+
+    @PostMapping(value = "/createDischargeData")
+    public LoginAndRegisterResponseMap createDischargeData(@Validated @RequestBody RequestDTO requestDTO,
+                                                      BindingResult bindingResult) throws IOException {
+        return userService.createDischargeData(requestDTO, bindingResult);
+    }
+
     @RequestMapping(value = "/user/profilePicture", method = RequestMethod.PUT, headers = "Content-Type= multipart/form-data")
     public ResponseDTO uploadFile(
                            @RequestParam("file") MultipartFile file) {
          return userService.updateProfilePicture(file);
     }
-
 
 }

@@ -16,12 +16,6 @@ import java.util.List;
 public interface KeycloakDAO {
 
     @GET(Constants.SEARCH_USERS)
-    Call<List<UserRepresentation>> searchUsersByUserName(@Path("realm") String realm,
-                                                         @Header("Authorization") String token,
-                                                         @Query("username") String username) throws IOException;
-
-
-    @GET(Constants.SEARCH_USERS)
     Call<List<UserRepresentation>> searchUsers(@Path("realm") String realm,
                                                @Header("Authorization") String token,
                                                @Query("username") String username ) throws IOException;
@@ -89,5 +83,11 @@ public interface KeycloakDAO {
                                  @Field("grant_type") String grantType,
                                  @Field("client_secret") String clientSecret,
                                  @Field("scope") String scope);
+
+
+
+    @GET(Constants.SEARCH_USERS)
+    Call<List<UserRepresentation>> getRegisteredUsers(@Path("realm") String realm,
+                                                @Header("Authorization") String token) throws IOException;
 
 }

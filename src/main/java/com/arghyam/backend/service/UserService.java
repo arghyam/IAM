@@ -23,7 +23,13 @@ public interface UserService {
 
     public LoginAndRegisterResponseMap getUserProfile(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
-    LoginAndRegisterResponseMap reSendOtp(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
+    public LoginAndRegisterResponseMap reSendOtp(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
-    ResponseDTO updateProfilePicture(MultipartFile file);
+    public LoginAndRegisterResponseMap createRegistryUser(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
+
+    public LoginAndRegisterResponseMap getRegistereUsers() throws IOException;
+
+    public LoginAndRegisterResponseMap createDischargeData(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
+
+    public ResponseDTO updateProfilePicture(MultipartFile file);
 }

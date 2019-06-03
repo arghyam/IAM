@@ -1,5 +1,7 @@
 package com.arghyam.backend.dao;
 
+import com.arghyam.backend.dto.RegistryRequest;
+import com.arghyam.backend.dto.RegistryResponse;
 import com.arghyam.backend.dto.RequestDTO;
 import com.arghyam.backend.utils.Constants;
 import retrofit2.Call;
@@ -12,6 +14,7 @@ import java.io.IOException;
 public interface RegistryDAO {
 
     @POST(Constants.REGISRY_ADD_USER)
-    Call<Void> createUser(@Header("x-authenticated-user-token") String token,
-                          @Body RequestDTO registryUserDto ) throws IOException;
+    Call<RegistryResponse> createUser(@Header("x-authenticated-user-token") String adminAccessToken,
+                                      @Body RegistryRequest registryRequest) throws IOException;
+
 }

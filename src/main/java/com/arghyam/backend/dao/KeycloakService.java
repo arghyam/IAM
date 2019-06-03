@@ -8,6 +8,7 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.validation.BindingResult;
 
 import java.io.IOException;
+import java.util.List;
 
 public interface KeycloakService {
 
@@ -26,4 +27,6 @@ public interface KeycloakService {
     public void updateUser(String token, String id, UserRepresentation user, String realm) throws IOException;
 
     public LoginResponseDTO login(UserRepresentation loginRequest, BindingResult bindingResult) throws IOException;
+
+    public List<UserRepresentation> getRegisteredUsers(String token,String realm) throws IOException;;
 }

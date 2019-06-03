@@ -28,7 +28,7 @@ dependencies {
     implementation('org.springframework.boot:spring-boot-starter-web')
     testImplementation('org.springframework.boot:spring-boot-starter-test')
     compile('org.springframework.boot:spring-boot-starter-validation')
-    compile("org.springframework.boot:spring-boot-starter-data-neo4j")
+//    compile("org.springframework.boot:spring-boot-starter-data-neo4j")
     compile group: 'org.keycloak', name: 'keycloak-spring-boot-starter', version: '4.7.0.Final'
 
     // https://mvnrepository.com/artifact/org.keycloak/keycloak-admin-client
