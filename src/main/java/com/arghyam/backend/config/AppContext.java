@@ -2,8 +2,13 @@ package com.arghyam.backend.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+
 
 @Configuration
+@Component
+@Service
 public class AppContext {
 
     @Value("${keycloak.auth-server-url}")
@@ -50,6 +55,39 @@ public class AppContext {
 
     @Value("${spring.data.neo4j.password}")
     private String neo4jPassword;
+
+    @Value("${bucketName}")
+    private String bucketName;
+    @Value("${amazon-accesskey-id}")
+    private String accessKey;
+    @Value("${amazon-secret-access-key}")
+    private String secretKey;
+
+
+
+    public String getBucketName() {
+        return bucketName;
+    }
+
+    public void setBucketName(String bucketName) {
+        this.bucketName = bucketName;
+    }
+
+    public String getAccessKey() {
+        return accessKey;
+    }
+
+    public void setAccessKey(String accessKey) {
+        this.accessKey = accessKey;
+    }
+
+    public String getSecretKey() {
+        return secretKey;
+    }
+
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
+    }
 
     public String getNeo4jBaseUri() {
         return neo4jBaseUri;

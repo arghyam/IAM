@@ -3,12 +3,15 @@ package com.arghyam.backend.controller;
 
 import com.arghyam.backend.dto.LoginAndRegisterResponseMap;
 import com.arghyam.backend.dto.RequestDTO;
+import com.arghyam.backend.dto.ResponseDTO;
 import com.arghyam.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 @RequestMapping(path = "/api/v1")
@@ -43,5 +46,13 @@ public class UserController {
                                                   BindingResult bindingResult) throws IOException {
         return userService.getUserProfile(requestDTO, bindingResult);
     }
+
+
+    @RequestMapping(value = "/user/profilePicture", method = RequestMethod.PUT, headers = "Content-Type= multipart/form-data")
+    public ResponseDTO uploadFile(
+                           @RequestParam("file") MultipartFile file) {
+         return userService.updateProfilePicture(file);
+    }
+
 
 }
