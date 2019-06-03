@@ -1,5 +1,13 @@
 package com.arghyam.backend.config;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.arghyam.backend.dao.KeycloakDAO;
 import com.arghyam.backend.dao.RegistryDAO;
 import com.arghyam.backend.utils.Constants;
@@ -50,7 +58,6 @@ public class ServiceConfiguration {
         return keycloak;
     }
 
-
     @Bean
     public RegistryDAO getRegistryDao() {
         Retrofit retrofit = new Retrofit.Builder()
@@ -60,15 +67,14 @@ public class ServiceConfiguration {
         return retrofit.create(RegistryDAO.class);
     }
 
+    @Bean
+    public AmazonS3 buildAmazonS3(){
+        AWSCredentials awsCredentials = new BasicAWSCredentials(appContext.getAccessKey(), appContext.getSecretKey());
 
-//    @Bean
-//    public SessionFactory getSessionFactory() {
-//    return new SessionFactory(getConfiguration(),
-//                      "com.baeldung.spring.data.neo4j.domain");
-//    }
-//
-//    @Bean
-//    public Neo4jTransactionManager transactionManager() {
-//        return new Neo4jTransactionManager(getSessionFactory());
-//    }
+        AmazonS3 amazonS3 = AmazonS3ClientBuilder.standard()
+                .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
+                .withRegion(Regions.AP_SOUTH_1)
+                .build();
+        return amazonS3;
+    }
 }

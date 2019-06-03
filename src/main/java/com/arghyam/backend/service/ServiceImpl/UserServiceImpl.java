@@ -1,5 +1,7 @@
 package com.arghyam.backend.service.ServiceImpl;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.arghyam.backend.config.AppContext;
 import com.arghyam.backend.dao.KeycloakDAO;
 import com.arghyam.backend.dao.KeycloakService;
@@ -7,12 +9,19 @@ import com.arghyam.backend.dao.RegistryDAO;
 import com.arghyam.backend.dto.*;
 import com.arghyam.backend.entity.DischargeData;
 import com.arghyam.backend.entity.RegistryUser;
+import com.arghyam.backend.dto.LoginAndRegisterResponseMap;
+import com.arghyam.backend.dto.LoginDTO;
+import com.arghyam.backend.dto.RequestDTO;
+import com.arghyam.backend.dto.ResponseDTO;
 import com.arghyam.backend.entity.Springuser;
 import com.arghyam.backend.exceptions.UnprocessableEntitiesException;
 import com.arghyam.backend.exceptions.ValidationError;
 import com.arghyam.backend.service.UserService;
 import com.arghyam.backend.utils.Constants;
+import com.arghyam.backend.utils.AmazonUtils;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.internal.http.HttpMethod;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -27,17 +36,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import retrofit2.Call;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
 
+import static com.arghyam.backend.utils.Constants.ARGHYAM_S3_FOLDER_LOCATION;
+import static com.arghyam.backend.utils.Constants.IMAGE_UPLOAD_SUCCESS_MESSAGE;
 import static java.util.Arrays.asList;
 
 @Component
 @Service
 public class UserServiceImpl implements UserService {
 
+    @Autowired
+    AmazonS3 amazonS3;
 
     @Autowired
     AppContext appContext;
@@ -83,6 +98,7 @@ public class UserServiceImpl implements UserService {
             System.out.println("exception" + e);
         }
     }
+
 
 
     public CredentialRepresentation setCredentialPassword(String password) {
@@ -151,26 +167,60 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public LoginAndRegisterResponseMap reSendOtp(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
-        UserRepresentation userRepresentation=null;
+        UserRepresentation userRepresentation = null;
         validatePojo(bindingResult);
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
-        if (null!=requestDTO.getRequest()&& requestDTO.getRequest().keySet().contains("person")){
-            LoginDTO loginDTO=mapper.convertValue(requestDTO.getRequest().get("person"), LoginDTO.class);
-            userRepresentation= keycloakService.getUserByUsername(adminToken, loginDTO.getUsername(), appContext.getRealm());
-            loginServiceImpl.updateOtpForUser(loginDTO,adminToken,userRepresentation, "resendOtp");
+        if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("person")) {
+            LoginDTO loginDTO = mapper.convertValue(requestDTO.getRequest().get("person"), LoginDTO.class);
+            userRepresentation = keycloakService.getUserByUsername(adminToken, loginDTO.getUsername(), appContext.getRealm());
+            loginServiceImpl.updateOtpForUser(loginDTO, adminToken, userRepresentation, "resendOtp");
         }
-        LoginAndRegisterResponseMap responseDTO=new LoginAndRegisterResponseMap();
+        LoginAndRegisterResponseMap responseDTO = new LoginAndRegisterResponseMap();
         responseDTO.setId(requestDTO.getId());
         responseDTO.setEts(requestDTO.getEts());
         responseDTO.setVer(requestDTO.getVer());
         responseDTO.
                 setParams(requestDTO.getParams());
-        HashMap<String,Object> map=new HashMap<>();
-        map.put("responseCode",200);
-        map.put("responseStatus","Otp sent successfully");
-        map.put("response",null);
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("responseCode", 200);
+        map.put("responseStatus", "Otp sent successfully");
+        map.put("response", null);
 
         responseDTO.setResponse(map);
+        return responseDTO;
+    }
+
+    /**
+     * Upload's images to amazon S3
+     * @param file
+     *
+     * @return
+     */
+    @Override
+    public ResponseDTO updateProfilePicture(MultipartFile file) {
+        try {
+            File imageFile = AmazonUtils.convertMultiPartToFile(file);
+            String fileName = AmazonUtils.generateFileName(file);
+
+            PutObjectRequest request = new PutObjectRequest(appContext.getBucketName(), ARGHYAM_S3_FOLDER_LOCATION+fileName, imageFile);
+            amazonS3.putObject(request);
+            imageFile.delete();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return sendResponse();
+    }
+
+    /**
+     * Image upload api response
+     * @return
+     */
+    private ResponseDTO sendResponse() {
+        ResponseDTO responseDTO=new ResponseDTO();
+        responseDTO.setResponseCode(200);
+        responseDTO.setMessage(IMAGE_UPLOAD_SUCCESS_MESSAGE);
+        responseDTO.setResponse(null);
         return responseDTO;
     }
 
@@ -178,7 +228,7 @@ public class UserServiceImpl implements UserService {
     private UserRepresentation getUserFromKeycloak(RequestDTO requestDTO) throws IOException {
         String userToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         Springuser springuser = new Springuser();
-        if(requestDTO.getRequest().keySet().contains("person")) {
+        if (requestDTO.getRequest().keySet().contains("person")) {
             springuser = mapper.convertValue(requestDTO.getRequest().get("person"), Springuser.class);
         }
         return keycloakService.getUserByUsername(userToken, springuser.getPhonenumber(), appContext.getRealm());
@@ -191,7 +241,7 @@ public class UserServiceImpl implements UserService {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String userToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         Springuser springuser = new Springuser();
-        if(requestDTO.getRequest().keySet().contains("person")) {
+        if (requestDTO.getRequest().keySet().contains("person")) {
             springuser = mapper.convertValue(requestDTO.getRequest().get("person"), Springuser.class);
         }
 

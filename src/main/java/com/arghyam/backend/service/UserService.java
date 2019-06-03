@@ -2,8 +2,10 @@ package com.arghyam.backend.service;
 
 import com.arghyam.backend.dto.LoginAndRegisterResponseMap;
 import com.arghyam.backend.dto.RequestDTO;
+import com.arghyam.backend.dto.ResponseDTO;
 import org.keycloak.admin.client.Keycloak;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
@@ -28,4 +30,6 @@ public interface UserService {
     public LoginAndRegisterResponseMap getRegistereUsers() throws IOException;
 
     public LoginAndRegisterResponseMap createDischargeData(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
+
+    public ResponseDTO updateProfilePicture(MultipartFile file);
 }

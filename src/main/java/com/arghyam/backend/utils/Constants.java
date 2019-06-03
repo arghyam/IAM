@@ -58,6 +58,8 @@ public class Constants {
 
     public static final String ERROR_WHILE_CREATING_USER = "Failed to create user in registry";
 
+    public static final String ARGHYAM_S3_FOLDER_LOCATION = "arghyam/";
 
 
+    public static final String IMAGE_UPLOAD_SUCCESS_MESSAGE="Uploaded successfully";
 }

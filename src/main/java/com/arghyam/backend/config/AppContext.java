@@ -2,8 +2,13 @@ package com.arghyam.backend.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+
 
 @Configuration
+@Component
+@Service
 public class AppContext {
 
     @Value("${keycloak.auth-server-url}")
@@ -42,38 +47,72 @@ public class AppContext {
     @Value("${registry-base-url}")
     private String registryBaseUrl;
 
-//    @Value("${spring.data.neo4j.uri}")
-//    private String neo4jBaseUri;
-//
-//    @Value("${spring.data.neo4j.username}")
-//    private String neo4jUsername;
-//
-//    @Value("${spring.data.neo4j.password}")
-//    private String neo4jPassword;
-//
-//    public String getNeo4jBaseUri() {
-//        return neo4jBaseUri;
-//    }
-//
-//    public void setNeo4jBaseUri(String neo4jBaseUri) {
-//        this.neo4jBaseUri = neo4jBaseUri;
-//    }
-//
-//    public String getNeo4jUsername() {
-//        return neo4jUsername;
-//    }
-//
-//    public void setNeo4jUsername(String neo4jUsername) {
-//        this.neo4jUsername = neo4jUsername;
-//    }
-//
-//    public String getNeo4jPassword() {
-//        return neo4jPassword;
-//    }
-//
-//    public void setNeo4jPassword(String neo4jPassword) {
-//        this.neo4jPassword = neo4jPassword;
-//    }
+    @Value("${spring.data.neo4j.uri}")
+    private String neo4jBaseUri;
+
+    @Value("${spring.data.neo4j.username}")
+    private String neo4jUsername;
+
+    @Value("${spring.data.neo4j.password}")
+    private String neo4jPassword;
+
+    @Value("${bucketName}")
+    private String bucketName;
+    @Value("${amazon-accesskey-id}")
+    private String accessKey;
+    @Value("${amazon-secret-access-key}")
+    private String secretKey;
+
+
+
+    public String getBucketName() {
+        return bucketName;
+    }
+
+    public void setBucketName(String bucketName) {
+        this.bucketName = bucketName;
+    }
+
+    public String getAccessKey() {
+        return accessKey;
+    }
+
+    public void setAccessKey(String accessKey) {
+        this.accessKey = accessKey;
+    }
+
+    public String getSecretKey() {
+        return secretKey;
+    }
+
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
+    }
+
+    public String getNeo4jBaseUri() {
+        return neo4jBaseUri;
+    }
+
+    public void setNeo4jBaseUri(String neo4jBaseUri) {
+        this.neo4jBaseUri = neo4jBaseUri;
+    }
+
+    public String getNeo4jUsername() {
+        return neo4jUsername;
+    }
+
+    public void setNeo4jUsername(String neo4jUsername) {
+        this.neo4jUsername = neo4jUsername;
+    }
+
+    public String getNeo4jPassword() {
+        return neo4jPassword;
+    }
+
+    public void setNeo4jPassword(String neo4jPassword) {
+        this.neo4jPassword = neo4jPassword;
+    }
+
 
     public String getArghyamKeyCloakAppClient() {
         return arghyamKeyCloakAppClient;
