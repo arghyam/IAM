@@ -17,11 +17,5 @@ public class SpringUserApplication {
     public static void main(String[] args) {
         SpringApplication.run(SpringUserApplication.class, args);
     }
-
-//    @Bean
-//    public void setUpGraphDatabase() {
-//        Driver graphDBDriver = GraphDatabase.driver(appContext.getNeo4jBaseUri(), AuthTokens.basic(appContext.getNeo4jUsername(), appContext.getNeo4jPassword()));
-//
-//    }
 }
 
