@@ -2,20 +2,19 @@ package com.arghyam.backend.service.ServiceImpl;
 
 import com.arghyam.backend.config.AppContext;
 import com.arghyam.backend.dao.KeycloakDAO;
+import com.arghyam.backend.dao.KeycloakService;
 import com.arghyam.backend.dao.MessageService;
 import com.arghyam.backend.dto.*;
 import com.arghyam.backend.exceptions.BadRequestException;
 import com.arghyam.backend.exceptions.UnauthorizedException;
-import com.arghyam.backend.dao.KeycloakService;
 import com.arghyam.backend.service.LoginService;
 import com.arghyam.backend.service.UserService;
 import com.arghyam.backend.utils.Constants;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
+import org.joda.time.Instant;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
@@ -23,10 +22,8 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.ParseException;
+import java.util.*;
 
 @Component
 @Service
@@ -59,11 +56,16 @@ public class LoginServiceImpl implements LoginService {
         if(requestDTO.getRequest().keySet().contains("person")) {
             //map person object (part of request map) to LoginDTO object
             LoginDTO loginDTO = mapper.convertValue(requestDTO.getRequest().get("person"), LoginDTO.class);
-            if (loginDTO.getUsername() == null || loginDTO.getUsername().equals(null)) {
+            if (loginDTO.getUsername() == null || loginDTO.getUsername().equals("") ) {
                 throw new BadRequestException("Username is missing");
-            } else {
+            }
+            else if(loginDTO.getUsername().length()<10 || loginDTO.getUsername().length()>10){
+                throw new BadRequestException("Username is invalid");
+            }
+            else {
                 loginDTO.setPassword("password");
                 AccessTokenResponseDTO accessTokenResponseDTO = userLogin(loginDTO);
+                //admin user token
                 String userToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
                 if (accessTokenResponseDTO !=null) {
                     response.setMessage("Otp is sent to the registered mobile number");
@@ -93,8 +95,11 @@ public class LoginServiceImpl implements LoginService {
             }
             List<String> otpList = new ArrayList<>();
             otpList.add(otp);
+            List<String> createdAtList=new ArrayList<>();
+            createdAtList.add(String.valueOf(Instant.now().getMillis()));
             Map<String, List<String>> attributes = new HashMap<>();
             attributes.put("otp", otpList);
+            attributes.put("createdAt",createdAtList);
             messageService.sendMessage("<#> OTP for login is :" + otp + "\n" +" P9He0xQtBTT", loginDTO.getUsername());
             userRepresentation.setAttributes(attributes);
             keycloakService.updateUser(userToken, userRepresentation.getId(), userRepresentation, appContext.getRealm());
@@ -130,7 +135,8 @@ public class LoginServiceImpl implements LoginService {
 
         if(loginWithPhonenumber.getPhoneNumber().equals("+919999999999")) {
             otp.add("0123");
-        } else {
+        }
+        else {
             otp.add(userService.otpgenerator());
         }
         userRepresentation.getAttributes().put("otp", otp);
@@ -189,27 +195,58 @@ public class LoginServiceImpl implements LoginService {
             LoginResponseDTO loginResponseDTO=keycloakService.login(userRepresentation,bindingResult);
             UserResponseDTO userResponseDTO = new UserResponseDTO();
             AccessTokenResponseDTO accessTokenResponseDTO = new AccessTokenResponseDTO();
-            if (otp.equals(verifyOtpDTO.getOtp())){
-                accessTokenResponseDTO.setAccessToken(loginResponseDTO.getAccessToken());
-                accessTokenResponseDTO.setRefreshToken(loginResponseDTO.getRefreshToken());
-                userResponseDTO.setAccessTokenResponseDTO(accessTokenResponseDTO);
-                updateLoginResponseBody(userResponseDTO, loginAndRegisterResponseMap, requestDTO, "200", "Otp verified", "verifyOtp");
-                return loginAndRegisterResponseMap;
-            }else {
-                accessTokenResponseDTO.setAccessToken("");
-                accessTokenResponseDTO.setRefreshToken("");
-                userResponseDTO.setAccessTokenResponseDTO(accessTokenResponseDTO);
-                updateLoginResponseBody(userResponseDTO, loginAndRegisterResponseMap, requestDTO, "401", "Otp not verified", "verifyOtp");
-                return loginAndRegisterResponseMap;
+            try {
+                String createdAtList=userRepresentation.getAttributes().get("createdAt").get(0);
+                if(verifyOtpDTO.getOtp().length()!=4){
+                    throw new BadRequestException("Invalid Otp");
+                }
+                if (otp.equals(verifyOtpDTO.getOtp()) && compareTime(createdAtList)){
+
+                    accessTokenResponseDTO.setAccessToken(loginResponseDTO.getAccessToken());
+                    accessTokenResponseDTO.setRefreshToken(loginResponseDTO.getRefreshToken());
+                    userResponseDTO.setAccessTokenResponseDTO(accessTokenResponseDTO);
+                    updateLoginResponseBody(userResponseDTO, loginAndRegisterResponseMap, requestDTO, "200", "Otp verified", "verifyOtp");
+                    return loginAndRegisterResponseMap;
+                }else {
+                    accessTokenResponseDTO.setAccessToken("");
+                    accessTokenResponseDTO.setRefreshToken("");
+                    userResponseDTO.setAccessTokenResponseDTO(accessTokenResponseDTO);
+                    if (compareTime(createdAtList)){
+                        updateLoginResponseBody(userResponseDTO, loginAndRegisterResponseMap, requestDTO, "401", "Otp not verified", "verifyOtp");
+                    }else {
+                        updateLoginResponseBody(userResponseDTO, loginAndRegisterResponseMap, requestDTO, "422", "Otp expired", "verifyOtp");
+                    }
+
+                    return loginAndRegisterResponseMap;
+                }
+            } catch (ParseException e) {
+                System.out.println("error due to :"+e);
+                e.printStackTrace();
+                return null;
             }
         }else {
             throw new UnauthorizedException("User doesn't exist");
         }
     }
 
+    private boolean compareTime(String createdAt) throws ParseException {
+        Date createdDate=new Date(Long.parseLong(createdAt));
+        Calendar calendar=Calendar.getInstance();
+        calendar.setTime(createdDate);
+        calendar.add(Calendar.MINUTE,15);
+        // cal.getTime() will give the created date + 15 minutes
+        Date currentDateTime=new Date();
+        if (currentDateTime.after(calendar.getTime())){
+            return false;
+        }else {
+            return true;
+        }
+    }
+
 
     private void updateLoginResponseBody(Object object,
-                              LoginAndRegisterResponseMap loginAndRegisterResponseMap, RequestDTO requestDTO, String responseCode, String responseStatus, String type) {
+                              LoginAndRegisterResponseMap loginAndRegisterResponseMap, RequestDTO requestDTO,
+                                         String responseCode, String responseStatus, String type) {
         Map<String, Object> responseMap = new HashMap<>();
         if (type.equals("verifyOtp")){
             UserResponseDTO response = mapper.convertValue(object, UserResponseDTO.class);

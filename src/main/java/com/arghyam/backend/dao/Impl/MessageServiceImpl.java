@@ -24,7 +24,7 @@ public class MessageServiceImpl implements MessageService {
 
         try {
             HttpResponse<String> response = Unirest.get("http://api.msg91.com/api/sendhttp.php?" +
-                    "route=4&sender=Arghyam&mobiles=" + phoneNumber +
+                    "route=4&sender=Frwatr&mobiles=" + phoneNumber +
                     "&authkey=270241AX2UK15p65ca1ad62"+
                     "&message=" + URLEncoder.encode(message) +
                     "&country=91").asString();

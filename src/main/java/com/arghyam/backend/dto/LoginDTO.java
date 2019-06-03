@@ -18,6 +18,7 @@ public class LoginDTO {
     @JsonProperty("client_id")
     private String clientId;
 
+    @Size(min = 9, max = 10)
     @JsonProperty("username")
     private String username;
 

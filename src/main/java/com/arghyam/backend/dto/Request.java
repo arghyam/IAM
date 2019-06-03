@@ -1,16 +1,16 @@
 package com.arghyam.backend.dto;
 
-import com.arghyam.backend.entity.RegistryUser;
+import java.util.Map;
 
 public class Request {
 
-    private RegistryUser Person;
+    private Map<String, Object> requestObject;
 
-    public RegistryUser getPerson() {
-        return Person;
+    public Map<String, Object> getRequestObject() {
+        return requestObject;
     }
 
-    public void setPerson(RegistryUser person) {
-        Person = person;
+    public void setRequestObject(Map<String, Object> requestObject) {
+        this.requestObject = requestObject;
     }
 }

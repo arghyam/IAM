@@ -3,26 +3,23 @@ package com.arghyam.backend.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import java.util.Map;
-
-public class RegistryRequest {
-
+public class RegistryDischargeData {
     private String id;
     private String ver;
     private Long ets;
     private RequestParams params;
-    private Map<String, Object> request;
+    private RequestDischarge  request;
     @JsonIgnore
     private String requestMapString;
     @JsonIgnore
     private JsonNode requestMapNode;
 
-    public RegistryRequest() {
+    public RegistryDischargeData() {
         this.ver = "1.0";
         this.ets = System.currentTimeMillis();
     }
 
-    public RegistryRequest(RequestParams params, Map<String, Object> request, String id, String requestMapString) {
+    public RegistryDischargeData(RequestParams params, RequestDischarge request, String id, String requestMapString) {
         this.ver = "1.0";
         this.ets = System.currentTimeMillis();
         this.params = params;
@@ -64,11 +61,11 @@ public class RegistryRequest {
     }
 
 
-    public Map<String, Object> getRequest() {
+    public RequestDischarge getRequest() {
         return request;
     }
 
-    public void setRequest(Map<String, Object> request) {
+    public void setRequest(RequestDischarge request) {
         this.request = request;
     }
 
