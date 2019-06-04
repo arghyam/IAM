@@ -13,6 +13,8 @@ import com.arghyam.backend.utils.Constants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.joda.time.Instant;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -44,6 +46,7 @@ public class LoginServiceImpl implements LoginService {
     @Autowired
     private MessageService messageService;
 
+    private static Logger log = LoggerFactory.getLogger(LoginServiceImpl.class);
 
 
     ObjectMapper mapper = new ObjectMapper();

@@ -9,18 +9,13 @@ import com.arghyam.backend.dao.RegistryDAO;
 import com.arghyam.backend.dto.*;
 import com.arghyam.backend.entity.DischargeData;
 import com.arghyam.backend.entity.RegistryUser;
-import com.arghyam.backend.dto.LoginAndRegisterResponseMap;
-import com.arghyam.backend.dto.LoginDTO;
-import com.arghyam.backend.dto.RequestDTO;
-import com.arghyam.backend.dto.ResponseDTO;
 import com.arghyam.backend.entity.Springs;
 import com.arghyam.backend.entity.Springuser;
 import com.arghyam.backend.exceptions.UnprocessableEntitiesException;
 import com.arghyam.backend.exceptions.ValidationError;
 import com.arghyam.backend.service.UserService;
-import com.arghyam.backend.utils.Constants;
 import com.arghyam.backend.utils.AmazonUtils;
-
+import com.arghyam.backend.utils.Constants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.admin.client.Keycloak;
@@ -35,8 +30,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import retrofit2.Call;
 import org.springframework.web.multipart.MultipartFile;
+import retrofit2.Call;
 
 import java.io.File;
 import java.io.IOException;
@@ -79,7 +74,7 @@ public class UserServiceImpl implements UserService {
 
     ObjectMapper mapper = new ObjectMapper();
 
-    private static Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
+    private static Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
 
     @Override
@@ -282,18 +277,18 @@ public class UserServiceImpl implements UserService {
             Call<RegistryResponse> createRegistryEntryCall = registryDao.createUser(adminAccessToken, registryRequest);
             retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
             if (!registryUserCreationResponse.isSuccessful()) {
-                logger.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+                log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
             }
 
             userRepresentation.getAttributes().put(Constants.REG_ENTRY_CREATED, asList(Boolean.TRUE.toString()));
             retrofit2.Response updateKeycloakUser = keycloakDAO.updateUser("Bearer" + adminAccessToken, userRepresentation.getId(), userRepresentation, appContext.getRealm()).execute();
             if (!updateKeycloakUser.isSuccessful()) {
-                logger.error("Error Updating user {} ", updateKeycloakUser.errorBody().string());
+                log.error("Error Updating user {} ", updateKeycloakUser.errorBody().string());
             }
-            logger.info("Registry entry created and user is successfully logged in");
+            log.info("Registry entry created and user is successfully logged in");
 
         } catch (IOException e) {
-            logger.error("Error creating registry entry : {} ", e.getMessage());
+            log.error("Error creating registry entry : {} ", e.getMessage());
         }
         return null;
     }
@@ -331,16 +326,15 @@ public class UserServiceImpl implements UserService {
         dischargrMap.put("dischargeData", discharge);
         String stringRequest = objectMapper.writeValueAsString(dischargrMap);
         RegistryRequest registryRequest = new RegistryRequest(null, dischargrMap, com.arghyam.backend.dto.RegistryResponse.API_ID.CREATE.getId(), stringRequest);
-
         try {
             Call<RegistryResponse> createRegistryEntryCall = registryDao.createUser(adminAccessToken, registryRequest);
             retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
             if (!registryUserCreationResponse.isSuccessful()) {
-                logger.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+                log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
             }
 
         } catch (IOException e) {
-            logger.error("Error creating registry entry : {} ", e.getMessage());
+            log.error("Error creating registry entry : {} ", e.getMessage());
         }
 
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
@@ -370,20 +364,25 @@ public class UserServiceImpl implements UserService {
         springDto.setUsage(Arrays.asList("usage-short"));
         springDto.setVillage(Arrays.asList("village1"));
 
+        log.info("********create spring flow ***" + springDto);
+
         Map<String, Object> springMap = new HashMap<>();
         springMap.put("springs", springDto);
         String stringRequest = objectMapper.writeValueAsString(springMap);
+        log.info("********create spring flow ***" + stringRequest);
         RegistryRequest registryRequest = new RegistryRequest(null, springMap, com.arghyam.backend.dto.RegistryResponse.API_ID.CREATE.getId(), stringRequest);
 
+        log.info("********create spring flow ***" + objectMapper.writeValueAsString(registryRequest));
         try {
             Call<RegistryResponse> createRegistryEntryCall = registryDao.createUser(adminAccessToken, registryRequest);
             retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
+
             if (!registryUserCreationResponse.isSuccessful()) {
-                logger.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+                log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
             }
 
         } catch (IOException e) {
-            logger.error("Error creating registry entry : {} ", e.getMessage());
+            log.error("Error creating registry entry : {} ", e.getMessage());
         }
 
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
@@ -392,6 +391,7 @@ public class UserServiceImpl implements UserService {
         response.put("responseStatus", "created discharge data successfully");
         response.put("responseObject", springDto);
         loginAndRegisterResponseMap.setResponse(response);
+        log.info("********create spring flow ***"+ objectMapper.writeValueAsString(loginAndRegisterResponseMap));
         return loginAndRegisterResponseMap;
     }
 
