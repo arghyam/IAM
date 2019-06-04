@@ -317,7 +317,7 @@ public class UserServiceImpl implements UserService {
 
         DischargeData discharge = new DischargeData();
         discharge.setDischargeTime(dischargeData.getDischargeTime());
-        discharge.setSpringCode(getAlphaNumericString(6));
+        discharge.setSpringCode(dischargeData.getSpringCode());
         discharge.setSpringName(dischargeData.getSpringName());
         discharge.setCreatedDate(new Date().toString());
         discharge.setUserId(UUID.randomUUID().toString());
