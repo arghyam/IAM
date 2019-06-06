@@ -32,9 +32,11 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.multipart.MultipartFile;
 import retrofit2.Call;
+import retrofit2.http.Url;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.*;
 
@@ -193,29 +195,36 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public ResponseDTO updateProfilePicture(MultipartFile file) {
+        URL url=null;
         try {
             File imageFile = AmazonUtils.convertMultiPartToFile(file);
             String fileName = AmazonUtils.generateFileName(file);
 
             PutObjectRequest request = new PutObjectRequest(appContext.getBucketName(), ARGHYAM_S3_FOLDER_LOCATION+fileName, imageFile);
             amazonS3.putObject(request);
+            url=amazonS3.getUrl(appContext.getBucketName(),fileName);
             imageFile.delete();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return sendResponse();
+        return sendResponse(url);
     }
 
     /**
      * Image upload api response
      * @return
+     * @param url
      */
-    private ResponseDTO sendResponse() {
+    private ResponseDTO sendResponse(URL url) {
         ResponseDTO responseDTO=new ResponseDTO();
+        HashMap<String,Object>map=new HashMap<>();
+        map.put("imageUrl",url);
+        ImageResponseDTO imageResponseDTO=new ImageResponseDTO();
+        imageResponseDTO.setMap(map);
         responseDTO.setResponseCode(200);
         responseDTO.setMessage(IMAGE_UPLOAD_SUCCESS_MESSAGE);
-        responseDTO.setResponse(null);
+        responseDTO.setResponse(map);
         return responseDTO;
     }
 
