@@ -34,4 +34,6 @@ public interface UserService {
     public LoginAndRegisterResponseMap createSpring(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
     public ResponseDTO updateProfilePicture(MultipartFile file);
+
+    LoginAndRegisterResponseMap createAdditionalInfo(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 }

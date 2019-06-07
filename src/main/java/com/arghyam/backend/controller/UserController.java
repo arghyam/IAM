@@ -79,4 +79,11 @@ public class UserController {
                                                            BindingResult bindingResult) throws IOException {
         return userService.createSpring(requestDTO, bindingResult);
     }
+
+
+    @PostMapping(value = "/createAdditionalInfo")
+    public LoginAndRegisterResponseMap createAdditionalInfo(@Validated @RequestBody RequestDTO requestDTO,
+                                                    BindingResult bindingResult) throws IOException {
+        return userService.createAdditionalInfo(requestDTO, bindingResult);
+    }
 }
