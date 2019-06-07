@@ -202,7 +202,11 @@ public class UserServiceImpl implements UserService {
 
             PutObjectRequest request = new PutObjectRequest(appContext.getBucketName(), ARGHYAM_S3_FOLDER_LOCATION+fileName, imageFile);
             amazonS3.putObject(request);
-            url=amazonS3.getUrl(appContext.getBucketName(),fileName);
+            java.util.Date expiration = new java.util.Date();
+            long expTimeMillis = expiration.getTime();
+            expTimeMillis += 1000 * 60 * 60;
+            expiration.setTime(expTimeMillis);
+            url=amazonS3.generatePresignedUrl(appContext.getBucketName(),"arghyam/"+fileName,expiration);
             imageFile.delete();
         } catch (Exception e) {
             e.printStackTrace();
