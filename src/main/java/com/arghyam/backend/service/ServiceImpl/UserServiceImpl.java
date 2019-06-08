@@ -104,6 +104,7 @@ public class UserServiceImpl implements UserService {
         return credential;
     }
 
+
     @Override
     public Keycloak getKeycloak() {
         Keycloak keycloak = KeycloakBuilder.builder()
@@ -139,6 +140,7 @@ public class UserServiceImpl implements UserService {
         int randomPIN = (int) (Math.random() * 9000) + 1000;
         return String.valueOf(randomPIN);
     }
+
 
     @Override
     public LoginAndRegisterResponseMap getUserProfile(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
@@ -205,6 +207,24 @@ public class UserServiceImpl implements UserService {
         }
 
         return sendResponse();
+    }
+
+    @Override
+    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult) {
+        List<String> springs =   new ArrayList<>();
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+
+        if (springs.size() == 3) {
+            throw new UnprocessableEntitiesException(Arrays.asList(new ValidationError("spring", "invalid field value")));
+        } else {
+            Map<String, Object> springUser = new HashMap<>();
+            springUser.put("responseObject", null);
+            springUser.put("responseCode", 200);
+            springUser.put("responseStatus", "all springs fetched");
+            BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+            loginAndRegisterResponseMap.setResponse(springUser);
+            return loginAndRegisterResponseMap;
+        }
     }
 
     /**
@@ -316,11 +336,12 @@ public class UserServiceImpl implements UserService {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
 
         DischargeData discharge = new DischargeData();
-        discharge.setDischargeTime(dischargeData.getDischargeTime());
-        discharge.setSpringCode(dischargeData.getSpringCode());
-        discharge.setSpringName(dischargeData.getSpringName());
-        discharge.setCreatedDate(new Date().toString());
-        discharge.setUserId(UUID.randomUUID().toString());
+        BeanUtils.copyProperties(dischargeData, discharge);
+          discharge.setUserId(UUID.randomUUID().toString());
+          discharge.setTenantId("tenantId1");
+          discharge.setOrgId("Organisation1");
+          discharge.setCreatedTimeStamp(new Date().toString());
+          discharge.setUpdatedTimeStamp("");
 
         Map<String, Object> dischargrMap = new HashMap<>();
         dischargrMap.put("dischargeData", discharge);
@@ -355,14 +376,12 @@ public class UserServiceImpl implements UserService {
         Springs springDto = new Springs();
         BeanUtils.copyProperties(springs, springDto);
         springDto.setSpringCode(getAlphaNumericString(6));
-        springDto.setElevation("");
-        springDto.setCrtdDttm(new Date().toString());
-        springDto.setUpdtDttm("");
-        springDto.setOrganization(Arrays.asList("organisation1"));
-        springDto.setTenantId("");
-        springDto.setUploadedBy("");
-        springDto.setUsage(Arrays.asList("usage-short"));
-        springDto.setVillage(Arrays.asList("village1"));
+        springDto.setUserId(UUID.randomUUID().toString());
+        springDto.setCreatedTimeStamp(new Date().toString());
+        springDto.setUpdatedTimeStamp("");
+        Map<String, Object> extraInfo = new HashMap<>();
+        extraInfo.put("extraInfo", "geolocation");
+        springDto.setExtraInformation(extraInfo);
 
         log.info("********create spring flow ***" + springDto);
 
