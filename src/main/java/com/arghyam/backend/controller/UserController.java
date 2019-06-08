@@ -81,6 +81,13 @@ public class UserController {
     }
 
 
+
+    @PostMapping(value = "/createAdditionalInfo")
+    public LoginAndRegisterResponseMap createAdditionalInfo(@Validated @RequestBody RequestDTO requestDTO,
+                                                    BindingResult bindingResult) throws IOException {
+        return userService.createAdditionalInfo(requestDTO, bindingResult);
+    }
+
     @PostMapping(value = "/getAllSprings")
     public LoginAndRegisterResponseMap getAllSprings(@Validated @RequestBody RequestDTO requestDTO,
                                                     BindingResult bindingResult) throws IOException {

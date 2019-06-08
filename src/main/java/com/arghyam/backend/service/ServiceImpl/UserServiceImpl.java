@@ -1,5 +1,6 @@
 package com.arghyam.backend.service.ServiceImpl;
 
+import com.amazonaws.services.dynamodbv2.xspec.S;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.arghyam.backend.config.AppContext;
@@ -7,10 +8,7 @@ import com.arghyam.backend.dao.KeycloakDAO;
 import com.arghyam.backend.dao.KeycloakService;
 import com.arghyam.backend.dao.RegistryDAO;
 import com.arghyam.backend.dto.*;
-import com.arghyam.backend.entity.DischargeData;
-import com.arghyam.backend.entity.RegistryUser;
-import com.arghyam.backend.entity.Springs;
-import com.arghyam.backend.entity.Springuser;
+import com.arghyam.backend.entity.*;
 import com.arghyam.backend.exceptions.UnprocessableEntitiesException;
 import com.arghyam.backend.exceptions.ValidationError;
 import com.arghyam.backend.service.UserService;
@@ -97,7 +95,6 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
     public CredentialRepresentation setCredentialPassword(String password) {
         CredentialRepresentation credential = new CredentialRepresentation();
         credential.setType(CredentialRepresentation.PASSWORD);
@@ -105,7 +102,6 @@ public class UserServiceImpl implements UserService {
         credential.setTemporary(false);
         return credential;
     }
-
 
     @Override
     public Keycloak getKeycloak() {
@@ -142,7 +138,6 @@ public class UserServiceImpl implements UserService {
         int randomPIN = (int) (Math.random() * 9000) + 1000;
         return String.valueOf(randomPIN);
     }
-
 
     @Override
     public LoginAndRegisterResponseMap getUserProfile(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
@@ -191,24 +186,24 @@ public class UserServiceImpl implements UserService {
 
     /**
      * Upload's images to amazon S3
-     * @param file
      *
+     * @param file
      * @return
      */
     @Override
     public ResponseDTO updateProfilePicture(MultipartFile file) {
-        URL url=null;
+        URL url = null;
         try {
             File imageFile = AmazonUtils.convertMultiPartToFile(file);
             String fileName = AmazonUtils.generateFileName(file);
 
-            PutObjectRequest request = new PutObjectRequest(appContext.getBucketName(), ARGHYAM_S3_FOLDER_LOCATION+fileName, imageFile);
+            PutObjectRequest request = new PutObjectRequest(appContext.getBucketName(), ARGHYAM_S3_FOLDER_LOCATION + fileName, imageFile);
             amazonS3.putObject(request);
             java.util.Date expiration = new java.util.Date();
             long expTimeMillis = expiration.getTime();
             expTimeMillis += 1000 * 60 * 60;
             expiration.setTime(expTimeMillis);
-            url=amazonS3.generatePresignedUrl(appContext.getBucketName(),"arghyam/"+fileName,expiration);
+            url = amazonS3.generatePresignedUrl(appContext.getBucketName(), "arghyam/" + fileName, expiration);
             imageFile.delete();
         } catch (Exception e) {
             e.printStackTrace();
@@ -218,33 +213,65 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult) {
-        List<String> springs =   new ArrayList<>();
-        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+    public LoginAndRegisterResponseMap createAdditionalInfo(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+        AdditionalInfo additionalInfo = new AdditionalInfo();
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        if (requestDTO.getRequest().keySet().contains("additionalInfo")) {
+            additionalInfo = mapper.convertValue(requestDTO.getRequest().get("additionalInfo"), AdditionalInfo.class);
+        }
+        log.info("user data" + additionalInfo);
+        Map<String, Object> additionalInfoMap = new HashMap<>();
+        additionalInfoMap.put("additionalInfo", additionalInfo);
+        String stringRequest = objectMapper.writeValueAsString(additionalInfoMap);
+        RegistryRequest registryRequest=new RegistryRequest(null,additionalInfoMap, RegistryResponse.API_ID.CREATE.getId(),stringRequest);
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap=new LoginAndRegisterResponseMap();
+        BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+        if (additionalInfo.getWaterUseList().isEmpty()){
+            HashMap<String,Object> map=new HashMap<>();
+            map.put("responseCode",422);
+            map.put("responseStatus","unProcessable entity");
+            loginAndRegisterResponseMap.setResponse(map);
+            return loginAndRegisterResponseMap;
+            //error response call
+        }else {
+            // retrofit call
+            try {
+                Call<RegistryResponse> createRegistryEntryCall = registryDao.createUser(adminToken, registryRequest);
+                retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
+                if (!registryUserCreationResponse.isSuccessful()) {
+                    log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+                }else {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("responseCode", 200);
+                    response.put("responseStatus", "created additional information");
+                    //response.put("responseObject", registryRequest);
+                    loginAndRegisterResponseMap.setResponse(response);
+                }
 
-        if (springs.size() == 3) {
-            throw new UnprocessableEntitiesException(Arrays.asList(new ValidationError("spring", "invalid field value")));
-        } else {
-            Map<String, Object> springUser = new HashMap<>();
-            springUser.put("responseObject", null);
-            springUser.put("responseCode", 200);
-            springUser.put("responseStatus", "all springs fetched");
-            BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
-            loginAndRegisterResponseMap.setResponse(springUser);
+            } catch (IOException e) {
+                log.error("Error creating registry entry : {} ", e.getMessage());
+            }
+
             return loginAndRegisterResponseMap;
         }
     }
 
+    @Override
+    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult) {
+        return null;
+    }
+
     /**
      * Image upload api response
-     * @return
+     *
      * @param url
+     * @return
      */
     private ResponseDTO sendResponse(URL url) {
-        ResponseDTO responseDTO=new ResponseDTO();
-        HashMap<String,Object>map=new HashMap<>();
-        map.put("imageUrl",url);
-        ImageResponseDTO imageResponseDTO=new ImageResponseDTO();
+        ResponseDTO responseDTO = new ResponseDTO();
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("imageUrl", url);
+        ImageResponseDTO imageResponseDTO = new ImageResponseDTO();
         imageResponseDTO.setMap(map);
         responseDTO.setResponseCode(200);
         responseDTO.setMessage(IMAGE_UPLOAD_SUCCESS_MESSAGE);
@@ -288,17 +315,16 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
     @Override
-    public LoginAndRegisterResponseMap createRegistryUser(RequestDTO requestDTO, BindingResult bindingResult) throws IOException{
+    public LoginAndRegisterResponseMap createRegistryUser(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         Springuser springuser = new Springuser();
-        if(requestDTO.getRequest().keySet().contains("person")) {
+        if (requestDTO.getRequest().keySet().contains("person")) {
             springuser = mapper.convertValue(requestDTO.getRequest().get("person"), Springuser.class);
         }
         UserRepresentation userRepresentation = keycloakService.getUserByUsername(adminAccessToken, springuser.getPhonenumber(), appContext.getRealm());
         RegistryUser person = new RegistryUser(springuser.getName(), "", "",
-                    "", "", new java.util.Date().toString(), new java.util.Date().toString(), springuser.getPhonenumber());
+                "", "", new java.util.Date().toString(), new java.util.Date().toString(), springuser.getPhonenumber());
 
 
         Map<String, Object> personMap = new HashMap<>();
@@ -350,11 +376,11 @@ public class UserServiceImpl implements UserService {
 
         DischargeData discharge = new DischargeData();
         BeanUtils.copyProperties(dischargeData, discharge);
-          discharge.setUserId(UUID.randomUUID().toString());
-          discharge.setTenantId("tenantId1");
-          discharge.setOrgId("Organisation1");
-          discharge.setCreatedTimeStamp(new Date().toString());
-          discharge.setUpdatedTimeStamp("");
+        discharge.setUserId(UUID.randomUUID().toString());
+        discharge.setTenantId("tenantId1");
+        discharge.setOrgId("Organisation1");
+        discharge.setCreatedTimeStamp(new Date().toString());
+        discharge.setUpdatedTimeStamp("");
 
         Map<String, Object> dischargrMap = new HashMap<>();
         dischargrMap.put("dischargeData", discharge);
@@ -428,30 +454,29 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    public static String getAlphaNumericString(int n)
-        {
-            byte[] array = new byte[256];
-            new Random().nextBytes(array);
+    public static String getAlphaNumericString(int n) {
+        byte[] array = new byte[256];
+        new Random().nextBytes(array);
 
-            String randomString
-                    = new String(array, Charset.forName("UTF-8"));
-            StringBuffer r = new StringBuffer();
+        String randomString
+                = new String(array, Charset.forName("UTF-8"));
+        StringBuffer r = new StringBuffer();
 
-            String  AlphaNumericString
-                    = randomString
-                    .replaceAll("[^A-Za-z0-9]", "");
+        String AlphaNumericString
+                = randomString
+                .replaceAll("[^A-Za-z0-9]", "");
 
-            for (int k = 0; k < AlphaNumericString.length(); k++) {
-                if (Character.isLetter(AlphaNumericString.charAt(k))
-                        && (n > 0)
-                        || Character.isDigit(AlphaNumericString.charAt(k))
-                        && (n > 0)) {
-                    r.append(AlphaNumericString.charAt(k));
-                    n--;
-                }
+        for (int k = 0; k < AlphaNumericString.length(); k++) {
+            if (Character.isLetter(AlphaNumericString.charAt(k))
+                    && (n > 0)
+                    || Character.isDigit(AlphaNumericString.charAt(k))
+                    && (n > 0)) {
+                r.append(AlphaNumericString.charAt(k));
+                n--;
             }
-            return r.toString();
         }
+        return r.toString();
+    }
 
 }
 
