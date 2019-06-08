@@ -418,6 +418,8 @@ public class UserServiceImpl implements UserService {
         springDto.setUserId(UUID.randomUUID().toString());
         springDto.setCreatedTimeStamp(new Date().toString());
         springDto.setUpdatedTimeStamp("");
+        springDto.setUsage("irrigation");
+        springDto.setNumberOfHouseholds(2);
         Map<String, Object> extraInfo = new HashMap<>();
         extraInfo.put("extraInfo", "geolocation");
         springDto.setExtraInformation(extraInfo);
