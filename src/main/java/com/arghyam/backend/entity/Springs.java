@@ -3,37 +3,42 @@ package com.arghyam.backend.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.List;
+import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Springs {
 
-    String springCode;
+    private String springCode;
 
-    String springName;
+    private String userId;
 
-    List<String> organization;
+    private String tenantId;
 
-    String uploadedBy;
+    private String orgId;
 
-    String tenantId;
+    private double latitude;
 
-    List<String> village;
+    private double longitude;
 
-    String ownership;
+    private double elevation;
 
-    List<String> usage;
+    private double accuracy;
 
-    List<String> images;
+    private String village;
 
-    String latitude;
+    private Integer numberOfHouseholds;
 
-    String longitude;
+    private String ownershipType;
 
-    String elevation;
+    private String usage;
 
-    String crtdDttm;
+    private List<String> images;
 
-    String updtDttm;
+    private Map<String, Object> extraInformation;
+
+    private String createdTimeStamp;
+
+    private String updatedTimeStamp;
 
     public String getSpringCode() {
         return springCode;
@@ -43,29 +48,7 @@ public class Springs {
         this.springCode = springCode;
     }
 
-    public String getSpringName() {
-        return springName;
-    }
 
-    public void setSpringName(String springName) {
-        this.springName = springName;
-    }
-
-    public List<String> getOrganization() {
-        return organization;
-    }
-
-    public void setOrganization(List<String> organization) {
-        this.organization = organization;
-    }
-
-    public String getUploadedBy() {
-        return uploadedBy;
-    }
-
-    public void setUploadedBy(String uploadedBy) {
-        this.uploadedBy = uploadedBy;
-    }
 
     public String getTenantId() {
         return tenantId;
@@ -75,55 +58,76 @@ public class Springs {
         this.tenantId = tenantId;
     }
 
-    public List<String> getVillage() {
-        return village;
+    public String getOrgId() {
+        return orgId;
     }
 
-    public void setVillage(List<String> village) {
-        this.village = village;
+    public void setOrgId(String orgId) {
+        this.orgId = orgId;
     }
 
-    public List<String> getUsage() {
-        return usage;
-    }
-
-    public void setUsage(List<String> usage) {
-        this.usage = usage;
-    }
-
-
-
-    public String getLatitude() {
+    public double getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(String latitude) {
+    public void setLatitude(double latitude) {
         this.latitude = latitude;
     }
 
-    public String getLongitude() {
+    public double getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(String longitude) {
+    public void setLongitude(double longitude) {
         this.longitude = longitude;
     }
 
-    public String getElevation() {
+    public double getElevation() {
         return elevation;
     }
 
-    public void setElevation(String elevation) {
+    public void setElevation(double elevation) {
         this.elevation = elevation;
     }
 
-
-    public String getOwnership() {
-        return ownership;
+    public double getAccuracy() {
+        return accuracy;
     }
 
-    public void setOwnership(String ownership) {
-        this.ownership = ownership;
+    public void setAccuracy(double accuracy) {
+        this.accuracy = accuracy;
+    }
+
+    public String getVillage() {
+        return village;
+    }
+
+    public void setVillage(String village) {
+        this.village = village;
+    }
+
+    public Integer getNumberOfHouseholds() {
+        return numberOfHouseholds;
+    }
+
+    public void setNumberOfHouseholds(Integer numberOfHouseholds) {
+        this.numberOfHouseholds = numberOfHouseholds;
+    }
+
+    public String getOwnershipType() {
+        return ownershipType;
+    }
+
+    public void setOwnershipType(String ownershipType) {
+        this.ownershipType = ownershipType;
+    }
+
+    public String getUsage() {
+        return usage;
+    }
+
+    public void setUsage(String usage) {
+        this.usage = usage;
     }
 
     public List<String> getImages() {
@@ -134,19 +138,35 @@ public class Springs {
         this.images = images;
     }
 
-    public String getCrtdDttm() {
-        return crtdDttm;
+    public String getUserId() {
+        return userId;
     }
 
-    public void setCrtdDttm(String crtdDttm) {
-        this.crtdDttm = crtdDttm;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
-    public String getUpdtDttm() {
-        return updtDttm;
+    public Map<String, Object> getExtraInformation() {
+        return extraInformation;
     }
 
-    public void setUpdtDttm(String updtDttm) {
-        this.updtDttm = updtDttm;
+    public void setExtraInformation(Map<String, Object> extraInformation) {
+        this.extraInformation = extraInformation;
+    }
+
+    public String getCreatedTimeStamp() {
+        return createdTimeStamp;
+    }
+
+    public void setCreatedTimeStamp(String createdTimeStamp) {
+        this.createdTimeStamp = createdTimeStamp;
+    }
+
+    public String getUpdatedTimeStamp() {
+        return updatedTimeStamp;
+    }
+
+    public void setUpdatedTimeStamp(String updatedTimeStamp) {
+        this.updatedTimeStamp = updatedTimeStamp;
     }
 }

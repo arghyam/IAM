@@ -225,10 +225,7 @@ public class UserServiceImpl implements UserService {
         String stringRequest = objectMapper.writeValueAsString(additionalInfoMap);
         RegistryRequest registryRequest=new RegistryRequest(null,additionalInfoMap, RegistryResponse.API_ID.CREATE.getId(),stringRequest);
         LoginAndRegisterResponseMap loginAndRegisterResponseMap=new LoginAndRegisterResponseMap();
-        loginAndRegisterResponseMap.setParams(requestDTO.getParams());
-        loginAndRegisterResponseMap.setVer(requestDTO.getVer());
-        loginAndRegisterResponseMap.setEts(requestDTO.getEts());
-        loginAndRegisterResponseMap.setId(requestDTO.getId());
+        BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         if (additionalInfo.getWaterUseList().isEmpty()){
             HashMap<String,Object> map=new HashMap<>();
             map.put("responseCode",422);
@@ -257,6 +254,11 @@ public class UserServiceImpl implements UserService {
 
             return loginAndRegisterResponseMap;
         }
+    }
+
+    @Override
+    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult) {
+        return null;
     }
 
     /**
@@ -373,11 +375,12 @@ public class UserServiceImpl implements UserService {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
 
         DischargeData discharge = new DischargeData();
-        discharge.setDischargeTime(dischargeData.getDischargeTime());
-        discharge.setSpringCode(dischargeData.getSpringCode());
-        discharge.setSpringName(dischargeData.getSpringName());
-        discharge.setCreatedDate(new Date().toString());
+        BeanUtils.copyProperties(dischargeData, discharge);
         discharge.setUserId(UUID.randomUUID().toString());
+        discharge.setTenantId("tenantId1");
+        discharge.setOrgId("Organisation1");
+        discharge.setCreatedTimeStamp(new Date().toString());
+        discharge.setUpdatedTimeStamp("");
 
         Map<String, Object> dischargrMap = new HashMap<>();
         dischargrMap.put("dischargeData", discharge);
@@ -412,14 +415,12 @@ public class UserServiceImpl implements UserService {
         Springs springDto = new Springs();
         BeanUtils.copyProperties(springs, springDto);
         springDto.setSpringCode(getAlphaNumericString(6));
-        springDto.setElevation("");
-        springDto.setCrtdDttm(new Date().toString());
-        springDto.setUpdtDttm("");
-        springDto.setOrganization(Arrays.asList("organisation1"));
-        springDto.setTenantId("");
-        springDto.setUploadedBy("");
-        springDto.setUsage(Arrays.asList("usage-short"));
-        springDto.setVillage(Arrays.asList("village1"));
+        springDto.setUserId(UUID.randomUUID().toString());
+        springDto.setCreatedTimeStamp(new Date().toString());
+        springDto.setUpdatedTimeStamp("");
+        Map<String, Object> extraInfo = new HashMap<>();
+        extraInfo.put("extraInfo", "geolocation");
+        springDto.setExtraInformation(extraInfo);
 
         log.info("********create spring flow ***" + springDto);
 
@@ -448,7 +449,7 @@ public class UserServiceImpl implements UserService {
         response.put("responseStatus", "created discharge data successfully");
         response.put("responseObject", springDto);
         loginAndRegisterResponseMap.setResponse(response);
-        log.info("********create spring flow ***" + objectMapper.writeValueAsString(loginAndRegisterResponseMap));
+        log.info("********create spring flow ***"+ objectMapper.writeValueAsString(loginAndRegisterResponseMap));
         return loginAndRegisterResponseMap;
     }
 
