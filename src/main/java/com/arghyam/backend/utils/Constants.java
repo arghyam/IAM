@@ -49,6 +49,7 @@ public class Constants {
     public static final String REG_ENTRY_CREATED = "registry_entry_created";
 
     public static final String REGISTRY_UPDATE_USER = "update";
+    public static final String REGISTRY_READ_USER = "read/{id}";
 
     public static final String PASSWORD = "password";
 

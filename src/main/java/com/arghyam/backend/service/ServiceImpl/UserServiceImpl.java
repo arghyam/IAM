@@ -1,6 +1,5 @@
 package com.arghyam.backend.service.ServiceImpl;
 
-import com.amazonaws.services.dynamodbv2.xspec.S;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.arghyam.backend.config.AppContext;
@@ -9,6 +8,7 @@ import com.arghyam.backend.dao.KeycloakService;
 import com.arghyam.backend.dao.RegistryDAO;
 import com.arghyam.backend.dto.*;
 import com.arghyam.backend.entity.*;
+import com.arghyam.backend.exceptions.InternalServerException;
 import com.arghyam.backend.exceptions.UnprocessableEntitiesException;
 import com.arghyam.backend.exceptions.ValidationError;
 import com.arghyam.backend.service.UserService;
@@ -28,10 +28,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.multipart.MultipartFile;
 import retrofit2.Call;
-import retrofit2.http.Url;
 
+import javax.ws.rs.InternalServerErrorException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -223,27 +224,27 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> additionalInfoMap = new HashMap<>();
         additionalInfoMap.put("additionalInfo", additionalInfo);
         String stringRequest = objectMapper.writeValueAsString(additionalInfoMap);
-        RegistryRequest registryRequest=new RegistryRequest(null,additionalInfoMap, RegistryResponse.API_ID.CREATE.getId(),stringRequest);
-        LoginAndRegisterResponseMap loginAndRegisterResponseMap=new LoginAndRegisterResponseMap();
+        RegistryRequest registryRequest = new RegistryRequest(null, additionalInfoMap, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         loginAndRegisterResponseMap.setParams(requestDTO.getParams());
         loginAndRegisterResponseMap.setVer(requestDTO.getVer());
         loginAndRegisterResponseMap.setEts(requestDTO.getEts());
         loginAndRegisterResponseMap.setId(requestDTO.getId());
-        if (additionalInfo.getWaterUseList().isEmpty()){
-            HashMap<String,Object> map=new HashMap<>();
-            map.put("responseCode",422);
-            map.put("responseStatus","unProcessable entity");
+        if (additionalInfo.getWaterUseList().isEmpty()) {
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("responseCode", 422);
+            map.put("responseStatus", "unProcessable entity");
             loginAndRegisterResponseMap.setResponse(map);
             return loginAndRegisterResponseMap;
             //error response call
-        }else {
+        } else {
             // retrofit call
             try {
                 Call<RegistryResponse> createRegistryEntryCall = registryDao.createUser(adminToken, registryRequest);
                 retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
                 if (!registryUserCreationResponse.isSuccessful()) {
                     log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
-                }else {
+                } else {
                     Map<String, Object> response = new HashMap<>();
                     response.put("responseCode", 200);
                     response.put("responseStatus", "created additional information");
@@ -253,10 +254,55 @@ public class UserServiceImpl implements UserService {
 
             } catch (IOException e) {
                 log.error("Error creating registry entry : {} ", e.getMessage());
+                throw new InternalServerException("Internal server error");
+
             }
 
             return loginAndRegisterResponseMap;
         }
+    }
+
+    @Override
+    public Object getSpringById(RequestDTO requestDTO) throws IOException {
+        retrofit2.Response registryUserCreationResponse;
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        Person springs = new Person();
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("springs")) {
+            springs = mapper.convertValue(requestDTO.getRequest().get("springs"), Person.class);
+        }
+        Map<String, Object> springMap = new HashMap<>();
+        springMap.clear();
+        if (springMap.isEmpty()) {
+            springMap.put("springs", springs);
+        } else {
+            springMap.clear();
+            springMap.put("springs", springs);
+        }
+        String stringRequest = mapper.writeValueAsString(springMap);
+        RegistryRequest registryRequest = new RegistryRequest(null, springMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
+        try {
+            Call<RegistryResponse> createRegistryEntryCall = registryDao.findSpringbyId(adminToken, registryRequest);
+            registryUserCreationResponse = createRegistryEntryCall.execute();
+            if (!registryUserCreationResponse.isSuccessful()) {
+                log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+            } else {
+                Map<String, Object> response = new HashMap<>();
+                response.put("responseCode", 200);
+                response.put("responseStatus", "created additional information");
+
+                log.info("response---:" + mapper.writeValueAsString(registryUserCreationResponse.body()));
+                response.put("responseObject", registryUserCreationResponse.body());
+                loginAndRegisterResponseMap.setResponse(response);
+            }
+        } catch (Exception e) {
+            log.error("Error creating registry entry : {} ", e.getMessage());
+            throw new InternalServerException("Internal server error");
+
+        }
+
+
+        return registryUserCreationResponse.body();
     }
 
     /**
