@@ -259,20 +259,38 @@ public class UserServiceImpl implements UserService {
     @Override
     public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
 
-//
-//        Springs springProfile = new Springs();
-//        String springs;
-//        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
-//        if (requestDTO.getRequest().keySet().contains("springs")) {
-//            springs = requestDTO.getRequest().get("springs").toString();
-//        }
-//        log.info("user data" + additionalInfo);
-//        Map<String, Object> additionalInfoMap = new HashMap<>();
-//        additionalInfoMap.put("additionalInfo", additionalInfo);
-//        String stringRequest = objectMapper.writeValueAsString(additionalInfoMap);
-//        RegistryRequest registryRequest=new RegistryRequest(null,additionalInfoMap, RegistryResponse.API_ID.CREATE.getId(),stringRequest);
+        NodeEntity nodeEntity = new NodeEntity();
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        if (requestDTO.getRequest().keySet().contains("springs")) {
+            nodeEntity = mapper.convertValue(requestDTO.getRequest().get("springs"), NodeEntity.class);
+        }
 
-        return null;
+        log.info("node entity" + nodeEntity);
+        Map<String, Object> entityMap = new HashMap<>();
+        entityMap.put("springs", nodeEntity);
+        String stringRequest = objectMapper.writeValueAsString(entityMap);
+        RegistryRequest registryRequest=new RegistryRequest(null,entityMap, RegistryResponse.API_ID.SEARCH.getId(),stringRequest);
+
+        try {
+            Call<RegistryResponse> createRegistryEntryCall = registryDao.searchUser(adminToken, registryRequest);
+            retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
+            log.info("spring's response" + objectMapper.writeValueAsString(registryUserCreationResponse.body()));
+            if (!registryUserCreationResponse.isSuccessful()) {
+                log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+            }
+
+            BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+            Map<String, Object> response = new HashMap<>();
+            response.put("responseCode", 200);
+            response.put("responseStatus", "all springs fetched successfully");
+            response.put("responseObject", registryUserCreationResponse.body());
+            loginAndRegisterResponseMap.setResponse(response);
+        } catch (IOException e) {
+            log.error("Error creating registry entry : {} ", e.getMessage());
+        }
+
+        return loginAndRegisterResponseMap;
     }
 
     /**
