@@ -257,7 +257,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult) {
+    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+
+//
+//        Springs springProfile = new Springs();
+//        String springs;
+//        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+//        if (requestDTO.getRequest().keySet().contains("springs")) {
+//            springs = requestDTO.getRequest().get("springs").toString();
+//        }
+//        log.info("user data" + additionalInfo);
+//        Map<String, Object> additionalInfoMap = new HashMap<>();
+//        additionalInfoMap.put("additionalInfo", additionalInfo);
+//        String stringRequest = objectMapper.writeValueAsString(additionalInfoMap);
+//        RegistryRequest registryRequest=new RegistryRequest(null,additionalInfoMap, RegistryResponse.API_ID.CREATE.getId(),stringRequest);
+
         return null;
     }
 
@@ -381,6 +395,8 @@ public class UserServiceImpl implements UserService {
         discharge.setOrgId("Organisation1");
         discharge.setCreatedTimeStamp(new Date().toString());
         discharge.setUpdatedTimeStamp("");
+        discharge.setSeasonality("Sessional");
+        discharge.setMonths(Arrays.asList("January"));
 
         Map<String, Object> dischargrMap = new HashMap<>();
         dischargrMap.put("dischargeData", discharge);
