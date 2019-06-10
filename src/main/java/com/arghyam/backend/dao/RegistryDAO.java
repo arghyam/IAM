@@ -20,4 +20,8 @@ public interface RegistryDAO {
     Call<RegistryResponse> findSpringbyId(@Header("x-authenticated-user-token") String adminAccessToken
             ,@Body RegistryRequest registryRequest ) throws IOException;
 
+    @POST(Constants.REGISRY_SEARCH_USER)
+    Call<RegistryResponse> searchUser(@Header("x-authenticated-user-token") String adminAccessToken,
+                                      @Body RegistryRequest registryRequest) throws IOException;
+
 }

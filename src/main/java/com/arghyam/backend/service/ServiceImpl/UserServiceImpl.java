@@ -224,16 +224,13 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> additionalInfoMap = new HashMap<>();
         additionalInfoMap.put("additionalInfo", additionalInfo);
         String stringRequest = objectMapper.writeValueAsString(additionalInfoMap);
-        RegistryRequest registryRequest = new RegistryRequest(null, additionalInfoMap, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
-        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
-        loginAndRegisterResponseMap.setParams(requestDTO.getParams());
-        loginAndRegisterResponseMap.setVer(requestDTO.getVer());
-        loginAndRegisterResponseMap.setEts(requestDTO.getEts());
-        loginAndRegisterResponseMap.setId(requestDTO.getId());
-        if (additionalInfo.getWaterUseList().isEmpty()) {
-            HashMap<String, Object> map = new HashMap<>();
-            map.put("responseCode", 422);
-            map.put("responseStatus", "unProcessable entity");
+        RegistryRequest registryRequest=new RegistryRequest(null,additionalInfoMap, RegistryResponse.API_ID.CREATE.getId(),stringRequest);
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap=new LoginAndRegisterResponseMap();
+        BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+        if (additionalInfo.getWaterUseList().isEmpty()){
+            HashMap<String,Object> map=new HashMap<>();
+            map.put("responseCode",422);
+            map.put("responseStatus","unProcessable entity");
             loginAndRegisterResponseMap.setResponse(map);
             return loginAndRegisterResponseMap;
             //error response call
@@ -303,6 +300,45 @@ public class UserServiceImpl implements UserService {
 
 
         return registryUserCreationResponse.body();
+    }
+
+
+
+
+    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+
+        NodeEntity nodeEntity = new NodeEntity();
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        if (requestDTO.getRequest().keySet().contains("springs")) {
+            nodeEntity = mapper.convertValue(requestDTO.getRequest().get("springs"), NodeEntity.class);
+        }
+
+        log.info("node entity" + nodeEntity);
+        Map<String, Object> entityMap = new HashMap<>();
+        entityMap.put("springs", nodeEntity);
+        String stringRequest = objectMapper.writeValueAsString(entityMap);
+        RegistryRequest registryRequest=new RegistryRequest(null,entityMap, RegistryResponse.API_ID.SEARCH.getId(),stringRequest);
+
+        try {
+            Call<RegistryResponse> createRegistryEntryCall = registryDao.searchUser(adminToken, registryRequest);
+            retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
+            log.info("spring's response" + objectMapper.writeValueAsString(registryUserCreationResponse.body()));
+            if (!registryUserCreationResponse.isSuccessful()) {
+                log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+            }
+
+            BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+            Map<String, Object> response = new HashMap<>();
+            response.put("responseCode", 200);
+            response.put("responseStatus", "all springs fetched successfully");
+            response.put("responseObject", registryUserCreationResponse.body());
+            loginAndRegisterResponseMap.setResponse(response);
+        } catch (IOException e) {
+            log.error("Error creating registry entry : {} ", e.getMessage());
+        }
+
+        return loginAndRegisterResponseMap;
     }
 
     /**
@@ -419,11 +455,14 @@ public class UserServiceImpl implements UserService {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
 
         DischargeData discharge = new DischargeData();
-        discharge.setDischargeTime(dischargeData.getDischargeTime());
-        discharge.setSpringCode(dischargeData.getSpringCode());
-        discharge.setSpringName(dischargeData.getSpringName());
-        discharge.setCreatedDate(new Date().toString());
+        BeanUtils.copyProperties(dischargeData, discharge);
         discharge.setUserId(UUID.randomUUID().toString());
+        discharge.setTenantId("tenantId1");
+        discharge.setOrgId("Organisation1");
+        discharge.setCreatedTimeStamp(new Date().toString());
+        discharge.setUpdatedTimeStamp("");
+        discharge.setSeasonality("Sessional");
+        discharge.setMonths(Arrays.asList("January"));
 
         Map<String, Object> dischargrMap = new HashMap<>();
         dischargrMap.put("dischargeData", discharge);
@@ -458,14 +497,14 @@ public class UserServiceImpl implements UserService {
         Springs springDto = new Springs();
         BeanUtils.copyProperties(springs, springDto);
         springDto.setSpringCode(getAlphaNumericString(6));
-        springDto.setElevation("");
-        springDto.setCrtdDttm(new Date().toString());
-        springDto.setUpdtDttm("");
-        springDto.setOrganization(Arrays.asList("organisation1"));
-        springDto.setTenantId("");
-        springDto.setUploadedBy("");
-        springDto.setUsage(Arrays.asList("usage-short"));
-        springDto.setVillage(Arrays.asList("village1"));
+        springDto.setUserId(UUID.randomUUID().toString());
+        springDto.setCreatedTimeStamp(new Date().toString());
+        springDto.setUpdatedTimeStamp("");
+        springDto.setUsage("irrigation");
+        springDto.setNumberOfHouseholds(2);
+        Map<String, Object> extraInfo = new HashMap<>();
+        extraInfo.put("extraInfo", "geolocation");
+        springDto.setExtraInformation(extraInfo);
 
         log.info("********create spring flow ***" + springDto);
 
@@ -494,7 +533,7 @@ public class UserServiceImpl implements UserService {
         response.put("responseStatus", "created discharge data successfully");
         response.put("responseObject", springDto);
         loginAndRegisterResponseMap.setResponse(response);
-        log.info("********create spring flow ***" + objectMapper.writeValueAsString(loginAndRegisterResponseMap));
+        log.info("********create spring flow ***"+ objectMapper.writeValueAsString(loginAndRegisterResponseMap));
         return loginAndRegisterResponseMap;
     }
 

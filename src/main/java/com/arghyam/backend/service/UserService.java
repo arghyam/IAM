@@ -38,4 +38,6 @@ public interface UserService {
     LoginAndRegisterResponseMap createAdditionalInfo(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
     Object getSpringById(RequestDTO springId) throws IOException;
+
+    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 }
