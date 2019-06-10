@@ -284,12 +284,18 @@ public class UserServiceImpl implements UserService {
             if (!registryUserCreationResponse.isSuccessful()) {
                 log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
             } else {
+                RegistryResponse registryResponse = new RegistryResponse();
+                BeanUtils.copyProperties(registryUserCreationResponse.body(), registryResponse);
                 Map<String, Object> response = new HashMap<>();
                 response.put("responseCode", 200);
-                response.put("responseStatus", "created additional information");
+                response.put("responseStatus", "successfull");
 
                 log.info("response---:" + mapper.writeValueAsString(registryUserCreationResponse.body()));
-                response.put("responseObject", registryUserCreationResponse.body());
+                response.put("responseObject", registryResponse.getResult());
+                loginAndRegisterResponseMap.setId(requestDTO.getId());
+                loginAndRegisterResponseMap.setEts(requestDTO.getEts());
+                loginAndRegisterResponseMap.setVer(requestDTO.getVer());
+                loginAndRegisterResponseMap.setParams(requestDTO.getParams());
                 loginAndRegisterResponseMap.setResponse(response);
             }
         } catch (Exception e) {
@@ -299,7 +305,7 @@ public class UserServiceImpl implements UserService {
         }
 
 
-        return registryUserCreationResponse.body();
+        return loginAndRegisterResponseMap;
     }
 
 
