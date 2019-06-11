@@ -37,5 +37,5 @@ public interface UserService {
 
     LoginAndRegisterResponseMap createAdditionalInfo(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
-    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
+    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult, Integer pageNumber) throws IOException;
 }

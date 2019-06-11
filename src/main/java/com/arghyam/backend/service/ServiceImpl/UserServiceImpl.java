@@ -9,13 +9,18 @@ import com.arghyam.backend.dao.KeycloakService;
 import com.arghyam.backend.dao.RegistryDAO;
 import com.arghyam.backend.dto.*;
 import com.arghyam.backend.entity.*;
+import com.arghyam.backend.exceptions.BadRequestException;
+import com.arghyam.backend.exceptions.UnauthorizedException;
 import com.arghyam.backend.exceptions.UnprocessableEntitiesException;
 import com.arghyam.backend.exceptions.ValidationError;
 import com.arghyam.backend.service.UserService;
 import com.arghyam.backend.utils.AmazonUtils;
 import com.arghyam.backend.utils.Constants;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.json.JSONObject;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -24,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
@@ -32,11 +38,13 @@ import org.springframework.web.multipart.MultipartFile;
 import retrofit2.Call;
 import retrofit2.http.Url;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.arghyam.backend.utils.Constants.ARGHYAM_S3_FOLDER_LOCATION;
 import static com.arghyam.backend.utils.Constants.IMAGE_UPLOAD_SUCCESS_MESSAGE;
@@ -257,41 +265,103 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult, Integer pageNumber) throws IOException {
 
-        NodeEntity nodeEntity = new NodeEntity();
-        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
-        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
-        if (requestDTO.getRequest().keySet().contains("springs")) {
-            nodeEntity = mapper.convertValue(requestDTO.getRequest().get("springs"), NodeEntity.class);
-        }
-
-        log.info("node entity" + nodeEntity);
-        Map<String, Object> entityMap = new HashMap<>();
-        entityMap.put("springs", nodeEntity);
-        String stringRequest = objectMapper.writeValueAsString(entityMap);
-        RegistryRequest registryRequest=new RegistryRequest(null,entityMap, RegistryResponse.API_ID.SEARCH.getId(),stringRequest);
-
-        try {
-            Call<RegistryResponse> createRegistryEntryCall = registryDao.searchUser(adminToken, registryRequest);
-            retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
-            log.info("spring's response" + objectMapper.writeValueAsString(registryUserCreationResponse.body()));
-            if (!registryUserCreationResponse.isSuccessful()) {
-                log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+        if (pageNumber == null) {
+            throw new BadRequestException("pageNumber is invalid");
+        } else if (pageNumber <= 0) {
+            throw new UnauthorizedException("pageNumber is invalid");
+        } else {
+            LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+            int startValue=0, endValue=0;
+            String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+            Map<String, String> springs = new HashMap<>();
+            if (requestDTO.getRequest().keySet().contains("springs")) {
+                springs.put("@type", "springs");
             }
 
-            BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
-            Map<String, Object> response = new HashMap<>();
-            response.put("responseCode", 200);
-            response.put("responseStatus", "all springs fetched successfully");
-            response.put("responseObject", registryUserCreationResponse.body());
-            loginAndRegisterResponseMap.setResponse(response);
-        } catch (IOException e) {
-            log.error("Error creating registry entry : {} ", e.getMessage());
-        }
+            Map<String, Object> entityMap = new HashMap<>();
+            entityMap.put("springs", springs);
+            String stringRequest = objectMapper.writeValueAsString(entityMap);
+            RegistryRequest registryRequest=new RegistryRequest(null,entityMap, RegistryResponse.API_ID.SEARCH.getId(),stringRequest);
 
-        return loginAndRegisterResponseMap;
+            try {
+                Call<RegistryResponse> createRegistryEntryCall = registryDao.searchUser(adminToken, registryRequest);
+                retrofit2.Response<RegistryResponse> registryUserCreationResponse = createRegistryEntryCall.execute();
+                if (!registryUserCreationResponse.isSuccessful()) {
+                    log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+                }
+
+                RegistryResponse registryResponse = new RegistryResponse();
+                registryResponse = registryUserCreationResponse.body();
+                BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+                Map<String, Object> response = new HashMap<>();
+                List<LinkedHashMap> springList = (List<LinkedHashMap>) registryResponse.getResult();
+                List<Springs> springData = new ArrayList<>();
+                springList.stream().forEach(spring -> {
+                    int i = 0;
+                    Springs springResponse = new Springs();
+                    convertRegistryResponseToSpring (springResponse, spring);
+                    springData.add(springResponse);
+                });
+
+                Set<Springs> springSet = springData.stream().collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(Springs::getCreatedTimeStamp).reversed())));
+                List<Springs> newSprings = new ArrayList<>();
+                newSprings.addAll(springSet);
+                List<Springs> paginatedResponse = new ArrayList<>();
+                paginatedResponse(startValue, pageNumber, endValue, newSprings, paginatedResponse);
+                response.put("responseObject", paginatedResponse);
+                response.put("responseCode", 200);
+                response.put("responseStatus", "all springs fetched successfully");
+                loginAndRegisterResponseMap.setResponse(response);
+            } catch (IOException e) {
+                log.error("Error creating registry entry : {} ", e.getMessage());
+            }
+
+            return loginAndRegisterResponseMap;
+        }
     }
+
+
+    private void paginatedResponse (int startValue, int pageNumber, int endValue, List<Springs> newSprings, List<Springs> paginatedResponse) {
+        startValue = ((pageNumber - 1) * 5);
+        endValue = (startValue + 5);
+        for (int j=startValue; j<endValue; j++) {
+            paginatedResponse.add(newSprings.get(j));
+        }
+    }
+
+
+    private void convertRegistryResponseToSpring (Springs springResponse, LinkedHashMap spring) {
+
+        springResponse.setNumberOfHouseholds((Integer) spring.get("numberOfHouseholds"));
+        springResponse.setUsage((String) spring.get("usage"));
+        springResponse.setUpdatedTimeStamp((String) spring.get("updatedTimeStamp"));
+        springResponse.setOrgId((String) spring.get("orgId"));
+        springResponse.setUserId((String) spring.get("userId"));
+        springResponse.setExtraInformation((Map<String, Object>) spring.get("extraInformation"));
+        springResponse.setCreatedTimeStamp((String) spring.get("createdTimeStamp"));
+        springResponse.setVillage((String) spring.get("village"));
+        springResponse.setSpringCode((String) spring.get("springCode"));
+        springResponse.setTenantId((String) spring.get("tenantId"));
+        springResponse.setAccuracy((Double) spring.get("accuracy"));
+        springResponse.setElevation((Double) spring.get("elevation"));
+        springResponse.setLatitude((Double) spring.get("latitude"));
+        springResponse.setLongitude((Double) spring.get("longitude"));
+        springResponse.setOwnershipType((String) spring.get("ownershipType"));
+
+        log.info("***************** IMAGE OBJECT TYPE " + spring.get("images").getClass());
+        if (spring.get("images").getClass().toString().equals("class java.util.ArrayList")) {
+            springResponse.setImages((List<String>) spring.get("images"));
+        } else if (spring.get("images").getClass().toString().equals("class java.lang.String")){
+            String result = (String) spring.get("images");
+            result = new StringBuilder(result).deleteCharAt(0).toString();
+            result = new StringBuilder(result).deleteCharAt(result.length()-1).toString();
+            List<String> images = Arrays.asList(result);
+            springResponse.setImages(images);
+        }
+    }
+
 
     /**
      * Image upload api response
