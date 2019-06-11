@@ -308,7 +308,8 @@ public class UserServiceImpl implements UserService {
                 Set<Springs> springSet = springData.stream().collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(Springs::getCreatedTimeStamp).reversed())));
                 List<Springs> newSprings = new ArrayList<>();
                 newSprings.addAll(springSet);
-                List<Springs> paginatedResponse = new ArrayList<>();
+
+                PaginatedResponse paginatedResponse = new PaginatedResponse();
                 paginatedResponse(startValue, pageNumber, endValue, newSprings, paginatedResponse);
                 response.put("responseObject", paginatedResponse);
                 response.put("responseCode", 200);
@@ -323,12 +324,15 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private void paginatedResponse (int startValue, int pageNumber, int endValue, List<Springs> newSprings, List<Springs> paginatedResponse) {
+    private void paginatedResponse (int startValue, int pageNumber, int endValue, List<Springs> newSprings, PaginatedResponse paginatedResponse) {
         startValue = ((pageNumber - 1) * 5);
         endValue = (startValue + 5);
+        List<Springs> springsList = new ArrayList<>();
         for (int j=startValue; j<endValue; j++) {
-            paginatedResponse.add(newSprings.get(j));
+            springsList.add(newSprings.get(j));
         }
+        paginatedResponse.setSprings(springsList);
+        paginatedResponse.setTotalSprings(newSprings.size());
     }
 
 
