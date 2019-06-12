@@ -370,8 +370,31 @@ public class UserServiceImpl implements UserService {
     }
 
 
+
+
+
     private void mapExtraInformationForDisrchargeData (Springs springResponse, RegistryResponse registryResponseForDischarge) {
         Map<String, Object> dischargeMap = new HashMap<>();
+        DischargeData dischargeDataObject=new DischargeData();
+        List<LinkedHashMap> dischargedDataList = (List<LinkedHashMap>) registryResponseForDischarge.getResult();
+
+        dischargedDataList.stream().forEach(dischargeData->{
+
+
+
+
+            if (dischargeData.get("images").getClass().toString().equals("class java.util.ArrayList")){
+                dischargeDataObject.setImages((List<String>) dischargeData.get("images"));
+            }else if (dischargeData.get("images").getClass().toString().equals("class java.lang.String")){
+                String result=(String)dischargeData.get("images");
+                result = new StringBuilder(result).deleteCharAt(0).toString();
+                result = new StringBuilder(result).deleteCharAt(result.length()-1).toString();
+                List<String> images = Arrays.asList(result);
+                dischargeDataObject.setImages(images);
+            }
+
+        });
+
         dischargeMap.put("dischargeData", registryResponseForDischarge.getResult());
         springResponse.setExtraInformation(dischargeMap);
     }
