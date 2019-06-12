@@ -87,7 +87,7 @@ public class UserController {
         return userService.createAdditionalInfo(requestDTO, bindingResult);
     }
 
-    @PostMapping(value = "/springs/{springCode}")
+    @PostMapping(value = "/springs")
     public Object getSpringById(@RequestBody RequestDTO requestDTO) throws IOException {
         return userService.getSpringById(requestDTO);
     }
