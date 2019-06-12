@@ -39,5 +39,6 @@ public interface UserService {
 
     Object getSpringById(RequestDTO springId) throws IOException;
 
-    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
+    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult, Integer pageNumber) throws IOException;
+
 }

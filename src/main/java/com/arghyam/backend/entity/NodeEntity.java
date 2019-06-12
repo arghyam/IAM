@@ -3,17 +3,18 @@ package com.arghyam.backend.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Map;
+
 @JsonIgnoreProperties
 public class NodeEntity {
 
-    @JsonProperty(value="@type")
-    String type;
+    Map<String, String> springs;
 
-    public String getType() {
-        return type;
+    public Map<String, String> getSprings() {
+        return springs;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setSprings(Map<String, String> springs) {
+        this.springs = springs;
     }
 }

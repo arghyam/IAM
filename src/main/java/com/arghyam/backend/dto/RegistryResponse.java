@@ -1,5 +1,8 @@
 package com.arghyam.backend.dto;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+
 public class RegistryResponse {
     private String id;
     private String ver;

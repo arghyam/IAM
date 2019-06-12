@@ -94,7 +94,8 @@ public class UserController {
 
     @PostMapping(value = "/getAllSprings")
     public LoginAndRegisterResponseMap getAllSprings(@Validated @RequestBody RequestDTO requestDTO,
+                                                     @RequestParam(value = "pageNumber", defaultValue = "") Integer pageNumber,
                                                     BindingResult bindingResult) throws IOException {
-        return userService.getAllSprings(requestDTO, bindingResult);
+        return userService.getAllSprings(requestDTO, bindingResult, pageNumber);
     }
 }

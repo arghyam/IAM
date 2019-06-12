@@ -8,23 +8,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ResponseStatus(HttpStatus.UNAUTHORIZED)
 public class UnauthorizedException extends RuntimeException {
 
-    private String messaage;
-
-
     /**
      * Instantiates a new Unauthorized exception.
      *
      * @param message the message
      */
     public UnauthorizedException(String message) {
-        this.messaage = message;
-    }
-
-    public String getMessaage() {
-        return messaage;
-    }
-
-    public void setMessaage(String messaage) {
-        this.messaage = messaage;
+        super(message);
     }
 }
