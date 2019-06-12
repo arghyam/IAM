@@ -51,5 +51,12 @@ public class GlobalExceptionHandler {
             throws IOException {
         return new ResponseEntity<>(new ResponseMessage(e.getMessage()), HttpStatus.UNAUTHORIZED);
     }
+
+    @ExceptionHandler(InternalServerException.class)
+    public ResponseEntity internalServerException(UnauthorizedException e,
+                                                    HttpServletResponse response)
+            throws IOException {
+        return new ResponseEntity<>(new ResponseMessage(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }
 

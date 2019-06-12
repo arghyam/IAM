@@ -11,7 +11,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 @RequestMapping(path = "/api/v1")
@@ -86,6 +85,11 @@ public class UserController {
     public LoginAndRegisterResponseMap createAdditionalInfo(@Validated @RequestBody RequestDTO requestDTO,
                                                     BindingResult bindingResult) throws IOException {
         return userService.createAdditionalInfo(requestDTO, bindingResult);
+    }
+
+    @PostMapping(value = "/springs")
+    public Object getSpringById(@RequestBody RequestDTO requestDTO) throws IOException {
+        return userService.getSpringById(requestDTO);
     }
 
     @PostMapping(value = "/getAllSprings")
