@@ -14,6 +14,7 @@ import com.arghyam.backend.exceptions.ValidationError;
 import com.arghyam.backend.service.UserService;
 import com.arghyam.backend.utils.AmazonUtils;
 import com.arghyam.backend.utils.Constants;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.admin.client.Keycloak;
@@ -31,6 +32,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.multipart.MultipartFile;
 import retrofit2.Call;
+import retrofit2.Response;
 
 import javax.ws.rs.InternalServerErrorException;
 import java.io.File;
@@ -224,13 +226,13 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> additionalInfoMap = new HashMap<>();
         additionalInfoMap.put("additionalInfo", additionalInfo);
         String stringRequest = objectMapper.writeValueAsString(additionalInfoMap);
-        RegistryRequest registryRequest=new RegistryRequest(null,additionalInfoMap, RegistryResponse.API_ID.CREATE.getId(),stringRequest);
-        LoginAndRegisterResponseMap loginAndRegisterResponseMap=new LoginAndRegisterResponseMap();
+        RegistryRequest registryRequest = new RegistryRequest(null, additionalInfoMap, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
-        if (additionalInfo.getWaterUseList().isEmpty()){
-            HashMap<String,Object> map=new HashMap<>();
-            map.put("responseCode",422);
-            map.put("responseStatus","unProcessable entity");
+        if (additionalInfo.getWaterUseList().isEmpty()) {
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("responseCode", 422);
+            map.put("responseStatus", "unProcessable entity");
             loginAndRegisterResponseMap.setResponse(map);
             return loginAndRegisterResponseMap;
             //error response call
@@ -261,7 +263,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Object getSpringById(RequestDTO requestDTO) throws IOException {
-        retrofit2.Response registryUserCreationResponse;
+        retrofit2.Response registryUserCreationResponse = null;
+        retrofit2.Response dischargeDataResponse = null;
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         Person springs = new Person();
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
@@ -279,6 +282,7 @@ public class UserServiceImpl implements UserService {
         String stringRequest = mapper.writeValueAsString(springMap);
         RegistryRequest registryRequest = new RegistryRequest(null, springMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
         try {
+
             Call<RegistryResponse> createRegistryEntryCall = registryDao.findSpringbyId(adminToken, registryRequest);
             registryUserCreationResponse = createRegistryEntryCall.execute();
             if (!registryUserCreationResponse.isSuccessful()) {
@@ -286,6 +290,7 @@ public class UserServiceImpl implements UserService {
             } else {
                 RegistryResponse registryResponse = new RegistryResponse();
                 BeanUtils.copyProperties(registryUserCreationResponse.body(), registryResponse);
+                getDischargedDataForSprings(adminToken, dischargeDataResponse,registryResponse);
                 Map<String, Object> response = new HashMap<>();
                 response.put("responseCode", 200);
                 response.put("responseStatus", "successfull");
@@ -308,7 +313,25 @@ public class UserServiceImpl implements UserService {
         return loginAndRegisterResponseMap;
     }
 
+    private void getDischargedDataForSprings(String adminToken, Response dischargeDataResponse, RegistryResponse searchSpringResponse) throws IOException {
+        HashMap<String, Object> dischargeDataMap = new HashMap<>();
+        dischargeDataMap.put("dischargeData","dischargeData");
+       /* DischargeData springs=new DischargeData();
+        BeanUtils.copyProperties(searchSpringResponse.getResult(),springs);
+        dischargeDataMap.put("springCode",springs.getSpringCode());*/
+        String stringRequest = mapper.writeValueAsString(dischargeDataMap);
+        RegistryRequest registryRequest = new RegistryRequest(null, dischargeDataMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
 
+        Call<RegistryResponse> createRegistryEntryCall = registryDao.findSpringbyId(adminToken, registryRequest);
+        dischargeDataResponse = createRegistryEntryCall.execute();
+        DischargeDataListEntity dischargeDataListEntity=new DischargeDataListEntity();
+      //  dischargeDataListEntity= (DischargeDataListEntity) dischargeDataResponse.body();
+        BeanUtils.copyProperties(dischargeDataResponse.body(),dischargeDataListEntity);
+        log.info("response====="+dischargeDataResponse.body());
+
+
+
+    }
 
 
     public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
@@ -324,7 +347,7 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> entityMap = new HashMap<>();
         entityMap.put("springs", nodeEntity);
         String stringRequest = objectMapper.writeValueAsString(entityMap);
-        RegistryRequest registryRequest=new RegistryRequest(null,entityMap, RegistryResponse.API_ID.SEARCH.getId(),stringRequest);
+        RegistryRequest registryRequest = new RegistryRequest(null, entityMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
 
         try {
             Call<RegistryResponse> createRegistryEntryCall = registryDao.searchUser(adminToken, registryRequest);
@@ -539,7 +562,7 @@ public class UserServiceImpl implements UserService {
         response.put("responseStatus", "created discharge data successfully");
         response.put("responseObject", springDto);
         loginAndRegisterResponseMap.setResponse(response);
-        log.info("********create spring flow ***"+ objectMapper.writeValueAsString(loginAndRegisterResponseMap));
+        log.info("********create spring flow ***" + objectMapper.writeValueAsString(loginAndRegisterResponseMap));
         return loginAndRegisterResponseMap;
     }
 
