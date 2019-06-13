@@ -37,7 +37,6 @@ import org.springframework.validation.FieldError;
 
 import org.springframework.web.multipart.MultipartFile;
 import retrofit2.Call;
-import retrofit2.Response;
 
 import java.io.File;
 import java.io.IOException;
