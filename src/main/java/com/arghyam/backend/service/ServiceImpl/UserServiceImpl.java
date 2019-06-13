@@ -408,6 +408,7 @@ public class UserServiceImpl implements UserService {
         springResponse.setCreatedTimeStamp((String) spring.get("createdTimeStamp"));
         springResponse.setVillage((String) spring.get("village"));
         springResponse.setSpringCode((String) spring.get("springCode"));
+        springResponse.setSpringName((String) spring.get("springName"));
         springResponse.setTenantId((String) spring.get("tenantId"));
         springResponse.setAccuracy((Double) spring.get("accuracy"));
         springResponse.setElevation((Double) spring.get("elevation"));
