@@ -37,7 +37,6 @@ import org.springframework.validation.FieldError;
 
 import org.springframework.web.multipart.MultipartFile;
 import retrofit2.Call;
-import retrofit2.Response;
 
 import java.io.File;
 import java.io.IOException;
@@ -409,6 +408,7 @@ public class UserServiceImpl implements UserService {
         springResponse.setCreatedTimeStamp((String) spring.get("createdTimeStamp"));
         springResponse.setVillage((String) spring.get("village"));
         springResponse.setSpringCode((String) spring.get("springCode"));
+        springResponse.setSpringName((String) spring.get("springName"));
         springResponse.setTenantId((String) spring.get("tenantId"));
         springResponse.setAccuracy((Double) spring.get("accuracy"));
         springResponse.setElevation((Double) spring.get("elevation"));
@@ -428,6 +428,9 @@ public class UserServiceImpl implements UserService {
     }
 
 
+
+
+
     private void mapExtraInformationForDisrchargeData (Springs springResponse, RegistryResponse registryResponseForDischarge) {
         Map<String, Object> dischargeMap = new HashMap<>();
         List<LinkedHashMap> dischargeDataList = (List<LinkedHashMap>) registryResponseForDischarge.getResult();
@@ -435,10 +438,10 @@ public class UserServiceImpl implements UserService {
         dischargeDataList.stream().forEach(discharge -> {
             DischargeData dischargeData = new DischargeData();
             try {
-                  convertRegistryResponseToDischarge(dischargeData, discharge);
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
-                }
+                convertRegistryResponseToDischarge(dischargeData, discharge);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
             updatedDischargeDataList.add(dischargeData);
 
         });
@@ -513,7 +516,7 @@ public class UserServiceImpl implements UserService {
 
     private void paginatedResponse (int startValue, int pageNumber, int endValue, List<Springs> newSprings, PaginatedResponse paginatedResponse) {
         startValue = ((pageNumber - 1) * 5);
-        endValue = (startValue + 5);
+        endValue = (newSprings.size() >5*pageNumber) ? (startValue + 5) : newSprings.size();
         List<Springs> springsList = new ArrayList<>();
         for (int j=startValue; j<endValue; j++) {
             springsList.add(newSprings.get(j));
@@ -534,6 +537,8 @@ public class UserServiceImpl implements UserService {
         springResponse.setCreatedTimeStamp((String) spring.get("createdTimeStamp"));
         springResponse.setVillage((String) spring.get("village"));
         springResponse.setSpringCode((String) spring.get("springCode"));
+        springResponse.setSpringName((String) spring.get("springName"));
+
         springResponse.setTenantId((String) spring.get("tenantId"));
         springResponse.setAccuracy((Double) spring.get("accuracy"));
         springResponse.setElevation((Double) spring.get("elevation"));
