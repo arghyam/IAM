@@ -53,10 +53,6 @@ public class DischargeData {
         return volumeOfContainer;
     }
 
-    public void setVolumeOfContainer(double volumeOfContainer) {
-        this.volumeOfContainer = volumeOfContainer;
-    }
-
     public void setVolumeOfContainer(Double volumeOfContainer) {
         this.volumeOfContainer = volumeOfContainer;
     }

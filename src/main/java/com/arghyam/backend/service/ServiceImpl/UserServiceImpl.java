@@ -298,6 +298,14 @@ public class UserServiceImpl implements UserService {
 
                 Map<String, Object> response = new HashMap<>();
                 Springs springResponse = new Springs();
+                List<LinkedHashMap> springList = (List<LinkedHashMap>) registryResponse.getResult();
+                springList.stream().forEach(springWithdischarge -> {
+                    try {
+                        convertRegistryResponseToSpringDischarge (springResponse, springWithdischarge);
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
+                });
                 getDischargeDataForASpring(adminToken, springs.getSpringCode(), registryResponse, springResponse);
                 response.put("responseCode", 200);
                 response.put("responseStatus", "successfull");
@@ -330,18 +338,69 @@ public class UserServiceImpl implements UserService {
 
         RegistryResponse registryResponseForDischarge = new RegistryResponse();
         BeanUtils.copyProperties(registryUserCreationResponseForDischarge.body(), registryResponseForDischarge);
-        log.info(" ************** SPRING DISCHARGE DATA **********" + objectMapper.writeValueAsString(registryResponseForDischarge));
-        List<LinkedHashMap> springList = (List<LinkedHashMap>) registryResponse.getResult();
-        springList.stream().forEach(springWithdischarge -> {
-            convertRegistryResponseToSpringDischarge (springResponse, springWithdischarge);
-            mapExtraInformationForDisrchargeData (springResponse, registryResponseForDischarge);
-        });
+        mapExtraInformationForDisrchargeData (springResponse, registryResponseForDischarge);
+
     }
 
 
 
 
-    private void convertRegistryResponseToSpringDischarge (Springs springResponse, LinkedHashMap spring) {
+    private void convertRegistryResponseToDischarge (DischargeData dischargeData, LinkedHashMap discharge) throws JsonProcessingException {
+        dischargeData.setSeasonality((String) discharge.get("seasonality"));
+        dischargeData.setUpdatedTimeStamp((String) discharge.get("updatedTimeStamp"));
+        dischargeData.setCreatedTimeStamp((String) discharge.get("createdTimeStamp"));
+        dischargeData.setOrgId((String) discharge.get("orgId"));
+        dischargeData.setTenantId((String) discharge.get("tenantId"));
+        dischargeData.setVolumeOfContainer((Double) discharge.get("volumeOfContainer"));
+        dischargeData.setUserId((String) discharge.get("userId"));
+        dischargeData.setSpringCode((String) discharge.get("springCode"));
+        dischargeData.setStatus((String) discharge.get("status"));
+        dischargeData.setVolumeOfContainer((Double) discharge.get("volumeOfContainer"));
+
+
+        ArrayList<String> litresPerSecond = (ArrayList<String>) discharge.get("litresPerSecond");
+        List<Double> updatedLitresPerSecond = new ArrayList<>();
+        litresPerSecond.forEach(litrePerSecond -> {
+            Double lps = Double.parseDouble(litrePerSecond);
+            updatedLitresPerSecond.add(lps);
+        });
+        dischargeData.setLitresPerSecond(updatedLitresPerSecond);
+        convertStringToList(dischargeData, discharge,  "images");
+        convertStringToList(dischargeData, discharge,  "months");
+        convertStringToList(dischargeData, discharge,  "dischargeTime");
+    }
+
+
+    private void convertStringToList(DischargeData dischargeData, LinkedHashMap discharge, String attribute) {
+        if (discharge.get(attribute).getClass().toString().equals("class java.util.ArrayList")) {
+            if (attribute.equals("dischargeTime")) {
+                dischargeData.setDischargeTime((List<String>) discharge.get(attribute));
+            } else if (attribute.equals("months")) {
+                dischargeData.setMonths((List<String>) discharge.get(attribute));
+            } else if (attribute.equals("images")) {
+                dischargeData.setImages((List<String>) discharge.get(attribute));
+            }
+
+        } else if (discharge.get(attribute).getClass().toString().equals("class java.lang.String")){
+            String result = (String) discharge.get(attribute);
+            result = new StringBuilder(result).deleteCharAt(0).toString();
+            result = new StringBuilder(result).deleteCharAt(result.length()-1).toString();
+
+            if (attribute.equals("dischargeTime")) {
+                dischargeData.setDischargeTime(Arrays.asList(result));
+            } else if (attribute.equals("months")) {
+                dischargeData.setMonths(Arrays.asList(result));
+            } else if (attribute.equals("images")) {
+                dischargeData.setImages(Arrays.asList(result));
+            }
+        }
+    }
+
+
+
+
+
+    private void convertRegistryResponseToSpringDischarge (Springs springResponse, LinkedHashMap spring) throws JsonProcessingException {
         springResponse.setNumberOfHouseholds((Integer) spring.get("numberOfHouseholds"));
         springResponse.setUsage((String) spring.get("usage"));
         springResponse.setUpdatedTimeStamp((String) spring.get("updatedTimeStamp"));
@@ -357,7 +416,6 @@ public class UserServiceImpl implements UserService {
         springResponse.setLongitude((Double) spring.get("longitude"));
         springResponse.setOwnershipType((String) spring.get("ownershipType"));
 
-        log.info("***************** IMAGE OBJECT TYPE " + spring.get("images").getClass());
         if (spring.get("images").getClass().toString().equals("class java.util.ArrayList")) {
             springResponse.setImages((List<String>) spring.get("images"));
         } else if (spring.get("images").getClass().toString().equals("class java.lang.String")){
@@ -375,27 +433,19 @@ public class UserServiceImpl implements UserService {
 
     private void mapExtraInformationForDisrchargeData (Springs springResponse, RegistryResponse registryResponseForDischarge) {
         Map<String, Object> dischargeMap = new HashMap<>();
-        DischargeData dischargeDataObject=new DischargeData();
-        List<LinkedHashMap> dischargedDataList = (List<LinkedHashMap>) registryResponseForDischarge.getResult();
-
-        dischargedDataList.stream().forEach(dischargeData->{
-
-
-
-
-            if (dischargeData.get("images").getClass().toString().equals("class java.util.ArrayList")){
-                dischargeDataObject.setImages((List<String>) dischargeData.get("images"));
-            }else if (dischargeData.get("images").getClass().toString().equals("class java.lang.String")){
-                String result=(String)dischargeData.get("images");
-                result = new StringBuilder(result).deleteCharAt(0).toString();
-                result = new StringBuilder(result).deleteCharAt(result.length()-1).toString();
-                List<String> images = Arrays.asList(result);
-                dischargeDataObject.setImages(images);
+        List<LinkedHashMap> dischargeDataList = (List<LinkedHashMap>) registryResponseForDischarge.getResult();
+        List<DischargeData> updatedDischargeDataList = new ArrayList<>();
+        dischargeDataList.stream().forEach(discharge -> {
+            DischargeData dischargeData = new DischargeData();
+            try {
+                convertRegistryResponseToDischarge(dischargeData, discharge);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
             }
+            updatedDischargeDataList.add(dischargeData);
 
         });
-
-        dischargeMap.put("dischargeData", registryResponseForDischarge.getResult());
+        dischargeMap.put("dischargeData", updatedDischargeDataList);
         springResponse.setExtraInformation(dischargeMap);
     }
 
@@ -441,7 +491,6 @@ public class UserServiceImpl implements UserService {
                 List<LinkedHashMap> springList = (List<LinkedHashMap>) registryResponse.getResult();
                 List<Springs> springData = new ArrayList<>();
                 springList.stream().forEach(spring -> {
-                    int i = 0;
                     Springs springResponse = new Springs();
                     convertRegistryResponseToSpring (springResponse, spring);
                     springData.add(springResponse);
@@ -460,7 +509,6 @@ public class UserServiceImpl implements UserService {
             } catch (IOException e) {
                 log.error("Error creating registry entry : {} ", e.getMessage());
             }
-
             return loginAndRegisterResponseMap;
         }
     }
@@ -496,15 +544,13 @@ public class UserServiceImpl implements UserService {
         springResponse.setLongitude((Double) spring.get("longitude"));
         springResponse.setOwnershipType((String) spring.get("ownershipType"));
 
-        log.info("***************** IMAGE OBJECT TYPE " + spring.get("images").getClass());
         if (spring.get("images").getClass().toString().equals("class java.util.ArrayList")) {
             springResponse.setImages((List<String>) spring.get("images"));
         } else if (spring.get("images").getClass().toString().equals("class java.lang.String")){
             String result = (String) spring.get("images");
             result = new StringBuilder(result).deleteCharAt(0).toString();
             result = new StringBuilder(result).deleteCharAt(result.length()-1).toString();
-            List<String> images = Arrays.asList(result);
-            springResponse.setImages(images);
+            springResponse.setImages(Arrays.asList(result));
         }
     }
 
@@ -617,6 +663,7 @@ public class UserServiceImpl implements UserService {
         return loginAndRegisterResponseMap;
     }
 
+
     @Override
     public LoginAndRegisterResponseMap createDischargeData(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
@@ -657,6 +704,8 @@ public class UserServiceImpl implements UserService {
         return loginAndRegisterResponseMap;
     }
 
+
+
     @Override
     public LoginAndRegisterResponseMap createSpring(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
@@ -674,8 +723,6 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> extraInfo = new HashMap<>();
         extraInfo.put("extraInfo", "geolocation");
         springDto.setExtraInformation(extraInfo);
-
-        log.info("********create spring flow ***" + springDto);
 
         Map<String, Object> springMap = new HashMap<>();
         springMap.put("springs", springDto);
