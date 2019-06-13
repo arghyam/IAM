@@ -516,7 +516,7 @@ public class UserServiceImpl implements UserService {
 
     private void paginatedResponse (int startValue, int pageNumber, int endValue, List<Springs> newSprings, PaginatedResponse paginatedResponse) {
         startValue = ((pageNumber - 1) * 5);
-        endValue = (startValue + 5);
+        endValue = (newSprings.size() >5*pageNumber) ? (startValue + 5) : newSprings.size();
         List<Springs> springsList = new ArrayList<>();
         for (int j=startValue; j<endValue; j++) {
             springsList.add(newSprings.get(j));
@@ -537,6 +537,8 @@ public class UserServiceImpl implements UserService {
         springResponse.setCreatedTimeStamp((String) spring.get("createdTimeStamp"));
         springResponse.setVillage((String) spring.get("village"));
         springResponse.setSpringCode((String) spring.get("springCode"));
+        springResponse.setSpringName((String) spring.get("springName"));
+
         springResponse.setTenantId((String) spring.get("tenantId"));
         springResponse.setAccuracy((Double) spring.get("accuracy"));
         springResponse.setElevation((Double) spring.get("elevation"));
