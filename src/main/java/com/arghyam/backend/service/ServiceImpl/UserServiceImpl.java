@@ -298,29 +298,45 @@ public class UserServiceImpl implements UserService {
                 Map<String, Object> response = new HashMap<>();
                 Springs springResponse = new Springs();
                 List<LinkedHashMap> springList = (List<LinkedHashMap>) registryResponse.getResult();
-                springList.stream().forEach(springWithdischarge -> {
-                    try {
-                        convertRegistryResponseToSpringDischarge (springResponse, springWithdischarge);
-                    } catch (JsonProcessingException e) {
-                        e.printStackTrace();
-                    }
-                });
-                getDischargeDataForASpring(adminToken, springs.getSpringCode(), registryResponse, springResponse);
-                response.put("responseCode", 200);
-                response.put("responseStatus", "successfull");
-                response.put("responseObject", springResponse);
-                loginAndRegisterResponseMap.setId(requestDTO.getId());
-                loginAndRegisterResponseMap.setEts(requestDTO.getEts());
-                loginAndRegisterResponseMap.setVer(requestDTO.getVer());
-                loginAndRegisterResponseMap.setParams(requestDTO.getParams());
-                loginAndRegisterResponseMap.setResponse(response);
+                if (!springList.isEmpty()){
+                    springList.stream().forEach(springWithdischarge -> {
+                        try {
+                            convertRegistryResponseToSpringDischarge (springResponse, springWithdischarge);
+                        } catch (JsonProcessingException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                    getDischargeDataForASpring(adminToken, springs.getSpringCode(), registryResponse, springResponse);
+                    response.put("responseCode", 200);
+                    response.put("responseStatus", "successfull");
+                    response.put("responseObject", springResponse);
+                    loginAndRegisterResponseMap.setId(requestDTO.getId());
+                    loginAndRegisterResponseMap.setEts(requestDTO.getEts());
+                    loginAndRegisterResponseMap.setVer(requestDTO.getVer());
+                    loginAndRegisterResponseMap.setParams(requestDTO.getParams());
+                    loginAndRegisterResponseMap.setResponse(response);
+                    return loginAndRegisterResponseMap;
+                }else {
+                    // if results is empty
+                    loginAndRegisterResponseMap.setParams(requestDTO.getParams());
+                    loginAndRegisterResponseMap.setResponse(null);
+                    loginAndRegisterResponseMap.setVer(requestDTO.getVer());
+                    loginAndRegisterResponseMap.setEts(requestDTO.getEts());
+                    loginAndRegisterResponseMap.setId(requestDTO.getId());
+                    response.put("responseCode",404);
+                    response.put("responseStatus","spring not found");
+                    loginAndRegisterResponseMap.setResponse(response);
+
+                    return loginAndRegisterResponseMap;
+                }
+
             }
         } catch (Exception e) {
             log.error("Error creating registry entry : {} ", e.getMessage());
             throw new InternalServerException("Internal server error");
 
         }
-        return loginAndRegisterResponseMap;
+        return null;
     }
 
 
@@ -716,43 +732,58 @@ public class UserServiceImpl implements UserService {
 
         Springs springDto = new Springs();
         BeanUtils.copyProperties(springs, springDto);
-        springDto.setSpringCode(getAlphaNumericString(6));
-        springDto.setUserId(UUID.randomUUID().toString());
-        springDto.setCreatedTimeStamp(new Date().toString());
-        springDto.setUpdatedTimeStamp("");
-        springDto.setUsage("irrigation");
-        springDto.setNumberOfHouseholds(2);
-        Map<String, Object> extraInfo = new HashMap<>();
-        extraInfo.put("extraInfo", "geolocation");
-        springDto.setExtraInformation(extraInfo);
+        if (null!=springDto.getImages() && !springDto.getImages().isEmpty()){
+            springDto.setSpringCode(getAlphaNumericString(6));
+            springDto.setUserId(UUID.randomUUID().toString());
+            springDto.setCreatedTimeStamp(new Date().toString());
+            springDto.setUpdatedTimeStamp("");
+            springDto.setUsage("irrigation");
+            springDto.setNumberOfHouseholds(2);
+            Map<String, Object> extraInfo = new HashMap<>();
+            extraInfo.put("extraInfo", "geolocation");
+            springDto.setExtraInformation(extraInfo);
 
-        Map<String, Object> springMap = new HashMap<>();
-        springMap.put("springs", springDto);
-        String stringRequest = objectMapper.writeValueAsString(springMap);
-        log.info("********create spring flow ***" + stringRequest);
-        RegistryRequest registryRequest = new RegistryRequest(null, springMap, com.arghyam.backend.dto.RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+            Map<String, Object> springMap = new HashMap<>();
+            springMap.put("springs", springDto);
+            String stringRequest = objectMapper.writeValueAsString(springMap);
+            log.info("********create spring flow ***" + stringRequest);
+            RegistryRequest registryRequest = new RegistryRequest(null, springMap, com.arghyam.backend.dto.RegistryResponse.API_ID.CREATE.getId(), stringRequest);
 
-        log.info("********create spring flow ***" + objectMapper.writeValueAsString(registryRequest));
-        try {
-            Call<RegistryResponse> createRegistryEntryCall = registryDao.createUser(adminAccessToken, registryRequest);
-            retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
+            log.info("********create spring flow ***" + objectMapper.writeValueAsString(registryRequest));
+            try {
+                Call<RegistryResponse> createRegistryEntryCall = registryDao.createUser(adminAccessToken, registryRequest);
+                retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
 
-            if (!registryUserCreationResponse.isSuccessful()) {
-                log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+                if (!registryUserCreationResponse.isSuccessful()) {
+                    log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+                }
+
+            } catch (IOException e) {
+                log.error("Error creating registry entry : {} ", e.getMessage());
             }
 
-        } catch (IOException e) {
-            log.error("Error creating registry entry : {} ", e.getMessage());
+            BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+            Map<String, Object> response = new HashMap<>();
+            response.put("responseCode", 200);
+            response.put("responseStatus", "created discharge data successfully");
+            response.put("responseObject", springDto);
+            loginAndRegisterResponseMap.setResponse(response);
+            log.info("********create spring flow ***" + objectMapper.writeValueAsString(loginAndRegisterResponseMap));
+            return loginAndRegisterResponseMap;
+        }else {
+            Map<String, Object> response = new HashMap<>();
+            response.put("responseCode", 422);
+            response.put("responseStatus", "spring cannot be created");
+            loginAndRegisterResponseMap.setResponse(response);
+            loginAndRegisterResponseMap.setId(requestDTO.getId());
+            loginAndRegisterResponseMap.setEts(requestDTO.getEts());
+            loginAndRegisterResponseMap.setVer(requestDTO.getVer());
+            loginAndRegisterResponseMap.setParams(requestDTO.getParams());
+            return loginAndRegisterResponseMap;
         }
 
-        BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
-        Map<String, Object> response = new HashMap<>();
-        response.put("responseCode", 200);
-        response.put("responseStatus", "created discharge data successfully");
-        response.put("responseObject", springDto);
-        loginAndRegisterResponseMap.setResponse(response);
-        log.info("********create spring flow ***" + objectMapper.writeValueAsString(loginAndRegisterResponseMap));
-        return loginAndRegisterResponseMap;
+
+
     }
 
 
