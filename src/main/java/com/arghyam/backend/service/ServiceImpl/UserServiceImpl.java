@@ -199,10 +199,10 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public ResponseDTO updateProfilePicture(MultipartFile file) {
-        URL url = null;
+        String fileName="";
         try {
             File imageFile = AmazonUtils.convertMultiPartToFile(file);
-            String fileName = AmazonUtils.generateFileName(file);
+            fileName = AmazonUtils.generateFileName(file);
 
             PutObjectRequest request = new PutObjectRequest(appContext.getBucketName(), ARGHYAM_S3_FOLDER_LOCATION + fileName, imageFile);
             amazonS3.putObject(request);
@@ -210,13 +210,13 @@ public class UserServiceImpl implements UserService {
             long expTimeMillis = expiration.getTime();
             expTimeMillis += 1000 * 60 * 60;
             expiration.setTime(expTimeMillis);
-            url = amazonS3.generatePresignedUrl(appContext.getBucketName(), "arghyam/" + fileName, expiration);
+            /*url = amazonS3.generatePresignedUrl(appContext.getBucketName(), "arghyam/" + fileName, expiration);*/
             imageFile.delete();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return sendResponse(url);
+        return sendResponse(fileName);
     }
 
     @Override
@@ -561,14 +561,33 @@ public class UserServiceImpl implements UserService {
         springResponse.setLatitude((Double) spring.get("latitude"));
         springResponse.setLongitude((Double) spring.get("longitude"));
         springResponse.setOwnershipType((String) spring.get("ownershipType"));
+        java.util.Date expiration = new java.util.Date();
+        long expTimeMillis = expiration.getTime();
+        expTimeMillis += 1000 * 60 * 60;
+        expiration.setTime(expTimeMillis);
 
         if (spring.get("images").getClass().toString().equals("class java.util.ArrayList")) {
-            springResponse.setImages((List<String>) spring.get("images"));
+            List<URL> imageList=new ArrayList<>();
+            List<String> imageNewList=new ArrayList<>();
+            imageList=(List<URL>) spring.get("images");
+            for (int i = 0; i <imageList.size(); i++) {
+
+                URL url = amazonS3.
+                        generatePresignedUrl(appContext.getBucketName()
+                                , "arghyam/" + imageList.get(i), expiration);
+                imageNewList.add(String.valueOf(url));
+            }
+
+            springResponse.setImages(imageNewList);
         } else if (spring.get("images").getClass().toString().equals("class java.lang.String")){
             String result = (String) spring.get("images");
             result = new StringBuilder(result).deleteCharAt(0).toString();
             result = new StringBuilder(result).deleteCharAt(result.length()-1).toString();
-            springResponse.setImages(Arrays.asList(result));
+            URL url=amazonS3.
+                    generatePresignedUrl(appContext.getBucketName()
+                            , "arghyam/" + result, expiration);
+
+            springResponse.setImages(Arrays.asList(String.valueOf(url)));
         }
     }
 
@@ -580,10 +599,10 @@ public class UserServiceImpl implements UserService {
      * @param url
      * @return
      */
-    private ResponseDTO sendResponse(URL url) {
+    private ResponseDTO sendResponse(String url) {
         ResponseDTO responseDTO = new ResponseDTO();
         HashMap<String, Object> map = new HashMap<>();
-        map.put("imageUrl", url);
+        map.put("imageName", url);
         ImageResponseDTO imageResponseDTO = new ImageResponseDTO();
         imageResponseDTO.setMap(map);
         responseDTO.setResponseCode(200);
