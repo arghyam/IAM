@@ -387,13 +387,31 @@ public class UserServiceImpl implements UserService {
 
 
     private void convertStringToList(DischargeData dischargeData, LinkedHashMap discharge, String attribute) {
+
+        java.util.Date expiration = new java.util.Date();
+        long expTimeMillis = expiration.getTime();
+        expTimeMillis += 1000 * 60 * 60;
+        expiration.setTime(expTimeMillis);
+
+
         if (discharge.get(attribute).getClass().toString().equals("class java.util.ArrayList")) {
             if (attribute.equals("dischargeTime")) {
                 dischargeData.setDischargeTime((List<String>) discharge.get(attribute));
             } else if (attribute.equals("months")) {
                 dischargeData.setMonths((List<String>) discharge.get(attribute));
             } else if (attribute.equals("images")) {
-                dischargeData.setImages((List<String>) discharge.get(attribute));
+
+                List<URL> imageList=new ArrayList<>();
+                List<String> imageNewList=new ArrayList<>();
+                imageList=(List<URL>) discharge.get("images");
+                for (int i = 0; i <imageList.size(); i++) {
+
+                    URL url = amazonS3.
+                            generatePresignedUrl(appContext.getBucketName()
+                                    , "arghyam/" + imageList.get(i), expiration);
+                    imageNewList.add(String.valueOf(url));
+                }
+                dischargeData.setImages(imageNewList);
             }
 
         } else if (discharge.get(attribute).getClass().toString().equals("class java.lang.String")){
@@ -406,7 +424,10 @@ public class UserServiceImpl implements UserService {
             } else if (attribute.equals("months")) {
                 dischargeData.setMonths(Arrays.asList(result));
             } else if (attribute.equals("images")) {
-                dischargeData.setImages(Arrays.asList(result));
+                URL url=amazonS3.
+                        generatePresignedUrl(appContext.getBucketName()
+                                , "arghyam/" + result, expiration);
+                dischargeData.setImages(Arrays.asList(String.valueOf(url)));
             }
         }
     }
@@ -432,14 +453,36 @@ public class UserServiceImpl implements UserService {
         springResponse.setLongitude((Double) spring.get("longitude"));
         springResponse.setOwnershipType((String) spring.get("ownershipType"));
 
+        java.util.Date expiration = new java.util.Date();
+        long expTimeMillis = expiration.getTime();
+        expTimeMillis += 1000 * 60 * 60;
+        expiration.setTime(expTimeMillis);
+
         if (spring.get("images").getClass().toString().equals("class java.util.ArrayList")) {
-            springResponse.setImages((List<String>) spring.get("images"));
+
+            List<URL> imageList=new ArrayList<>();
+            List<String> imageNewList=new ArrayList<>();
+            imageList=(List<URL>) spring.get("images");
+            for (int i = 0; i <imageList.size(); i++) {
+
+                URL url = amazonS3.
+                        generatePresignedUrl(appContext.getBucketName()
+                                , "arghyam/" + imageList.get(i), expiration);
+                imageNewList.add(String.valueOf(url));
+            }
+
+
+
+            springResponse.setImages(imageNewList);
         } else if (spring.get("images").getClass().toString().equals("class java.lang.String")){
             String result = (String) spring.get("images");
             result = new StringBuilder(result).deleteCharAt(0).toString();
             result = new StringBuilder(result).deleteCharAt(result.length()-1).toString();
             List<String> images = Arrays.asList(result);
-            springResponse.setImages(images);
+            URL url=amazonS3.
+                    generatePresignedUrl(appContext.getBucketName()
+                            , "arghyam/" + result, expiration);
+            springResponse.setImages(Arrays.asList(String.valueOf(url)));
         }
     }
 
@@ -784,7 +827,7 @@ public class UserServiceImpl implements UserService {
             BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
             Map<String, Object> response = new HashMap<>();
             response.put("responseCode", 200);
-            response.put("responseStatus", "created discharge data successfully");
+            response.put("responseStatus", "created spring successfully");
             response.put("responseObject", springDto);
             loginAndRegisterResponseMap.setResponse(response);
             log.info("********create spring flow ***" + objectMapper.writeValueAsString(loginAndRegisterResponseMap));
