@@ -18,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import retrofit2.http.Query;
 
 import java.io.IOException;
 
@@ -37,26 +38,23 @@ public class LoginController {
 
     @RequestMapping(value = "/user/login", method = RequestMethod.POST)
     public LoginAndRegisterResponseMap login(@Validated @RequestBody RequestDTO requestDTO,
-                        BindingResult bindingResult) throws IOException {
+                                             BindingResult bindingResult) throws IOException {
         return loginService.login(requestDTO, bindingResult);
     }
-
 
 
     @RequestMapping(value = "/user/generate-accesstoken", method = RequestMethod.POST,
             consumes = MediaType.APPLICATION_JSON_VALUE, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_FORM_URLENCODED_VALUE})
     public LoginAndRegisterResponseMap generateAccessToken(@RequestBody RequestDTO requestDTO) throws Exception {
-            return loginService.refreshAccessToken(requestDTO);
+        return loginService.refreshAccessToken(requestDTO);
     }
-
 
 
     @RequestMapping(value = "/user/verifyOtp", method = RequestMethod.POST)
-    LoginAndRegisterResponseMap verifyOtp(@Validated @RequestBody RequestDTO requestDTO, BindingResult bindingResult)throws IOException {
+    LoginAndRegisterResponseMap verifyOtp(@Validated @RequestBody RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
 
-        return loginService.verifyOtp(requestDTO,bindingResult);
+        return loginService.verifyOtp(requestDTO, bindingResult);
     }
-
 
 
     @ResponseStatus(HttpStatus.OK)
@@ -93,4 +91,11 @@ public class LoginController {
         }
         return responseDTO;
     }
+
+    @RequestMapping(value = "/user/myActivities", method = RequestMethod.POST)
+    LoginAndRegisterResponseMap myActivities(@RequestBody  RequestDTO requestDTO) throws IOException {
+
+        return loginService.myactivities(requestDTO);
+    }
+
 }

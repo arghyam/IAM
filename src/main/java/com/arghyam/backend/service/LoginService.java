@@ -16,4 +16,6 @@ public interface LoginService {
     public ResponseDTO logout(String id) throws IOException;
 
     public LoginAndRegisterResponseMap verifyOtp(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
+
+    LoginAndRegisterResponseMap myactivities(RequestDTO requestDTO) throws IOException;
 }
