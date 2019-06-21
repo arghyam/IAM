@@ -37,6 +37,8 @@ import org.springframework.validation.FieldError;
 
 import org.springframework.web.multipart.MultipartFile;
 import retrofit2.Call;
+import retrofit2.Response;
+import sun.rmi.runtime.Log;
 
 import java.io.File;
 import java.io.IOException;
@@ -78,6 +80,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     LoginServiceImpl loginServiceImpl;
+
+    @Autowired
+    RegistryDAO registryDAO;
 
     ObjectMapper mapper = new ObjectMapper();
 
@@ -199,7 +204,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public ResponseDTO updateProfilePicture(MultipartFile file) {
-        String fileName="";
+        String fileName = "";
         try {
             File imageFile = AmazonUtils.convertMultiPartToFile(file);
             fileName = AmazonUtils.generateFileName(file);
@@ -298,10 +303,10 @@ public class UserServiceImpl implements UserService {
                 Map<String, Object> response = new HashMap<>();
                 Springs springResponse = new Springs();
                 List<LinkedHashMap> springList = (List<LinkedHashMap>) registryResponse.getResult();
-                if (!springList.isEmpty()){
+                if (!springList.isEmpty()) {
                     springList.stream().forEach(springWithdischarge -> {
                         try {
-                            convertRegistryResponseToSpringDischarge (springResponse, springWithdischarge);
+                            convertRegistryResponseToSpringDischarge(springResponse, springWithdischarge);
                         } catch (JsonProcessingException e) {
                             e.printStackTrace();
                         }
@@ -316,15 +321,15 @@ public class UserServiceImpl implements UserService {
                     loginAndRegisterResponseMap.setParams(requestDTO.getParams());
                     loginAndRegisterResponseMap.setResponse(response);
                     return loginAndRegisterResponseMap;
-                }else {
+                } else {
                     // if results is empty
                     loginAndRegisterResponseMap.setParams(requestDTO.getParams());
                     loginAndRegisterResponseMap.setResponse(null);
                     loginAndRegisterResponseMap.setVer(requestDTO.getVer());
                     loginAndRegisterResponseMap.setEts(requestDTO.getEts());
                     loginAndRegisterResponseMap.setId(requestDTO.getId());
-                    response.put("responseCode",404);
-                    response.put("responseStatus","spring not found");
+                    response.put("responseCode", 404);
+                    response.put("responseStatus", "spring not found");
                     loginAndRegisterResponseMap.setResponse(response);
 
                     return loginAndRegisterResponseMap;
@@ -340,7 +345,6 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
     private void getDischargeDataForASpring(String adminToken, String springCode, RegistryResponse registryResponse, Springs springResponse) throws IOException {
         Map<String, Object> dischargeData = new HashMap<>();
         dischargeData.put("springCode", springCode);
@@ -349,18 +353,16 @@ public class UserServiceImpl implements UserService {
         String stringDischargeDataRequest = mapper.writeValueAsString(dischargeDataMap);
         RegistryRequest registryRequestForDischarge = new RegistryRequest(null, dischargeDataMap, RegistryResponse.API_ID.SEARCH.getId(), stringDischargeDataRequest);
         Call<RegistryResponse> createRegistryEntryCallForDischargeData = registryDao.searchUser(adminToken, registryRequestForDischarge);
-        retrofit2.Response<RegistryResponse>  registryUserCreationResponseForDischarge = createRegistryEntryCallForDischargeData.execute();
+        retrofit2.Response<RegistryResponse> registryUserCreationResponseForDischarge = createRegistryEntryCallForDischargeData.execute();
 
         RegistryResponse registryResponseForDischarge = new RegistryResponse();
         BeanUtils.copyProperties(registryUserCreationResponseForDischarge.body(), registryResponseForDischarge);
-        mapExtraInformationForDisrchargeData (springResponse, registryResponseForDischarge);
+        mapExtraInformationForDisrchargeData(springResponse, registryResponseForDischarge);
 
     }
 
 
-
-
-    private void convertRegistryResponseToDischarge (DischargeData dischargeData, LinkedHashMap discharge) throws JsonProcessingException {
+    private void convertRegistryResponseToDischarge(DischargeData dischargeData, LinkedHashMap discharge) throws JsonProcessingException {
         dischargeData.setSeasonality((String) discharge.get("seasonality"));
         dischargeData.setUpdatedTimeStamp((String) discharge.get("updatedTimeStamp"));
         dischargeData.setCreatedTimeStamp((String) discharge.get("createdTimeStamp"));
@@ -380,9 +382,9 @@ public class UserServiceImpl implements UserService {
             updatedLitresPerSecond.add(lps);
         });
         dischargeData.setLitresPerSecond(updatedLitresPerSecond);
-        convertStringToList(dischargeData, discharge,  "images");
-        convertStringToList(dischargeData, discharge,  "months");
-        convertStringToList(dischargeData, discharge,  "dischargeTime");
+        convertStringToList(dischargeData, discharge, "images");
+        convertStringToList(dischargeData, discharge, "months");
+        convertStringToList(dischargeData, discharge, "dischargeTime");
     }
 
 
@@ -401,10 +403,10 @@ public class UserServiceImpl implements UserService {
                 dischargeData.setMonths((List<String>) discharge.get(attribute));
             } else if (attribute.equals("images")) {
 
-                List<URL> imageList=new ArrayList<>();
-                List<String> imageNewList=new ArrayList<>();
-                imageList=(List<URL>) discharge.get("images");
-                for (int i = 0; i <imageList.size(); i++) {
+                List<URL> imageList = new ArrayList<>();
+                List<String> imageNewList = new ArrayList<>();
+                imageList = (List<URL>) discharge.get("images");
+                for (int i = 0; i < imageList.size(); i++) {
 
                     URL url = amazonS3.
                             generatePresignedUrl(appContext.getBucketName()
@@ -414,17 +416,17 @@ public class UserServiceImpl implements UserService {
                 dischargeData.setImages(imageNewList);
             }
 
-        } else if (discharge.get(attribute).getClass().toString().equals("class java.lang.String")){
+        } else if (discharge.get(attribute).getClass().toString().equals("class java.lang.String")) {
             String result = (String) discharge.get(attribute);
             result = new StringBuilder(result).deleteCharAt(0).toString();
-            result = new StringBuilder(result).deleteCharAt(result.length()-1).toString();
+            result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
 
             if (attribute.equals("dischargeTime")) {
                 dischargeData.setDischargeTime(Arrays.asList(result));
             } else if (attribute.equals("months")) {
                 dischargeData.setMonths(Arrays.asList(result));
             } else if (attribute.equals("images")) {
-                URL url=amazonS3.
+                URL url = amazonS3.
                         generatePresignedUrl(appContext.getBucketName()
                                 , "arghyam/" + result, expiration);
                 dischargeData.setImages(Arrays.asList(String.valueOf(url)));
@@ -433,10 +435,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
-
-
-    private void convertRegistryResponseToSpringDischarge (Springs springResponse, LinkedHashMap spring) throws JsonProcessingException {
+    private void convertRegistryResponseToSpringDischarge(Springs springResponse, LinkedHashMap spring) throws JsonProcessingException {
         springResponse.setNumberOfHouseholds((Integer) spring.get("numberOfHouseholds"));
         springResponse.setUsage((String) spring.get("usage"));
         springResponse.setUpdatedTimeStamp((String) spring.get("updatedTimeStamp"));
@@ -460,10 +459,10 @@ public class UserServiceImpl implements UserService {
 
         if (spring.get("images").getClass().toString().equals("class java.util.ArrayList")) {
 
-            List<URL> imageList=new ArrayList<>();
-            List<String> imageNewList=new ArrayList<>();
-            imageList=(List<URL>) spring.get("images");
-            for (int i = 0; i <imageList.size(); i++) {
+            List<URL> imageList = new ArrayList<>();
+            List<String> imageNewList = new ArrayList<>();
+            imageList = (List<URL>) spring.get("images");
+            for (int i = 0; i < imageList.size(); i++) {
 
                 URL url = amazonS3.
                         generatePresignedUrl(appContext.getBucketName()
@@ -472,14 +471,13 @@ public class UserServiceImpl implements UserService {
             }
 
 
-
             springResponse.setImages(imageNewList);
-        } else if (spring.get("images").getClass().toString().equals("class java.lang.String")){
+        } else if (spring.get("images").getClass().toString().equals("class java.lang.String")) {
             String result = (String) spring.get("images");
             result = new StringBuilder(result).deleteCharAt(0).toString();
-            result = new StringBuilder(result).deleteCharAt(result.length()-1).toString();
+            result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
             List<String> images = Arrays.asList(result);
-            URL url=amazonS3.
+            URL url = amazonS3.
                     generatePresignedUrl(appContext.getBucketName()
                             , "arghyam/" + result, expiration);
             springResponse.setImages(Arrays.asList(String.valueOf(url)));
@@ -487,10 +485,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
-
-
-    private void mapExtraInformationForDisrchargeData (Springs springResponse, RegistryResponse registryResponseForDischarge) {
+    private void mapExtraInformationForDisrchargeData(Springs springResponse, RegistryResponse registryResponseForDischarge) {
         Map<String, Object> dischargeMap = new HashMap<>();
         List<LinkedHashMap> dischargeDataList = (List<LinkedHashMap>) registryResponseForDischarge.getResult();
         List<DischargeData> updatedDischargeDataList = new ArrayList<>();
@@ -514,7 +509,6 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
     @Override
     public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult, Integer pageNumber) throws IOException {
 
@@ -524,7 +518,7 @@ public class UserServiceImpl implements UserService {
             throw new UnauthorizedException("pageNumber is invalid");
         } else {
             LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
-            int startValue=0, endValue=0;
+            int startValue = 0, endValue = 0;
             String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
             Map<String, String> springs = new HashMap<>();
             if (requestDTO.getRequest().keySet().contains("springs")) {
@@ -534,7 +528,7 @@ public class UserServiceImpl implements UserService {
             Map<String, Object> entityMap = new HashMap<>();
             entityMap.put("springs", springs);
             String stringRequest = objectMapper.writeValueAsString(entityMap);
-            RegistryRequest registryRequest=new RegistryRequest(null,entityMap, RegistryResponse.API_ID.SEARCH.getId(),stringRequest);
+            RegistryRequest registryRequest = new RegistryRequest(null, entityMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
 
             try {
                 Call<RegistryResponse> createRegistryEntryCall = registryDao.searchUser(adminToken, registryRequest);
@@ -551,7 +545,7 @@ public class UserServiceImpl implements UserService {
                 List<Springs> springData = new ArrayList<>();
                 springList.stream().forEach(spring -> {
                     Springs springResponse = new Springs();
-                    convertRegistryResponseToSpring (springResponse, spring);
+                    convertRegistryResponseToSpring(springResponse, spring);
                     springData.add(springResponse);
                 });
 
@@ -573,11 +567,11 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private void paginatedResponse (int startValue, int pageNumber, int endValue, List<Springs> newSprings, PaginatedResponse paginatedResponse) {
+    private void paginatedResponse(int startValue, int pageNumber, int endValue, List<Springs> newSprings, PaginatedResponse paginatedResponse) {
         startValue = ((pageNumber - 1) * 5);
-        endValue = (newSprings.size() >5*pageNumber) ? (startValue + 5) : newSprings.size();
+        endValue = (newSprings.size() > 5 * pageNumber) ? (startValue + 5) : newSprings.size();
         List<Springs> springsList = new ArrayList<>();
-        for (int j=startValue; j<endValue; j++) {
+        for (int j = startValue; j < endValue; j++) {
             springsList.add(newSprings.get(j));
         }
         paginatedResponse.setSprings(springsList);
@@ -585,7 +579,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private void convertRegistryResponseToSpring (Springs springResponse, LinkedHashMap spring) {
+    private void convertRegistryResponseToSpring(Springs springResponse, LinkedHashMap spring) {
 
         springResponse.setNumberOfHouseholds((Integer) spring.get("numberOfHouseholds"));
         springResponse.setUsage((String) spring.get("usage"));
@@ -610,10 +604,10 @@ public class UserServiceImpl implements UserService {
         expiration.setTime(expTimeMillis);
 
         if (spring.get("images").getClass().toString().equals("class java.util.ArrayList")) {
-            List<URL> imageList=new ArrayList<>();
-            List<String> imageNewList=new ArrayList<>();
-            imageList=(List<URL>) spring.get("images");
-            for (int i = 0; i <imageList.size(); i++) {
+            List<URL> imageList = new ArrayList<>();
+            List<String> imageNewList = new ArrayList<>();
+            imageList = (List<URL>) spring.get("images");
+            for (int i = 0; i < imageList.size(); i++) {
 
                 URL url = amazonS3.
                         generatePresignedUrl(appContext.getBucketName()
@@ -622,18 +616,17 @@ public class UserServiceImpl implements UserService {
             }
 
             springResponse.setImages(imageNewList);
-        } else if (spring.get("images").getClass().toString().equals("class java.lang.String")){
+        } else if (spring.get("images").getClass().toString().equals("class java.lang.String")) {
             String result = (String) spring.get("images");
             result = new StringBuilder(result).deleteCharAt(0).toString();
-            result = new StringBuilder(result).deleteCharAt(result.length()-1).toString();
-            URL url=amazonS3.
+            result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
+            URL url = amazonS3.
                     generatePresignedUrl(appContext.getBucketName()
                             , "arghyam/" + result, expiration);
 
             springResponse.setImages(Arrays.asList(String.valueOf(url)));
         }
     }
-
 
 
     /**
@@ -785,7 +778,6 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
     @Override
     public LoginAndRegisterResponseMap createSpring(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
@@ -794,9 +786,9 @@ public class UserServiceImpl implements UserService {
 
         Springs springDto = new Springs();
         BeanUtils.copyProperties(springs, springDto);
-        if (null!=springDto.getImages() && !springDto.getImages().isEmpty()){
+        if (null != springDto.getImages() && !springDto.getImages().isEmpty()) {
             springDto.setSpringCode(getAlphaNumericString(6));
-            springDto.setUserId(UUID.randomUUID().toString());
+            springDto.setUserId(springDto.getUserId());
             springDto.setCreatedTimeStamp(new Date().toString());
             springDto.setUpdatedTimeStamp("");
             springDto.setUsage("irrigation");
@@ -824,6 +816,11 @@ public class UserServiceImpl implements UserService {
                 log.error("Error creating registry entry : {} ", e.getMessage());
             }
 
+
+            // storing activity related data into registry
+            generateActivity(springMap, adminAccessToken);
+
+
             BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
             Map<String, Object> response = new HashMap<>();
             response.put("responseCode", 200);
@@ -832,7 +829,7 @@ public class UserServiceImpl implements UserService {
             loginAndRegisterResponseMap.setResponse(response);
             log.info("********create spring flow ***" + objectMapper.writeValueAsString(loginAndRegisterResponseMap));
             return loginAndRegisterResponseMap;
-        }else {
+        } else {
             Map<String, Object> response = new HashMap<>();
             response.put("responseCode", 422);
             response.put("responseStatus", "spring cannot be created");
@@ -845,7 +842,32 @@ public class UserServiceImpl implements UserService {
         }
 
 
+    }
 
+
+    private void generateActivity(Map<String, Object> springMap, String adminToken) throws IOException {
+        HashMap<String, Object> map = new HashMap<>();
+        Springs springs = (Springs) springMap.get("springs");
+        ActivitiesRequestDTO activitySearchDto=new ActivitiesRequestDTO();
+        activitySearchDto.setUserId(springs.getUserId());
+        activitySearchDto.setAction("new spring has been created");
+        map.put("activities",activitySearchDto);
+        try {
+            String stringRequest = mapper.writeValueAsString(map);
+            RegistryRequest registryRequest = new RegistryRequest(null, map, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+            Call<RegistryResponse> activitiesResponse = registryDAO.createUser(adminToken, registryRequest);
+            Response response=activitiesResponse.execute();
+
+            if (!response.isSuccessful()) {
+                log.info("response is un successfull due to :" + response.errorBody().toString());
+            } else {
+                // successfull case
+                log.info("response is successfull " + response);
+
+            }
+        } catch (JsonProcessingException e) {
+            log.error("error is :" + e);
+        }
     }
 
 

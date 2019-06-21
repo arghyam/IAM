@@ -4,6 +4,15 @@ public class UserResponseDTO {
 
     private AccessTokenResponseDTO accessTokenResponseDTO;
     private String username;
+    private String userId;
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
 
     public AccessTokenResponseDTO getAccessTokenResponseDTO() {
         return accessTokenResponseDTO;

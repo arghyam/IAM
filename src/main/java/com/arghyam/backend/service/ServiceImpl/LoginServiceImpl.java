@@ -83,7 +83,7 @@ public class LoginServiceImpl implements LoginService {
                     response.setNewUserCreated(true);
                 }
                 UserRepresentation userRepresentation = keycloakService.getUserByUsername(userToken, loginDTO.getUsername(), appContext.getRealm());
-                response.setUserId(userRepresentation.getId());
+                //response.setUserId(userRepresentation.getId());
                 updateOtpForUser(loginDTO, userToken, userRepresentation, "login");
                 updateLoginResponseBody(response, loginAndRegisterResponseMap, requestDTO, "200", "Login successfull", "login");
             }
@@ -209,7 +209,9 @@ public class LoginServiceImpl implements LoginService {
 
                     accessTokenResponseDTO.setAccessToken(loginResponseDTO.getAccessToken());
                     accessTokenResponseDTO.setRefreshToken(loginResponseDTO.getRefreshToken());
+
                     userResponseDTO.setAccessTokenResponseDTO(accessTokenResponseDTO);
+                    userResponseDTO.setUserId(userRepresentation.getId());
                     updateLoginResponseBody(userResponseDTO, loginAndRegisterResponseMap, requestDTO, "200", "Otp verified", "verifyOtp");
                     return loginAndRegisterResponseMap;
                 } else {
@@ -239,15 +241,13 @@ public class LoginServiceImpl implements LoginService {
         retrofit2.Response registryUserCreationResponse = null;
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
-        /*if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("activities")) {
-            springs = mapper.convertValue(requestDTO.getRequest().get("activities"), ActivitiesRequestDTO.class);
-        }*/
-        HashMap<String, String> activities = new HashMap<>();
-        if (requestDTO.getRequest().keySet().contains("activities")) {
-            activities.put("@type", "activities");
+        ActivitySearchDto activity=new ActivitySearchDto();
+        if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("activities")) {
+            activity = mapper.convertValue(requestDTO.getRequest().get("activities"), ActivitySearchDto.class);
         }
+
         HashMap<String, Object> map = new HashMap<>();
-        map.put("activities", activities);
+        map.put("activities", activity);
         String stringRequest = mapper.writeValueAsString(map);
         RegistryRequest registryRequest = new RegistryRequest(null, map, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
         try {
