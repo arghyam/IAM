@@ -4,6 +4,15 @@ public class ActivitiesRequestDTO {
 
     private String userId;
     private String action;
+    private String createdAt;
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
+    }
 
     public String getAction() {
         return action;

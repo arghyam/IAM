@@ -745,7 +745,7 @@ public class UserServiceImpl implements UserService {
 
         DischargeData discharge = new DischargeData();
         BeanUtils.copyProperties(dischargeData, discharge);
-        discharge.setUserId(UUID.randomUUID().toString());
+        discharge.setUserId(discharge.getUserId());
         discharge.setTenantId("tenantId1");
         discharge.setOrgId("Organisation1");
         discharge.setCreatedTimeStamp(new Date().toString());
@@ -768,6 +768,8 @@ public class UserServiceImpl implements UserService {
             log.error("Error creating registry entry : {} ", e.getMessage());
         }
 
+            generateActivityForDischargeData(adminAccessToken,dischargrMap);
+
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         Map<String, Object> response = new HashMap<>();
         response.put("responseCode", 200);
@@ -775,6 +777,34 @@ public class UserServiceImpl implements UserService {
         response.put("responseObject", discharge);
         loginAndRegisterResponseMap.setResponse(response);
         return loginAndRegisterResponseMap;
+    }
+
+    private void generateActivityForDischargeData(String adminToken, Map<String, Object> dischargrMap) throws IOException {
+        HashMap<String,Object> map=new HashMap<>();
+        DischargeData dischargeData=(DischargeData) dischargrMap.get("dischargeData");
+        ActivitiesRequestDTO activitiesRequestDTO=new ActivitiesRequestDTO();
+        activitiesRequestDTO.setUserId(dischargeData.getUserId());
+        activitiesRequestDTO.setAction("New discharge data has been created for:"+dischargeData.getSpringCode());
+        activitiesRequestDTO.setCreatedAt(dischargeData.getCreatedTimeStamp());
+        map.put("activities",activitiesRequestDTO);
+
+        try {
+            String stringRequest = mapper.writeValueAsString(map);
+            RegistryRequest registryRequest = new RegistryRequest(null, map, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+            Call<RegistryResponse> activitiesResponse = registryDAO.createUser(adminToken, registryRequest);
+            Response response=activitiesResponse.execute();
+
+            if (!response.isSuccessful()) {
+                log.info("response is un successfull due to :" + response.errorBody().toString());
+            } else {
+                // successfull case
+                log.info("response is successfull " + response);
+
+            }
+        } catch (JsonProcessingException e) {
+            log.error("error is :" + e);
+        }
+
     }
 
 
@@ -850,7 +880,8 @@ public class UserServiceImpl implements UserService {
         Springs springs = (Springs) springMap.get("springs");
         ActivitiesRequestDTO activitySearchDto=new ActivitiesRequestDTO();
         activitySearchDto.setUserId(springs.getUserId());
-        activitySearchDto.setAction("new spring has been created");
+        activitySearchDto.setCreatedAt(springs.getCreatedTimeStamp());
+        activitySearchDto.setAction("new spring has been created for :"+springs.getSpringCode());
         map.put("activities",activitySearchDto);
         try {
             String stringRequest = mapper.writeValueAsString(map);

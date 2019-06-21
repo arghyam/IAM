@@ -305,6 +305,7 @@ public class LoginServiceImpl implements LoginService {
     private void convertRegistryResponseToActivity(ActivitiesRequestDTO activityResponse, LinkedHashMap activity) {
         activityResponse.setUserId((String) activity.get("userId"));
         activityResponse.setAction((String) activity.get("action"));
+        activityResponse.setCreatedAt((String) activity.get("createdAt"));
     }
 
     private boolean compareTime(String createdAt) throws ParseException {
