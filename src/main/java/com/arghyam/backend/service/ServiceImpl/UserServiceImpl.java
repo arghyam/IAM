@@ -38,7 +38,6 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.multipart.MultipartFile;
 import retrofit2.Call;
 import retrofit2.Response;
-import sun.rmi.runtime.Log;
 
 import java.io.File;
 import java.io.IOException;
@@ -780,12 +779,17 @@ public class UserServiceImpl implements UserService {
     }
 
     private void generateActivityForDischargeData(String adminToken, Map<String, Object> dischargrMap) throws IOException {
+       Springs springsDetails=new Springs();
         HashMap<String,Object> map=new HashMap<>();
         DischargeData dischargeData=(DischargeData) dischargrMap.get("dischargeData");
         ActivitiesRequestDTO activitiesRequestDTO=new ActivitiesRequestDTO();
+        springsDetails=getSpringDetailsBySpringCode(dischargeData.getSpringCode());
         activitiesRequestDTO.setUserId(dischargeData.getUserId());
-        activitiesRequestDTO.setAction("New discharge data has been created for:"+dischargeData.getSpringCode());
+        activitiesRequestDTO.setAction("New discharge data has been created for spring:"+dischargeData.getSpringCode());
         activitiesRequestDTO.setCreatedAt(dischargeData.getCreatedTimeStamp());
+        activitiesRequestDTO.setLongitude(springsDetails.getLongitude());
+        activitiesRequestDTO.setLatitude(springsDetails.getLatitude());
+        activitiesRequestDTO.setSpringName(springsDetails.getSpringName());
         map.put("activities",activitiesRequestDTO);
 
         try {
@@ -805,6 +809,61 @@ public class UserServiceImpl implements UserService {
             log.error("error is :" + e);
         }
 
+    }
+
+    private Springs getSpringDetailsBySpringCode(String springCode) throws IOException {
+        retrofit2.Response registryUserCreationResponse = null;
+        retrofit2.Response dischargeDataResponse = null;
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        Person springs = new Person();
+        HashMap<String,Object> map=new HashMap<>();
+        RequestDTO requestDTO=new RequestDTO();
+        springs.setSpringCode(springCode);
+        map.put("springs",springs);
+        requestDTO.setRequest(map);
+
+        if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("springs")) {
+            springs = mapper.convertValue(requestDTO.getRequest().get("springs"), Person.class);
+        }
+        Map<String, Object> springMap = new HashMap<>();
+        springMap.clear();
+        if (springMap.isEmpty()) {
+            springMap.put("springs", springs);
+        } else {
+            springMap.clear();
+            springMap.put("springs", springs);
+        }
+        String stringRequest = mapper.writeValueAsString(springMap);
+        RegistryRequest registryRequest = new RegistryRequest(null, springMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
+        try {
+
+            Call<RegistryResponse> createRegistryEntryCall = registryDao.findSpringbyId(adminToken, registryRequest);
+            registryUserCreationResponse = createRegistryEntryCall.execute();
+            if (!registryUserCreationResponse.isSuccessful()) {
+                log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+            } else {
+                RegistryResponse registryResponse = new RegistryResponse();
+                BeanUtils.copyProperties(registryUserCreationResponse.body(), registryResponse);
+
+                Map<String, Object> response = new HashMap<>();
+                Springs springResponse = new Springs();
+                List<LinkedHashMap> springList = (List<LinkedHashMap>) registryResponse.getResult();
+                if (!springList.isEmpty()) {
+                    springList.stream().forEach(springWithdischarge -> {
+                        try {
+                            convertRegistryResponseToSpringDischarge(springResponse, springWithdischarge);
+                        } catch (JsonProcessingException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                }
+                return springResponse;
+
+            }
+        }catch (Exception e){
+
+        }
+        return null;
     }
 
 
@@ -881,6 +940,9 @@ public class UserServiceImpl implements UserService {
         ActivitiesRequestDTO activitySearchDto=new ActivitiesRequestDTO();
         activitySearchDto.setUserId(springs.getUserId());
         activitySearchDto.setCreatedAt(springs.getCreatedTimeStamp());
+        activitySearchDto.setSpringName(springs.getSpringName());
+        activitySearchDto.setLatitude(springs.getLatitude());
+        activitySearchDto.setLongitude(springs.getLongitude());
         activitySearchDto.setAction("new spring has been created for :"+springs.getSpringCode());
         map.put("activities",activitySearchDto);
         try {

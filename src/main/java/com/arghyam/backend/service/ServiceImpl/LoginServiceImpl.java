@@ -306,6 +306,9 @@ public class LoginServiceImpl implements LoginService {
         activityResponse.setUserId((String) activity.get("userId"));
         activityResponse.setAction((String) activity.get("action"));
         activityResponse.setCreatedAt((String) activity.get("createdAt"));
+        activityResponse.setSpringName((String) activity.get("springName"));
+        activityResponse.setLatitude((double) activity.get("latitude"));
+        activityResponse.setLongitude((double) activity.get("longitude"));
     }
 
     private boolean compareTime(String createdAt) throws ParseException {
