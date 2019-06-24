@@ -2,23 +2,22 @@ package com.arghyam.backend.service.ServiceImpl;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.arghyam.backend.config.AppContext;
-import com.arghyam.backend.dao.KeycloakDAO;
-import com.arghyam.backend.dao.KeycloakService;
-import com.arghyam.backend.dao.RegistryDAO;
 import com.arghyam.backend.dto.*;
-import com.arghyam.backend.entity.*;
-import com.arghyam.backend.exceptions.InternalServerException;
-import com.arghyam.backend.exceptions.BadRequestException;
-import com.arghyam.backend.exceptions.UnauthorizedException;
-import com.arghyam.backend.exceptions.UnprocessableEntitiesException;
-import com.arghyam.backend.exceptions.ValidationError;
-import com.arghyam.backend.service.UserService;
-import com.arghyam.backend.utils.AmazonUtils;
-import com.arghyam.backend.utils.Constants;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.forwater.backend.config.AppContext;
+import org.forwater.backend.dao.KeycloakDAO;
+import org.forwater.backend.dao.KeycloakService;
+import org.forwater.backend.dao.RegistryDAO;
+import org.forwater.backend.dto.*;
+import org.forwater.backend.dto.ActivitiesRequestDTO;
+import org.forwater.backend.entity.*;
+import org.forwater.backend.exceptions.*;
+import org.forwater.backend.service.ServiceImpl.LoginServiceImpl;
+import org.forwater.backend.service.UserService;
+import org.forwater.backend.utils.AmazonUtils;
+import org.forwater.backend.utils.Constants;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 
 import org.keycloak.admin.client.Keycloak;
@@ -36,6 +35,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 
 import org.springframework.web.multipart.MultipartFile;
+
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -46,9 +46,9 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.arghyam.backend.utils.Constants.ARGHYAM_S3_FOLDER_LOCATION;
-import static com.arghyam.backend.utils.Constants.IMAGE_UPLOAD_SUCCESS_MESSAGE;
 import static java.util.Arrays.asList;
+import static org.forwater.backend.utils.Constants.ARGHYAM_S3_FOLDER_LOCATION;
+import static org.forwater.backend.utils.Constants.IMAGE_UPLOAD_SUCCESS_MESSAGE;
 
 @Component
 @Service
@@ -237,7 +237,7 @@ public class UserServiceImpl implements UserService {
         RegistryRequest registryRequest = new RegistryRequest(null, additionalInfoMap, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
-        if (additionalInfo.getWaterUseList().isEmpty()) {
+        if (additionalInfo.getUsage().isEmpty()) {
             HashMap<String, Object> map = new HashMap<>();
             map.put("responseCode", 422);
             map.put("responseStatus", "unProcessable entity");
@@ -436,7 +436,7 @@ public class UserServiceImpl implements UserService {
 
     private void convertRegistryResponseToSpringDischarge(Springs springResponse, LinkedHashMap spring) throws JsonProcessingException {
         springResponse.setNumberOfHouseholds((Integer) spring.get("numberOfHouseholds"));
-        springResponse.setUsage((String) spring.get("usage"));
+        springResponse.setUsage((List<String>) spring.get("usage"));
         springResponse.setUpdatedTimeStamp((String) spring.get("updatedTimeStamp"));
         springResponse.setOrgId((String) spring.get("orgId"));
         springResponse.setUserId((String) spring.get("userId"));
@@ -581,7 +581,7 @@ public class UserServiceImpl implements UserService {
     private void convertRegistryResponseToSpring(Springs springResponse, LinkedHashMap spring) {
 
         springResponse.setNumberOfHouseholds((Integer) spring.get("numberOfHouseholds"));
-        springResponse.setUsage((String) spring.get("usage"));
+        springResponse.setUsage((List<String>) spring.get("usage"));
         springResponse.setUpdatedTimeStamp((String) spring.get("updatedTimeStamp"));
         springResponse.setOrgId((String) spring.get("orgId"));
         springResponse.setUserId((String) spring.get("userId"));
@@ -697,7 +697,7 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> personMap = new HashMap<>();
         personMap.put("person", person);
         String stringRequest = objectMapper.writeValueAsString(personMap);
-        RegistryRequest registryRequest = new RegistryRequest(null, personMap, com.arghyam.backend.dto.RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+        RegistryRequest registryRequest = new RegistryRequest(null, personMap, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
 
         try {
             Call<RegistryResponse> createRegistryEntryCall = registryDao.createUser(adminAccessToken, registryRequest);
@@ -755,7 +755,7 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> dischargrMap = new HashMap<>();
         dischargrMap.put("dischargeData", discharge);
         String stringRequest = objectMapper.writeValueAsString(dischargrMap);
-        RegistryRequest registryRequest = new RegistryRequest(null, dischargrMap, com.arghyam.backend.dto.RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+        RegistryRequest registryRequest = new RegistryRequest(null, dischargrMap,RegistryResponse.API_ID.CREATE.getId(), stringRequest);
         try {
             Call<RegistryResponse> createRegistryEntryCall = registryDao.createUser(adminAccessToken, registryRequest);
             retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
@@ -881,8 +881,7 @@ public class UserServiceImpl implements UserService {
             springDto.setUserId(springDto.getUserId());
             springDto.setCreatedTimeStamp(new Date().toString());
             springDto.setUpdatedTimeStamp("");
-            springDto.setUsage("irrigation");
-            springDto.setNumberOfHouseholds(2);
+
             Map<String, Object> extraInfo = new HashMap<>();
             extraInfo.put("extraInfo", "geolocation");
             springDto.setExtraInformation(extraInfo);
@@ -891,7 +890,7 @@ public class UserServiceImpl implements UserService {
             springMap.put("springs", springDto);
             String stringRequest = objectMapper.writeValueAsString(springMap);
             log.info("********create spring flow ***" + stringRequest);
-            RegistryRequest registryRequest = new RegistryRequest(null, springMap, com.arghyam.backend.dto.RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+            RegistryRequest registryRequest = new RegistryRequest(null, springMap, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
 
             log.info("********create spring flow ***" + objectMapper.writeValueAsString(registryRequest));
             try {
