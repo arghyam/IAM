@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class LoginAndRegisterResponseBody {
 
     Boolean newUserCreated;
-    String userId;
     String message;
 
     public Boolean getNewUserCreated() {
@@ -25,11 +24,4 @@ public class LoginAndRegisterResponseBody {
         this.message = message;
     }
 
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
 }
