@@ -8,6 +8,15 @@ public class ActivitiesRequestDTO {
     private String springName;
     private double latitude;
     private double longitude;
+    private String springCode;
+
+    public String getSpringCode() {
+        return springCode;
+    }
+
+    public void setSpringCode(String springCode) {
+        this.springCode = springCode;
+    }
 
     public String getSpringName() {
         return springName;

@@ -790,6 +790,7 @@ public class UserServiceImpl implements UserService {
         activitiesRequestDTO.setLongitude(springsDetails.getLongitude());
         activitiesRequestDTO.setLatitude(springsDetails.getLatitude());
         activitiesRequestDTO.setSpringName(springsDetails.getSpringName());
+        activitiesRequestDTO.setSpringCode(springsDetails.getSpringCode());
         map.put("activities",activitiesRequestDTO);
 
         try {
@@ -943,6 +944,7 @@ public class UserServiceImpl implements UserService {
         activitySearchDto.setSpringName(springs.getSpringName());
         activitySearchDto.setLatitude(springs.getLatitude());
         activitySearchDto.setLongitude(springs.getLongitude());
+        activitySearchDto.setSpringCode(springs.getSpringCode());
         activitySearchDto.setAction("new spring has been created for :"+springs.getSpringCode());
         map.put("activities",activitySearchDto);
         try {
