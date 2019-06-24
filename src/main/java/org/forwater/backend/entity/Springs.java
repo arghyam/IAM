@@ -10,6 +10,8 @@ public class Springs {
 
     private String springCode;
 
+    private String springName;
+
     private String userId;
 
     private String tenantId;
@@ -39,6 +41,16 @@ public class Springs {
     private String createdTimeStamp;
 
     private String updatedTimeStamp;
+
+
+    public String getSpringName() {
+        return springName;
+    }
+
+    public void setSpringName(String springName) {
+        this.springName = springName;
+    }
+
 
     public String getSpringCode() {
         return springCode;
