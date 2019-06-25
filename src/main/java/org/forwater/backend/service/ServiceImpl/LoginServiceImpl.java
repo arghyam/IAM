@@ -1,7 +1,4 @@
 package org.forwater.backend.service.ServiceImpl;
-//import com.arghyam.backend.dto.*;
-
-
 
 import org.forwater.backend.config.AppContext;
 import org.forwater.backend.dao.KeycloakDAO;
@@ -85,7 +82,6 @@ public class LoginServiceImpl implements LoginService {
                     response.setNewUserCreated(true);
                 }
                 UserRepresentation userRepresentation = keycloakService.getUserByUsername(userToken, loginDTO.getUsername(), appContext.getRealm());
-                //response.setUserId(userRepresentation.getId());
                 updateOtpForUser(loginDTO, userToken, userRepresentation, "login");
                 updateLoginResponseBody(response, loginAndRegisterResponseMap, requestDTO, "200", "Login successfull", "login");
             }
