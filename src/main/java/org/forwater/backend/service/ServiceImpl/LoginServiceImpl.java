@@ -210,6 +210,7 @@ public class LoginServiceImpl implements LoginService {
 
                     userResponseDTO.setAccessTokenResponseDTO(accessTokenResponseDTO);
                     userResponseDTO.setUserId(userRepresentation.getId());
+                    userResponseDTO.setUsername(userRepresentation.getUsername());
                     updateLoginResponseBody(userResponseDTO, loginAndRegisterResponseMap, requestDTO, "200", "Otp verified", "verifyOtp");
                     return loginAndRegisterResponseMap;
                 } else {
