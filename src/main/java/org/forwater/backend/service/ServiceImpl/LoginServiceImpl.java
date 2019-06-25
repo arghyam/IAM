@@ -274,6 +274,7 @@ public class LoginServiceImpl implements LoginService {
 
     private LoginAndRegisterResponseMap getActivitiesResponse(Response registryUserCreationResponse, RequestDTO requestDTO) {
         Map<String,Object> activitiesMap=new HashMap<>();
+        Map<String,Object> responseObjectMap=new HashMap<>();
         LoginAndRegisterResponseMap activitiesResponse=new LoginAndRegisterResponseMap();
         activitiesResponse.setId(requestDTO.getId());
         activitiesResponse.setEts(requestDTO.getEts());
@@ -293,7 +294,10 @@ public class LoginServiceImpl implements LoginService {
         });
 
         activitiesMap.put("activities",activityData);
-        activitiesResponse.setResponse(activitiesMap);
+        responseObjectMap.put("responseObject",activitiesMap);
+        responseObjectMap.put("responseCode",200);
+        responseObjectMap.put("responseStatus","successfull");
+        activitiesResponse.setResponse(responseObjectMap);
         return activitiesResponse;
     }
 
