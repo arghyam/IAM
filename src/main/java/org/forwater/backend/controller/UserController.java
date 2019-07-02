@@ -101,4 +101,11 @@ public class UserController {
         return userService.getAllSprings(requestDTO, bindingResult, pageNumber);
     }
 
+
+    @PostMapping(value = "/getAdditionalDetailsForSpring")
+    public LoginAndRegisterResponseMap getAdditionalDetailsForSpring(@ApiParam(value = "spring", required = true, name="spring") @Validated @RequestBody RequestDTO requestDTO,
+                                                     BindingResult bindingResult) throws IOException {
+        return userService.getAdditionalDetailsForSpring(requestDTO, bindingResult);
+    }
+
 }
