@@ -224,13 +224,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginAndRegisterResponseMap createAdditionalInfo(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+    public LoginAndRegisterResponseMap createAdditionalInfo(String springCode, RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
         AdditionalInfo additionalInfo = new AdditionalInfo();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         if (requestDTO.getRequest().keySet().contains("additionalInfo")) {
             additionalInfo = mapper.convertValue(requestDTO.getRequest().get("additionalInfo"), AdditionalInfo.class);
         }
         log.info("user data" + additionalInfo);
+        additionalInfo.setSpringCode(springCode);
         Map<String, Object> additionalInfoMap = new HashMap<>();
         additionalInfoMap.put("additionalInfo", additionalInfo);
         String stringRequest = objectMapper.writeValueAsString(additionalInfoMap);
@@ -693,7 +694,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public LoginAndRegisterResponseMap updateUserProfile(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+    public LoginAndRegisterResponseMap updateUserProfile(String userId, RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
         validatePojo(bindingResult);
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String userToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
@@ -702,7 +703,7 @@ public class UserServiceImpl implements UserService {
             springuser = mapper.convertValue(requestDTO.getRequest().get("person"), Springuser.class);
         }
 
-        UserRepresentation userRepresentation = keycloakService.getUserByUsername(userToken, springuser.getPhonenumber(), appContext.getRealm());
+        UserRepresentation userRepresentation = keycloakService.getUserByUsername(userToken, userId, appContext.getRealm());
         if (userRepresentation != null) {
             userRepresentation.setFirstName(springuser.getName());
         }
@@ -762,7 +763,7 @@ public class UserServiceImpl implements UserService {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         Map<String, Object> response = new HashMap<>();
         response.put("responseCode", 200);
-        response.put("responseStatus", "Fetched list of registered users");
+        response.put("responseStatus", "successfully fetched registered users");
         response.put("responseObject", getRegisteredUsers);
         loginAndRegisterResponseMap.setResponse(response);
         loginAndRegisterResponseMap.setVer("1.0");
@@ -772,11 +773,12 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public LoginAndRegisterResponseMap createDischargeData(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+    public LoginAndRegisterResponseMap createDischargeData(String springCode, RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         DischargeData dischargeData = mapper.convertValue(requestDTO.getRequest().get("dischargeData"), DischargeData.class);
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
 
+        dischargeData.setSpringCode(springCode);
         dischargeData.setUserId(dischargeData.getUserId());
         dischargeData.setTenantId("tenantId1");
         dischargeData.setOrgId("Organisation1");

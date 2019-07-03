@@ -17,7 +17,7 @@ public interface UserService {
 
     public void createUsers(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException;
 
-    public LoginAndRegisterResponseMap updateUserProfile(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
+    public LoginAndRegisterResponseMap updateUserProfile(String userId, RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
     public String otpgenerator();
 
@@ -29,13 +29,13 @@ public interface UserService {
 
     public LoginAndRegisterResponseMap getRegistereUsers() throws IOException;
 
-    public LoginAndRegisterResponseMap createDischargeData(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
+    public LoginAndRegisterResponseMap createDischargeData(String springCode, RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
     public LoginAndRegisterResponseMap createSpring(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
     public ResponseDTO updateProfilePicture(MultipartFile file);
 
-    LoginAndRegisterResponseMap createAdditionalInfo(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
+    LoginAndRegisterResponseMap createAdditionalInfo(String sprinceCode, RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
     Object getSpringById(RequestDTO springId) throws IOException;
 

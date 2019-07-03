@@ -34,10 +34,11 @@ public class UserController {
         return userService.reSendOtp(requestDTO, bindingResult);
     }
 
-    @PostMapping(value = "/user/updateUserProfile")
-    public LoginAndRegisterResponseMap updateUser(@ApiParam(value = "userProfile", required = true, name="userProfile") @Validated @RequestBody RequestDTO requestDTO,
+    @PutMapping(value = "/users/profile/{profileId}")
+    public LoginAndRegisterResponseMap updateUser(@ApiParam(value = "profileId", example = "01234567-89ab-cdef-0123-456789abcdef", required = true)
+                                                      @PathVariable(value = "profileId") String profileId, @ApiParam(value = "userProfile", required = true, name="userProfile") @Validated @RequestBody RequestDTO requestDTO,
                                                   BindingResult bindingResult) throws IOException {
-          return userService.updateUserProfile(requestDTO, bindingResult);
+          return userService.updateUserProfile(profileId, requestDTO, bindingResult);
     }
 
     @PostMapping(value = "/user/getUserProfile")
@@ -60,10 +61,11 @@ public class UserController {
     }
 
 
-    @PostMapping(value = "/createDischargeData")
-    public LoginAndRegisterResponseMap createDischargeData(@ApiParam(value = "dischargeData", required = true, name="dischargeData")  @Validated @RequestBody RequestDTO requestDTO,
+    @PostMapping(value = "/springs/{springCode}/discharge")
+    public LoginAndRegisterResponseMap createDischargeData(@ApiParam(value = "springCode", example = "012345", required = true)
+                                                               @PathVariable(value = "springCode") String springCode, @ApiParam(value = "dischargeData", required = true, name="dischargeData")  @Validated @RequestBody RequestDTO requestDTO,
                                                       BindingResult bindingResult) throws IOException {
-        return userService.createDischargeData(requestDTO, bindingResult);
+        return userService.createDischargeData(springCode, requestDTO, bindingResult);
     }
 
     @RequestMapping(value = "/user/profilePicture", method = RequestMethod.PUT, headers = "Content-Type= multipart/form-data")
@@ -74,7 +76,7 @@ public class UserController {
     }
 
 
-    @PostMapping(value = "/createSpring")
+    @PostMapping(value = "/spring")
     public LoginAndRegisterResponseMap createSpring(@ApiParam(value = "spring", required = true, name="spring") @Validated @RequestBody RequestDTO requestDTO,
                                                            BindingResult bindingResult) throws IOException {
         return userService.createSpring(requestDTO, bindingResult);
@@ -82,18 +84,20 @@ public class UserController {
 
 
 
-    @PostMapping(value = "/createAdditionalInfo")
-    public LoginAndRegisterResponseMap createAdditionalInfo(@ApiParam(value = "addtitionalData", required = true, name="addtitionalData") @Validated @RequestBody RequestDTO requestDTO,
+    @PostMapping(value = "/springs/{springCode}/additionalInfo")
+    public LoginAndRegisterResponseMap createAdditionalInfo(@ApiParam(value = "springCode", example = "012345", required = true)
+                                                                @PathVariable(value = "springCode") String springCode,
+                                                            @ApiParam(value = "addtitionalData", required = true, name="addtitionalData") @Validated @RequestBody RequestDTO requestDTO,
                                                     BindingResult bindingResult) throws IOException {
-        return userService.createAdditionalInfo(requestDTO, bindingResult);
+        return userService.createAdditionalInfo(springCode, requestDTO, bindingResult);
     }
 
-    @PostMapping(value = "/springs")
+    @PostMapping(value = "/springById")
     public Object getSpringById(@ApiParam(value = "spring", required = true, name="spring") @Validated @RequestBody RequestDTO requestDTO) throws IOException {
         return userService.getSpringById(requestDTO);
     }
 
-    @PostMapping(value = "/getAllSprings")
+    @PostMapping(value = "/getSprings")
     public LoginAndRegisterResponseMap getAllSprings(@ApiParam(value = "spring", required = true, name="spring") @Validated @RequestBody RequestDTO requestDTO,
                                                      @ApiParam(value = "pageNumber", required = true, name="pageNumber")
                                                      @RequestParam(value = "pageNumber", defaultValue = "") Integer pageNumber,
@@ -107,5 +111,8 @@ public class UserController {
                                                      BindingResult bindingResult) throws IOException {
         return userService.getAdditionalDetailsForSpring(requestDTO, bindingResult);
     }
+
+
+
 
 }
