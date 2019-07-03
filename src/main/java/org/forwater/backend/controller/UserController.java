@@ -55,7 +55,7 @@ public class UserController {
     }
 
 
-    @GetMapping(value = "/getRegisteredUsers")
+    @GetMapping(value = "/users")
     public LoginAndRegisterResponseMap getRegistereUsers() throws IOException {
         return userService.getRegistereUsers();
     }
