@@ -204,9 +204,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseDTO updateProfilePicture(MultipartFile file) {
         URL url = null;
+        String fileName="";
         try {
             File imageFile = AmazonUtils.convertMultiPartToFile(file);
-            String fileName = AmazonUtils.generateFileName(file);
+            fileName = AmazonUtils.generateFileName(file);
 
             PutObjectRequest request = new PutObjectRequest(appContext.getBucketName(), Constants.ARGHYAM_S3_FOLDER_LOCATION + fileName, imageFile);
             amazonS3.putObject(request);
@@ -220,7 +221,7 @@ public class UserServiceImpl implements UserService {
             e.printStackTrace();
         }
 
-        return sendResponse(url);
+        return sendResponse(fileName);
     }
 
     @Override
@@ -669,7 +670,7 @@ public class UserServiceImpl implements UserService {
      * @param url
      * @return
      */
-    private ResponseDTO sendResponse(URL url) {
+    private ResponseDTO sendResponse(String url) {
         ResponseDTO responseDTO = new ResponseDTO();
         HashMap<String, Object> map = new HashMap<>();
         map.put("imageUrl", url);
