@@ -1,12 +1,13 @@
 package org.forwater.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.forwater.backend.dto.SpringLocation;
 
 import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Springs {
+public class Springs extends SpringLocation{
 
     private String springCode;
 
@@ -17,14 +18,6 @@ public class Springs {
     private String tenantId;
 
     private String orgId;
-
-    private double latitude;
-
-    private double longitude;
-
-    private double elevation;
-
-    private double accuracy;
 
     private String village;
 
@@ -60,8 +53,6 @@ public class Springs {
         this.springCode = springCode;
     }
 
-
-
     public String getTenantId() {
         return tenantId;
     }
@@ -76,38 +67,6 @@ public class Springs {
 
     public void setOrgId(String orgId) {
         this.orgId = orgId;
-    }
-
-    public double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(double latitude) {
-        this.latitude = latitude;
-    }
-
-    public double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(double longitude) {
-        this.longitude = longitude;
-    }
-
-    public double getElevation() {
-        return elevation;
-    }
-
-    public void setElevation(double elevation) {
-        this.elevation = elevation;
-    }
-
-    public double getAccuracy() {
-        return accuracy;
-    }
-
-    public void setAccuracy(double accuracy) {
-        this.accuracy = accuracy;
     }
 
     public String getVillage() {
