@@ -540,11 +540,7 @@ public class UserServiceImpl implements UserService {
     @Cacheable("springsCache")
     public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult, Integer pageNumber) throws IOException {
 
-        if (pageNumber == null) {
-            throw new BadRequestException("pageNumber is invalid");
-        } else if (pageNumber <= 0) {
-            throw new UnauthorizedException("pageNumber is invalid");
-        } else {
+
             LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
             int startValue=0, endValue=0;
             String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
@@ -650,7 +646,6 @@ public class UserServiceImpl implements UserService {
                 log.error("Error creating registry entry : {} ", e.getMessage());
             }
             return loginAndRegisterResponseMap;
-        }
     }
 
 
