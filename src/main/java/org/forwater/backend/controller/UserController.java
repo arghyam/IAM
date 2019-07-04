@@ -100,7 +100,7 @@ public class UserController {
     @PostMapping(value = "/getSprings")
     public LoginAndRegisterResponseMap getAllSprings(@ApiParam(value = "spring", required = true, name="spring") @Validated @RequestBody RequestDTO requestDTO,
                                                      @ApiParam(value = "pageNumber", required = true, name="pageNumber")
-                                                     @RequestParam(value = "pageNumber", defaultValue = "") Integer pageNumber,
+                                                     @RequestParam(value = "pageNumber",required = false, defaultValue = "") Integer pageNumber,
                                                      BindingResult bindingResult) throws IOException {
         return userService.getAllSprings(requestDTO, bindingResult, pageNumber);
     }

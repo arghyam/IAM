@@ -47,12 +47,10 @@ dependencies {
 
    // compile group: 'org.keycloak', name: 'keycloak-spring-security-adapter', version: '4.7.0.Final'
 
+    // https://mvnrepository.com/artifact/joda-time/joda-time
+    compile group: 'joda-time', name: 'joda-time', version: '2.3'
 
-    // https://mvnrepository.com/artifact/org.springframework.security/spring-security-web
-    //compile group: 'org.springframework.security', name: 'spring-security-web', version: '5.1.2.RELEASE'
-
-    // https://mvnrepository.com/artifact/org.springframework.security/spring-security-config
-    //compile group: 'org.springframework.security', name: 'spring-security-config', version: '3.2.0.RELEASE'
+    compile("org.springframework.boot:spring-boot-starter-cache")
 
     // https://mvnrepository.com/artifact/io.swagger/swagger-core
     compile group: 'io.swagger', name: 'swagger-core', version: '1.5.0'
@@ -84,6 +82,8 @@ dependencies {
 
 
     compile group: 'org.bitbucket.b_c', name: 'jose4j', version: '0.6.5'
+
+
 
     // https://mvnrepository.com/artifact/org.keycloak/keycloak-core
     compile group: 'org.keycloak', name: 'keycloak-core', version: '5.0.0'

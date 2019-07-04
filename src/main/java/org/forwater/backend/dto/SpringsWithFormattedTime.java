@@ -1,14 +1,15 @@
-package org.forwater.backend.entity;
+package org.forwater.backend.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.forwater.backend.dto.SpringLocation;
-import org.joda.time.DateTime;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Springs extends SpringLocation implements Comparable<Springs> {
+public class SpringsWithFormattedTime extends SpringLocation {
+
 
     private String springCode;
 
@@ -32,10 +33,17 @@ public class Springs extends SpringLocation implements Comparable<Springs> {
 
     private Map<String, Object> extraInformation;
 
-    private String createdTimeStamp;
+    private Date createdTimeStamp;
 
-    private String updatedTimeStamp;
+    private Date updatedTimeStamp;
 
+    public String getSpringCode() {
+        return springCode;
+    }
+
+    public void setSpringCode(String springCode) {
+        this.springCode = springCode;
+    }
 
     public String getSpringName() {
         return springName;
@@ -45,13 +53,12 @@ public class Springs extends SpringLocation implements Comparable<Springs> {
         this.springName = springName;
     }
 
-
-    public String getSpringCode() {
-        return springCode;
+    public String getUserId() {
+        return userId;
     }
 
-    public void setSpringCode(String springCode) {
-        this.springCode = springCode;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getTenantId() {
@@ -110,14 +117,6 @@ public class Springs extends SpringLocation implements Comparable<Springs> {
         this.images = images;
     }
 
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
     public Map<String, Object> getExtraInformation() {
         return extraInformation;
     }
@@ -126,26 +125,21 @@ public class Springs extends SpringLocation implements Comparable<Springs> {
         this.extraInformation = extraInformation;
     }
 
-    public String getCreatedTimeStamp() {
+    public Date getCreatedTimeStamp() {
         return createdTimeStamp;
     }
 
-    public void setCreatedTimeStamp(String createdTimeStamp) {
+    public void setCreatedTimeStamp(Date createdTimeStamp) {
         this.createdTimeStamp = createdTimeStamp;
     }
 
-    public String getUpdatedTimeStamp() {
+    public Date getUpdatedTimeStamp() {
         return updatedTimeStamp;
     }
 
-    public void setUpdatedTimeStamp(String updatedTimeStamp) {
+    public void setUpdatedTimeStamp(Date updatedTimeStamp) {
         this.updatedTimeStamp = updatedTimeStamp;
     }
 
-    @Override
-    public int compareTo(Springs spring) {
-        if (getCreatedTimeStamp() == null || spring.getCreatedTimeStamp() == null)
-            return 0;
-        return getCreatedTimeStamp().compareTo(spring.getCreatedTimeStamp());
-    }
+
 }
