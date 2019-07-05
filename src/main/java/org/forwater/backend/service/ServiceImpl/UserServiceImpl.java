@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
@@ -41,10 +42,13 @@ import org.springframework.web.multipart.MultipartFile;
 import retrofit2.Call;
 import retrofit2.Response;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -534,13 +538,10 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
+    @Cacheable("springsCache")
     public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult, Integer pageNumber) throws IOException {
 
-        if (pageNumber == null) {
-            throw new BadRequestException("pageNumber is invalid");
-        } else if (pageNumber <= 0) {
-            throw new UnauthorizedException("pageNumber is invalid");
-        } else {
+
             LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
             int startValue=0, endValue=0;
             String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
@@ -577,12 +578,67 @@ public class UserServiceImpl implements UserService {
                     springData.add(springResponse);
                 });
 
-                Set<Springs> springSet = springData.stream().collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(Springs::getCreatedTimeStamp).reversed())));
-                List<Springs> newSprings = new ArrayList<>();
-                newSprings.addAll(springSet);
+
+                List<SpringsWithFormattedTime> updatedSpringList = new ArrayList<>();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
+                        Locale.ENGLISH);
+                springData.stream().forEach(spring->{
+                    SpringsWithFormattedTime newSpring = new SpringsWithFormattedTime();
+                    try {
+                        newSpring.setCreatedTimeStamp(dateFormat.parse(spring.getCreatedTimeStamp()));
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+
+
+                    newSpring.setImages(spring.getImages());
+                    newSpring.setExtraInformation(spring.getExtraInformation());
+                    newSpring.setNumberOfHouseholds(spring.getNumberOfHouseholds());
+                    newSpring.setOrgId(spring.getOrgId());
+                    newSpring.setOwnershipType(spring.getOwnershipType());
+                    newSpring.setSpringCode(spring.getSpringCode());
+                    newSpring.setSpringName(spring.getSpringName());
+                    newSpring.setTenantId(spring.getTenantId());
+                    newSpring.setUsage(spring.getUsage());
+                    newSpring.setUserId(spring.getUserId());
+                    newSpring.setVillage(spring.getVillage());
+                    newSpring.setAccuracy(spring.getAccuracy());
+                    newSpring.setElevation(spring.getElevation());
+                    newSpring.setLatitude(spring.getLatitude());
+                    newSpring.setLongitude(spring.getLongitude());
+                    updatedSpringList.add(newSpring);
+                });
+
+                updatedSpringList.sort(Comparator.comparing(SpringsWithFormattedTime::getCreatedTimeStamp).reversed());
+//                List<Springs> updatedSprings = new ArrayList<>();
+//                updatedSpringList.stream().forEach(springsWithFormattedTime -> {
+//                    Springs spring1 = new Springs();
+//                    spring1.setCreatedTimeStamp(springsWithFormattedTime.getCreatedTimeStamp().toString());
+//                    spring1.setNumberOfHouseholds(springsWithFormattedTime.getNumberOfHouseholds());
+//                    spring1.setUsage(springsWithFormattedTime.getUsage());
+//                    spring1.setExtraInformation(springsWithFormattedTime.getExtraInformation());
+//                    spring1.setImages(springsWithFormattedTime.getImages());
+//                    spring1.setOrgId(springsWithFormattedTime.getOrgId());
+//                    spring1.setOwnershipType(springsWithFormattedTime.getOwnershipType());
+//                    spring1.setSpringCode(springsWithFormattedTime.getSpringCode());
+//                    spring1.setSpringName(springsWithFormattedTime.getSpringName());
+//                    spring1.setTenantId(springsWithFormattedTime.getTenantId());
+//                    spring1.setUserId(springsWithFormattedTime.getUserId());
+//                    spring1.setVillage(springsWithFormattedTime.getVillage());
+//                    spring1.setAccuracy(springsWithFormattedTime.getAccuracy());
+//                    spring1.setElevation(springsWithFormattedTime.getElevation());
+//                    spring1.setLatitude(springsWithFormattedTime.getLatitude());
+//                    spring1.setLongitude(springsWithFormattedTime.getLongitude());
+//                    updatedSprings.add(spring1);
+//                });
 
                 PaginatedResponse paginatedResponse = new PaginatedResponse();
-                paginatedResponse(startValue, pageNumber, endValue, newSprings, paginatedResponse);
+                if (pageNumber != null) {
+                    paginatedResponse(startValue, pageNumber, endValue, updatedSpringList, paginatedResponse);
+                } else {
+                    paginatedResponse.setSprings(updatedSpringList);
+                    paginatedResponse.setTotalSprings(updatedSpringList.size());
+                }
                 response.put("responseObject", paginatedResponse);
                 response.put("responseCode", 200);
                 response.put("responseStatus", "all springs fetched successfully");
@@ -591,15 +647,14 @@ public class UserServiceImpl implements UserService {
                 log.error("Error creating registry entry : {} ", e.getMessage());
             }
             return loginAndRegisterResponseMap;
-        }
     }
 
 
 
-    private void paginatedResponse (int startValue, int pageNumber, int endValue, List<Springs> newSprings, PaginatedResponse paginatedResponse) {
+    private void paginatedResponse (int startValue, int pageNumber, int endValue, List<SpringsWithFormattedTime> newSprings, PaginatedResponse paginatedResponse) {
         startValue = ((pageNumber - 1) * 5);
         endValue = (newSprings.size() >5*pageNumber) ? (startValue + 5) : newSprings.size();
-        List<Springs> springsList = new ArrayList<>();
+        List<SpringsWithFormattedTime> springsList = new ArrayList<>();
         for (int j=startValue; j<endValue; j++) {
             springsList.add(newSprings.get(j));
         }
@@ -823,7 +878,7 @@ public class UserServiceImpl implements UserService {
         springsDetails=getSpringDetailsBySpringCode(dischargeData.getSpringCode());
         activitiesRequestDTO.setUserId(dischargeData.getUserId());
         activitiesRequestDTO.setAction("New discharge data has been created for spring:"+dischargeData.getSpringCode());
-        activitiesRequestDTO.setCreatedAt(dischargeData.getCreatedTimeStamp());
+        activitiesRequestDTO.setCreatedAt(dischargeData.getCreatedTimeStamp().toString());
         activitiesRequestDTO.setLongitude(springsDetails.getLongitude());
         activitiesRequestDTO.setLatitude(springsDetails.getLatitude());
         activitiesRequestDTO.setSpringName(springsDetails.getSpringName());
@@ -959,7 +1014,7 @@ public class UserServiceImpl implements UserService {
         Springs springs = (Springs) springMap.get("springs");
         ActivitiesRequestDTO activitySearchDto=new ActivitiesRequestDTO();
         activitySearchDto.setUserId(springs.getUserId());
-        activitySearchDto.setCreatedAt(springs.getCreatedTimeStamp());
+        activitySearchDto.setCreatedAt(springs.getCreatedTimeStamp().toString());
         activitySearchDto.setSpringName(springs.getSpringName());
         activitySearchDto.setLatitude(springs.getLatitude());
         activitySearchDto.setLongitude(springs.getLongitude());

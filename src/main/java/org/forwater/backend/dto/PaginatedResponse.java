@@ -6,15 +6,15 @@ import java.util.List;
 
 public class PaginatedResponse {
 
-    List<Springs> springs;
+    List<SpringsWithFormattedTime> springs;
 
     int totalSprings;
 
-    public List<Springs> getSprings() {
+    public List<SpringsWithFormattedTime> getSprings() {
         return springs;
     }
 
-    public void setSprings(List<Springs> springs) {
+    public void setSprings(List<SpringsWithFormattedTime> springs) {
         this.springs = springs;
     }
 
