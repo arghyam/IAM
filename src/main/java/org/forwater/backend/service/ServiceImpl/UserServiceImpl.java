@@ -208,9 +208,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseDTO updateProfilePicture(MultipartFile file) {
         URL url = null;
+        String fileName="";
         try {
             File imageFile = AmazonUtils.convertMultiPartToFile(file);
-            String fileName = AmazonUtils.generateFileName(file);
+            fileName = AmazonUtils.generateFileName(file);
 
             PutObjectRequest request = new PutObjectRequest(appContext.getBucketName(), Constants.ARGHYAM_S3_FOLDER_LOCATION + fileName, imageFile);
             amazonS3.putObject(request);
@@ -224,7 +225,7 @@ public class UserServiceImpl implements UserService {
             e.printStackTrace();
         }
 
-        return sendResponse(url);
+        return sendResponse(fileName);
     }
 
     @Override
@@ -674,6 +675,7 @@ public class UserServiceImpl implements UserService {
         springResponse.setSpringCode((String) spring.get("springCode"));
         springResponse.setTenantId((String) spring.get("tenantId"));
         springResponse.setAccuracy((Double) spring.get("accuracy"));
+        springResponse.setSpringName((String) spring.get("springName"));
         springResponse.setElevation((Double) spring.get("elevation"));
         springResponse.setLatitude((Double) spring.get("latitude"));
         springResponse.setLongitude((Double) spring.get("longitude"));
@@ -725,7 +727,7 @@ public class UserServiceImpl implements UserService {
      * @param url
      * @return
      */
-    private ResponseDTO sendResponse(URL url) {
+    private ResponseDTO sendResponse(String url) {
         ResponseDTO responseDTO = new ResponseDTO();
         HashMap<String, Object> map = new HashMap<>();
         map.put("imageUrl", url);
@@ -758,13 +760,12 @@ public class UserServiceImpl implements UserService {
             springuser = mapper.convertValue(requestDTO.getRequest().get("person"), Springuser.class);
         }
 
-        UserRepresentation userRepresentation = keycloakService.getUserByUsername(userToken, userId, appContext.getRealm());
+        UserRepresentation userRepresentation = keycloakService.getUserByUsername(userToken, springuser.getPhonenumber(), appContext.getRealm());
         if (userRepresentation != null) {
             userRepresentation.setFirstName(springuser.getName());
         }
         keycloakService.updateUser(userToken, userRepresentation.getId(), userRepresentation, appContext.getRealm());
         Map<String, Object> springUser = new HashMap<>();
-        springUser.put("responseObject", null);
         springUser.put("responseCode", 200);
         springUser.put("responseStatus", "user profile updated");
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
@@ -1089,7 +1090,7 @@ public class UserServiceImpl implements UserService {
                 AdditionalInfo fetchedAdditionalData = new AdditionalInfo();
                 List<LinkedHashMap> additionalDataList = (List<LinkedHashMap>) registryResponse.getResult();
                 additionalDataList.stream().forEach(additionalData -> {
-                    fetchedAdditionalData.setNumberOfHousehold((Integer) additionalData.get("numberOfHouseholds"));
+                    fetchedAdditionalData.setNumberOfHousehold((Integer) additionalData.get("numberOfHousehold"));
                     fetchedAdditionalData.setSeasonality((String) additionalData.get("seasonality"));
                     fetchedAdditionalData.setSpringCode((String) additionalData.get("springCode"));
 
