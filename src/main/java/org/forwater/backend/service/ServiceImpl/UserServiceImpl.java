@@ -328,7 +328,7 @@ public class UserServiceImpl implements UserService {
 
 
 
-    private void getAdditionalDataWithSpringCode(Response<RegistryResponse> registryUserCreationResponseForAdditional, Springs springResponse, DischargeData dischargeData, String updateFlow) throws IOException{
+    private void getAdditionalDataWithSpringCode(Response<RegistryResponse> registryUserCreationResponseForAdditional, Springs springResponse, DischargeDataResponse dischargeDataResponse, String updateFlow) throws IOException{
         if (registryUserCreationResponseForAdditional.body() != null) {
             RegistryResponse registryResponseForAdditional = new RegistryResponse();
             BeanUtils.copyProperties(registryUserCreationResponseForAdditional.body(), registryResponseForAdditional);
@@ -346,8 +346,8 @@ public class UserServiceImpl implements UserService {
                     }
                     springResponse.setNumberOfHouseholds((Integer) additionalInfo.get("numberOfHousehold"));
                 } else if (updateFlow.equalsIgnoreCase("updateDischargeData")) {
-                    dischargeData.setSeasonality((String) additionalInfo.get("seasonality"));
-                    convertStringToList(dischargeData, additionalInfo,  "months");
+                    dischargeDataResponse.setSeasonality((String) additionalInfo.get("seasonality"));
+                    convertStringToList(dischargeDataResponse, additionalInfo,  "months");
                 }
 
             });
@@ -377,17 +377,18 @@ public class UserServiceImpl implements UserService {
 
 
 
-    private void convertRegistryResponseToDischarge (String adminToken, Springs springResponse, DischargeData dischargeData, LinkedHashMap discharge, Response<RegistryResponse> registryUserCreationResponseForAdditional) throws JsonProcessingException {
-        dischargeData.setUpdatedTimeStamp((String) discharge.get("updatedTimeStamp"));
-        dischargeData.setCreatedTimeStamp((String) discharge.get("createdTimeStamp"));
-        dischargeData.setOrgId((String) discharge.get("orgId"));
-        dischargeData.setTenantId((String) discharge.get("tenantId"));
-        dischargeData.setVolumeOfContainer((Double) discharge.get("volumeOfContainer"));
-        dischargeData.setUserId((String) discharge.get("userId"));
-        dischargeData.setSpringCode((String) discharge.get("springCode"));
-        dischargeData.setStatus((String) discharge.get("status"));
+    private void convertRegistryResponseToDischarge (String adminToken, Springs springResponse, DischargeDataResponse dischargeDataResponse, LinkedHashMap discharge, Response<RegistryResponse> registryUserCreationResponseForAdditional) throws JsonProcessingException {
+        dischargeDataResponse.setUpdatedTimeStamp((String) discharge.get("updatedTimeStamp"));
+        dischargeDataResponse.setCreatedTimeStamp((String) discharge.get("createdTimeStamp"));
+        dischargeDataResponse.setOrgId((String) discharge.get("orgId"));
+        dischargeDataResponse.setTenantId((String) discharge.get("tenantId"));
+        dischargeDataResponse.setVolumeOfContainer((Double) discharge.get("volumeOfContainer"));
+        dischargeDataResponse.setUserId((String) discharge.get("userId"));
+        dischargeDataResponse.setSpringCode((String) discharge.get("springCode"));
+        dischargeDataResponse.setStatus((String) discharge.get("status"));
+        dischargeDataResponse.setOsid((String) discharge.get("osid"));
         try {
-            getAdditionalDataWithSpringCode(registryUserCreationResponseForAdditional, null, dischargeData, "updateDischargeData");
+            getAdditionalDataWithSpringCode(registryUserCreationResponseForAdditional, null, dischargeDataResponse, "updateDischargeData");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -408,13 +409,13 @@ public class UserServiceImpl implements UserService {
             Double lps = Double.parseDouble(litrePerSecond);
             updatedLitresPerSecond.add(lps);
         });
-        dischargeData.setLitresPerSecond(updatedLitresPerSecond);
-        convertStringToList(dischargeData, discharge,  "images");
-        convertStringToList(dischargeData, discharge,  "dischargeTime");
+        dischargeDataResponse.setLitresPerSecond(updatedLitresPerSecond);
+        convertStringToList(dischargeDataResponse, discharge,  "images");
+        convertStringToList(dischargeDataResponse, discharge,  "dischargeTime");
     }
 
 
-    private void convertStringToList(DischargeData dischargeData, LinkedHashMap discharge, String attribute) {
+    private void convertStringToList(DischargeDataResponse dischargeDataResponse, LinkedHashMap discharge, String attribute) {
 
         java.util.Date expiration = new java.util.Date();
         long expTimeMillis = expiration.getTime();
@@ -423,9 +424,9 @@ public class UserServiceImpl implements UserService {
 
         if (discharge.get(attribute).getClass().toString().equals("class java.util.ArrayList")) {
             if (attribute.equals("dischargeTime")) {
-                dischargeData.setDischargeTime((List<String>) discharge.get(attribute));
+                dischargeDataResponse.setDischargeTime((List<String>) discharge.get(attribute));
             } else if (attribute.equals("months")) {
-                dischargeData.setMonths((List<String>) discharge.get(attribute));
+                dischargeDataResponse.setMonths((List<String>) discharge.get(attribute));
             } else if (attribute.equals("images")) {
                 List<URL> imageList = new ArrayList<>();
                 List<String> imageNewList = new ArrayList<>();
@@ -437,7 +438,7 @@ public class UserServiceImpl implements UserService {
                                     , "arghyam/" + imageList.get(i), expiration);
                     imageNewList.add(String.valueOf(url));
                 }
-                dischargeData.setImages(imageNewList);
+                dischargeDataResponse.setImages(imageNewList);
             }
 
         } else if (discharge.get(attribute).getClass().toString().equals("class java.lang.String")){
@@ -446,14 +447,14 @@ public class UserServiceImpl implements UserService {
             result = new StringBuilder(result).deleteCharAt(result.length()-1).toString();
 
             if (attribute.equals("dischargeTime")) {
-                dischargeData.setDischargeTime(Arrays.asList(result));
+                dischargeDataResponse.setDischargeTime(Arrays.asList(result));
             } else if (attribute.equals("months")) {
-                dischargeData.setMonths(Arrays.asList(result));
+                dischargeDataResponse.setMonths(Arrays.asList(result));
             } else if (attribute.equals("images")) {
                 URL url = amazonS3.
                         generatePresignedUrl(appContext.getBucketName()
                                 , "arghyam/" + result, expiration);
-                dischargeData.setImages(Arrays.asList(String.valueOf(url)));
+                dischargeDataResponse.setImages(Arrays.asList(String.valueOf(url)));
             }
         }
     }
@@ -518,13 +519,13 @@ public class UserServiceImpl implements UserService {
         List<LinkedHashMap> dischargeDataList = (List<LinkedHashMap>) registryResponseForDischarge.getResult();
         List<DischargeData> updatedDischargeDataList = new ArrayList<>();
         dischargeDataList.stream().forEach(discharge -> {
-            DischargeData dischargeData = new DischargeData();
+            DischargeDataResponse dischargeDataResponse = new DischargeDataResponse();
             try {
-                convertRegistryResponseToDischarge(adminToken, springResponse, dischargeData, discharge, registryUserCreationResponseForAdditional);
+                convertRegistryResponseToDischarge(adminToken, springResponse, dischargeDataResponse, discharge, registryUserCreationResponseForAdditional);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
-            updatedDischargeDataList.add(dischargeData);
+            updatedDischargeDataList.add(dischargeDataResponse);
         });
         dischargeMap.put("dischargeData", updatedDischargeDataList);
         springResponse.setExtraInformation(dischargeMap);
@@ -1127,6 +1128,79 @@ public class UserServiceImpl implements UserService {
 
         }
         return loginAndRegisterResponseMap;
+    }
+
+
+    @Override
+    public LoginAndRegisterResponseMap reviewerData(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        Reviewer dischargeData = mapper.convertValue(requestDTO.getRequest().get("Reviewer"), Reviewer.class);
+        if (dischargeData.getStatus().equalsIgnoreCase("Accepted")) {
+            String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+            Map<String, Object> dischargrMap = new HashMap<>();
+            dischargrMap.put("dischargeData", dischargeData);
+
+            String objectMapper = new ObjectMapper().writeValueAsString(dischargrMap);
+            RegistryRequest registryRequest = new RegistryRequest(null, dischargrMap, RegistryResponse.API_ID.UPDATE.getId(), objectMapper);
+
+            try {
+                Call<RegistryResponse> createRegistryEntryCall = registryDao.updateUser(adminAccessToken, registryRequest);
+                retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
+
+                if (registryUserCreationResponse.isSuccessful() && registryUserCreationResponse.code() == 200) {
+                    BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("responseCode", 200);
+                    response.put("responseStatus", "Discharge data accepted");
+                    loginAndRegisterResponseMap.setResponse(response);
+
+                } else {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("responseCode", registryUserCreationResponse.code());
+                    response.put("responseStatus", registryUserCreationResponse.message());
+                    loginAndRegisterResponseMap.setResponse(response);
+                }
+
+            } catch (IOException e) {
+                log.error("Error creating registry entry : {} ", e.getMessage());
+            }
+
+            return loginAndRegisterResponseMap;
+
+        } else if(dischargeData.getStatus().equalsIgnoreCase("Rejected")){
+
+            String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+            Map<String, Object> dischargeMap = new HashMap<>();
+            dischargeMap.put("dischargeData", dischargeData);
+
+            String objectMapper = new ObjectMapper().writeValueAsString(dischargeMap);
+            RegistryRequest registryRequest = new RegistryRequest(null, dischargeMap, RegistryResponse.API_ID.UPDATE.getId(), objectMapper);
+
+            try {
+                Call<RegistryResponse> createRegistryEntryCall = registryDao.updateUser(adminAccessToken, registryRequest);
+                retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
+
+                if (registryUserCreationResponse.isSuccessful() && registryUserCreationResponse.code() == 200) {
+                    BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("responseCode", 451);
+                    response.put("responseStatus", "Discharge data Rejected");
+                    loginAndRegisterResponseMap.setResponse(response);
+
+                } else {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("responseCode", registryUserCreationResponse.code());
+                    response.put("responseStatus", registryUserCreationResponse.message());
+                    loginAndRegisterResponseMap.setResponse(response);
+                }
+
+            } catch (IOException e) {
+                log.error("Error creating registry entry : {} ", e.getMessage());
+            }
+
+        }
+        return loginAndRegisterResponseMap;
+
     }
 
 

@@ -43,4 +43,6 @@ public interface UserService {
 
     public LoginAndRegisterResponseMap getAdditionalDetailsForSpring(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
+    public LoginAndRegisterResponseMap reviewerData(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
+
 }
