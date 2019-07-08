@@ -113,6 +113,9 @@ public class UserController {
     }
 
 
-
+    @PostMapping(value = "/reviewerData")
+    public LoginAndRegisterResponseMap reviewerData( @Validated @RequestBody RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+        return userService.reviewerData(requestDTO, bindingResult);
+    }
 
 }
