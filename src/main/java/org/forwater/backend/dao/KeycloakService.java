@@ -28,5 +28,9 @@ public interface KeycloakService {
 
     public LoginResponseDTO login(UserRepresentation loginRequest, BindingResult bindingResult) throws IOException;
 
-    public List<UserRepresentation> getRegisteredUsers(String token,String realm) throws IOException;;
+    public List<UserRepresentation> getRegisteredUsers(String token,String realm) throws IOException;
+
+    public UserRepresentation getUserById(String realm, String id, String adminAccessToken) throws IOException;
+
+
 }

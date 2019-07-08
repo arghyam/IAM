@@ -266,24 +266,38 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public Object getSpringById(RequestDTO requestDTO) throws IOException {
+    public Object getSpringById( RequestDTO requestDTO) throws IOException {
         retrofit2.Response registryUserCreationResponse = null;
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         Person springs = new Person();
+        Springuser springuser = new Springuser();
+        DischargeDataResponse dischargeDataResponse = new DischargeDataResponse();
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+
+
         if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("springs")) {
             springs = mapper.convertValue(requestDTO.getRequest().get("springs"), Person.class);
             Map<String, Object> springMap = new HashMap<>();
             springMap.put("springs", springs);
             String stringRequest = mapper.writeValueAsString(springMap);
             RegistryRequest registryRequest = new RegistryRequest(null, springMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
+
+//                UserRepresentation userRepresentation = keycloakService.getUserById( appContext.getRealm(), dischargeDataResponse.getUserId());
+//              if (userRepresentation != null) {
+//                    userRepresentation.setFirstName(springuser.getName());
+//                }
+//                keycloakService.getUserById( appContext.getRealm(),appCon.);
+
             try {
 
                 Call<RegistryResponse> createRegistryEntryCall = registryDao.findEntitybyId(adminToken, registryRequest);
                 registryUserCreationResponse = createRegistryEntryCall.execute();
                 if (!registryUserCreationResponse.isSuccessful()) {
                     log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
-                } else {
+
+                }
+
+              else {
                     RegistryResponse registryResponse = new RegistryResponse();
                     BeanUtils.copyProperties(registryUserCreationResponse.body(), registryResponse);
 
@@ -297,6 +311,7 @@ public class UserServiceImpl implements UserService {
                             e.printStackTrace();
                         }
                     });
+
 
 
                     Map<String, Object> addtionalData = new HashMap<>();
@@ -325,7 +340,6 @@ public class UserServiceImpl implements UserService {
         }
         return loginAndRegisterResponseMap;
     }
-
 
 
     private void getAdditionalDataWithSpringCode(Response<RegistryResponse> registryUserCreationResponseForAdditional, Springs springResponse, DischargeDataResponse dischargeDataResponse, String updateFlow) throws IOException{
@@ -375,8 +389,6 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
-
     private void convertRegistryResponseToDischarge (String adminToken, Springs springResponse, DischargeDataResponse dischargeDataResponse, LinkedHashMap discharge, Response<RegistryResponse> registryUserCreationResponseForAdditional) throws JsonProcessingException {
         dischargeDataResponse.setUpdatedTimeStamp((String) discharge.get("updatedTimeStamp"));
         dischargeDataResponse.setCreatedTimeStamp((String) discharge.get("createdTimeStamp"));
@@ -387,6 +399,10 @@ public class UserServiceImpl implements UserService {
         dischargeDataResponse.setSpringCode((String) discharge.get("springCode"));
         dischargeDataResponse.setStatus((String) discharge.get("status"));
         dischargeDataResponse.setOsid((String) discharge.get("osid"));
+
+//        dischargeDataResponse.setSubmittedby((String) discharge.get("submittedby"));
+//        dischargeDataResponse.setSpringName((String) discharge.get("springName"));
+
         try {
             getAdditionalDataWithSpringCode(registryUserCreationResponseForAdditional, null, dischargeDataResponse, "updateDischargeData");
         } catch (IOException e) {
@@ -719,9 +735,6 @@ public class UserServiceImpl implements UserService {
             springResponse.setImages(Arrays.asList(String.valueOf(url)));
         }
     }
-
-
-
     /**
      * Image upload api response
      *
@@ -829,12 +842,14 @@ public class UserServiceImpl implements UserService {
     }
 
 
+
     @Override
     public LoginAndRegisterResponseMap createDischargeData(String springCode, RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         DischargeData dischargeData = mapper.convertValue(requestDTO.getRequest().get("dischargeData"), DischargeData.class);
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
 
+        DischargeDataResponse dischargeDataResponse = new DischargeDataResponse();
         dischargeData.setSpringCode(springCode);
         dischargeData.setUserId(dischargeData.getUserId());
         dischargeData.setTenantId("tenantId1");
@@ -851,6 +866,15 @@ public class UserServiceImpl implements UserService {
         try {
             Call<RegistryResponse> createRegistryEntryCall = registryDao.createUser(adminAccessToken, registryRequest);
             retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
+
+            BeanUtils.copyProperties(dischargeData, dischargeDataResponse);
+            RegistryResponse registryResponse = new RegistryResponse();
+            BeanUtils.copyProperties(registryUserCreationResponse.body(), registryResponse);
+            DischargeOsid dischargeOsid = mapper.convertValue(registryResponse.getResult(), DischargeOsid.class);
+            dischargeDataResponse.setOsid(dischargeOsid.getDischargeData().getOsid());
+
+            UserRepresentation userRepresentation = keycloakService.getUserById("Arghyam", dischargeData.getUserId(), adminAccessToken);
+            log.info("********************** SUBMITTED BY USER DETAILS ******************" + objectMapper.writeValueAsString(userRepresentation));
             if (!registryUserCreationResponse.isSuccessful()) {
                 log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
             }
@@ -865,7 +889,7 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> response = new HashMap<>();
         response.put("responseCode", 200);
         response.put("responseStatus", "created discharge data successfully");
-        response.put("responseObject", dischargeData);
+        response.put("responseObject", dischargeDataResponse);
         loginAndRegisterResponseMap.setResponse(response);
         return loginAndRegisterResponseMap;
     }
@@ -884,7 +908,7 @@ public class UserServiceImpl implements UserService {
         activitiesRequestDTO.setLatitude(springsDetails.getLatitude());
         activitiesRequestDTO.setSpringName(springsDetails.getSpringName());
         activitiesRequestDTO.setSpringCode(springsDetails.getSpringCode());
-        map.put("activities",activitiesRequestDTO);
+         map.put("activities",activitiesRequestDTO);
 
         try {
             String stringRequest = mapper.writeValueAsString(map);

@@ -37,7 +37,7 @@ public interface UserService {
 
     LoginAndRegisterResponseMap createAdditionalInfo(String sprinceCode, RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
-    Object getSpringById(RequestDTO springId) throws IOException;
+    Object getSpringById( RequestDTO springId) throws IOException;
 
     public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult, Integer pageNumber) throws IOException;
 

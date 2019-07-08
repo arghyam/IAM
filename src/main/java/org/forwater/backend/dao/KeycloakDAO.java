@@ -89,4 +89,11 @@ public interface KeycloakDAO {
     Call<List<UserRepresentation>> getRegisteredUsers(@Path("realm") String realm,
                                                 @Header("Authorization") String token) throws IOException;
 
+
+
+    @GET(Constants.SEARCH_USER_BY_ID)
+    Call<UserRepresentation> searchUserById(@Path("realm") String realm,
+                                            @Path("id") String id,
+                                            @Header("Authorization") String token) throws IOException;
+
 }
