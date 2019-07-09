@@ -384,18 +384,24 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private void convertRegistryResponseToDischarge (String adminToken, Springs springResponse, DischargeDataResponse dischargeDataResponse, LinkedHashMap discharge, Response<RegistryResponse> registryUserCreationResponseForAdditional) throws JsonProcessingException {
+    private void convertRegistryResponseToDischarge (String adminToken, Springs springResponse, DischargeDataResponse dischargeDataResponse, LinkedHashMap discharge, Response<RegistryResponse> registryUserCreationResponseForAdditional) throws IOException {
         dischargeDataResponse.setUpdatedTimeStamp((String) discharge.get("updatedTimeStamp"));
         dischargeDataResponse.setCreatedTimeStamp((String) discharge.get("createdTimeStamp"));
         dischargeDataResponse.setOrgId((String) discharge.get("orgId"));
         dischargeDataResponse.setTenantId((String) discharge.get("tenantId"));
         dischargeDataResponse.setVolumeOfContainer((Double) discharge.get("volumeOfContainer"));
         dischargeDataResponse.setUserId((String) discharge.get("userId"));
+        String userId=(String) discharge.get("userId");
         dischargeDataResponse.setSpringCode((String) discharge.get("springCode"));
         dischargeDataResponse.setStatus((String) discharge.get("status"));
         dischargeDataResponse.setOsid((String) discharge.get("osid"));
 
-        dischargeDataResponse.setSubmittedby((String) discharge.get("submittedby"));
+        UserRepresentation userRepresentation=keycloakService.getUserById(appContext.getRealm(),userId,adminToken);
+        if (null!=userRepresentation){
+            dischargeDataResponse.setSubmittedby(userRepresentation.getFirstName());
+        }
+
+        //dischargeDataResponse.setSubmittedby((String) discharge.get("submittedby"));
         //dischargeDataResponse.setSpringName((String) discharge.get("springName"));
 
         try {
@@ -533,7 +539,7 @@ public class UserServiceImpl implements UserService {
             DischargeDataResponse dischargeDataResponse = new DischargeDataResponse();
             try {
                 convertRegistryResponseToDischarge(adminToken, springResponse, dischargeDataResponse, discharge, registryUserCreationResponseForAdditional);
-            } catch (JsonProcessingException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
             updatedDischargeDataList.add(dischargeDataResponse);
@@ -1270,7 +1276,7 @@ public class UserServiceImpl implements UserService {
         notificationUpdateEntity.setStatus(dischargeData.getStatus());
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         Map<String, Object> dischargeMap = new HashMap<>();
-        dischargeMap.put("notifications", notificationUpdateEntity);
+        dischargeMap.put("dischargeData", notificationUpdateEntity);
 
         String objectMapper = new ObjectMapper().writeValueAsString(dischargeMap);
         RegistryRequest registryRequest = new RegistryRequest(null, dischargeMap, RegistryResponse.API_ID.UPDATE.getId(), objectMapper);
