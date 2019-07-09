@@ -840,6 +840,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public LoginAndRegisterResponseMap createDischargeData(String springCode, RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+        DischargeOsid dischargeOsid=null;
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         DischargeData dischargeData = mapper.convertValue(requestDTO.getRequest().get("dischargeData"), DischargeData.class);
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
@@ -867,7 +868,7 @@ public class UserServiceImpl implements UserService {
             BeanUtils.copyProperties(dischargeData, dischargeDataResponse);
             RegistryResponse registryResponse = new RegistryResponse();
             BeanUtils.copyProperties(registryUserCreationResponse.body(), registryResponse);
-            DischargeOsid dischargeOsid = mapper.convertValue(registryResponse.getResult(), DischargeOsid.class);
+            dischargeOsid = mapper.convertValue(registryResponse.getResult(), DischargeOsid.class);
             dischargeDataResponse.setOsid(dischargeOsid.getDischargeData().getOsid());
             UserRepresentation usersInfo=keycloakService.getUserById(appContext.getRealm(),dischargeData.getUserId(),adminAccessToken);
 
@@ -884,6 +885,7 @@ public class UserServiceImpl implements UserService {
         }
 
         generateActivityForDischargeData(adminAccessToken,dischargrMap);
+        generateNotifications(adminAccessToken,dischargrMap,dischargeOsid.getDischargeData().getOsid());
 
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         Map<String, Object> response = new HashMap<>();
@@ -892,6 +894,34 @@ public class UserServiceImpl implements UserService {
         response.put("responseObject", dischargeDataResponse);
         loginAndRegisterResponseMap.setResponse(response);
         return loginAndRegisterResponseMap;
+    }
+
+    private void generateNotifications(String adminAccessToken, Map<String, Object> dischargrMap, String osid) throws IOException {
+        HashMap<String,Object> map=new HashMap<>();
+        DischargeData dischargeData=(DischargeData) dischargrMap.get("dischargeData");
+        NotificationDTO notificationDTO=new NotificationDTO();
+        notificationDTO.setCreatedAt(System.currentTimeMillis());
+        notificationDTO.setSpringCode(dischargeData.getSpringCode());
+        notificationDTO.setUserId(dischargeData.getUserId());
+        notificationDTO.setDischargeDataOsid(osid);
+        notificationDTO.setStatus(dischargeData.getStatus());
+        notificationDTO.setSpringName("aniruddh");
+        notificationDTO.setUserName("9972300202");
+        map.put("notifications",notificationDTO);
+        try {
+            String stringRequest = mapper.writeValueAsString(map);
+            RegistryRequest registryRequest = new RegistryRequest(null, map, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+            Call<RegistryResponse> notificationResponse = registryDAO.createUser(adminAccessToken, registryRequest);
+            Response response=notificationResponse.execute();
+
+            if (!response.isSuccessful()) {
+                log.info("response is un successfull due to :" + response.errorBody().toString());
+            } else {
+                log.info("response is successfull " + response);
+            }
+        } catch (JsonProcessingException e) {
+            log.error("error is :" + e);
+        }
     }
 
 
@@ -1225,6 +1255,82 @@ public class UserServiceImpl implements UserService {
         }
         return loginAndRegisterResponseMap;
 
+    }
+
+    @Override
+    public LoginAndRegisterResponseMap getAllNotifications(RequestDTO requestDTO) throws IOException{
+        retrofit2.Response registryUserCreationResponse = null;
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+
+        HashMap<String, Object> map = new HashMap<>();
+        if (requestDTO.getRequest().containsKey("notifications")){
+            map.put("@type", "notifications");
+        }
+        Map<String, Object> entityMap = new HashMap<>();
+        entityMap.put("notifications", map);
+        String stringRequest = mapper.writeValueAsString(entityMap);
+        RegistryRequest registryRequest = new RegistryRequest(null, entityMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
+        try {
+
+            Call<RegistryResponse> loginResponseDTOCall = registryDAO.searchUser(adminToken, registryRequest);
+            registryUserCreationResponse = loginResponseDTOCall.execute();
+
+            if (!registryUserCreationResponse.isSuccessful()) {
+                log.info("response is un successfull due to :" + registryUserCreationResponse.errorBody().toString());
+            } else {
+                // successfull case
+                log.info("response is successfull " + registryUserCreationResponse);
+                return getNotificationsResponse(registryUserCreationResponse,requestDTO);
+
+            }
+
+        } catch (Exception e) {
+            log.error("Error creating registry entry : {} ", e.getMessage());
+            throw new InternalServerException("Internal server error");
+
+        }
+
+
+        return null;
+    }
+
+    private LoginAndRegisterResponseMap getNotificationsResponse(Response registryUserCreationResponse, RequestDTO requestDTO) {
+        Map<String,Object> activitiesMap=new HashMap<>();
+        Map<String,Object> responseObjectMap=new HashMap<>();
+        LoginAndRegisterResponseMap activitiesResponse=new LoginAndRegisterResponseMap();
+        activitiesResponse.setId(requestDTO.getId());
+        activitiesResponse.setEts(requestDTO.getEts());
+        activitiesResponse.setVer(requestDTO.getVer());
+        activitiesResponse.setParams(requestDTO.getParams());
+        RegistryResponse registryResponse = new RegistryResponse();
+        registryResponse = (RegistryResponse) registryUserCreationResponse.body();
+        BeanUtils.copyProperties(requestDTO, activitiesResponse);
+        Map<String, Object> response = new HashMap<>();
+
+        List<LinkedHashMap> activitiesList = (List<LinkedHashMap>) registryResponse.getResult();
+        List<NotificationDTO> activityData = new ArrayList<>();
+        activitiesList.stream().forEach(activities -> {
+            NotificationDTO activityResponse = new NotificationDTO();
+            convertRegistryResponseToNotifications(activityResponse, activities);
+            activityData.add(activityResponse);
+        });
+
+        activitiesMap.put("notifications",activityData);
+        responseObjectMap.put("responseObject",activitiesMap);
+        responseObjectMap.put("responseCode",200);
+        responseObjectMap.put("responseStatus","successfull");
+        activitiesResponse.setResponse(responseObjectMap);
+        return activitiesResponse;
+    }
+
+    private void convertRegistryResponseToNotifications(NotificationDTO activityResponse, LinkedHashMap notifications) {
+        activityResponse.setUserId((String) notifications.get("userId"));
+        activityResponse.setCreatedAt((long) notifications.get("createdAt"));
+        activityResponse.setSpringName((String) notifications.get("springName"));
+        activityResponse.setSpringCode((String)notifications.get("springCode"));
+        activityResponse.setDischargeDataOsid((String)notifications.get("dischargeDataOsid"));
+        activityResponse.setStatus((String)notifications.get("status"));
     }
 
 

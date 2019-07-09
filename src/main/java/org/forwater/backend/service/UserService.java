@@ -45,4 +45,6 @@ public interface UserService {
 
     public LoginAndRegisterResponseMap reviewerData(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
+
+    LoginAndRegisterResponseMap getAllNotifications(RequestDTO requestDTO) throws IOException;
 }
