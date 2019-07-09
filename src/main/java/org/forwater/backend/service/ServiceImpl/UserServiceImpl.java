@@ -283,12 +283,6 @@ public class UserServiceImpl implements UserService {
             String stringRequest = mapper.writeValueAsString(springMap);
             RegistryRequest registryRequest = new RegistryRequest(null, springMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
 
-//                UserRepresentation userRepresentation = keycloakService.getUserById( appContext.getRealm(), dischargeDataResponse.getUserId());
-//              if (userRepresentation != null) {
-//                    userRepresentation.setFirstName(springuser.getName());
-//                }
-//                keycloakService.getUserById( appContext.getRealm(),appCon.);
-
             try {
 
                 Call<RegistryResponse> createRegistryEntryCall = registryDao.findEntitybyId(adminToken, registryRequest);
@@ -401,8 +395,8 @@ public class UserServiceImpl implements UserService {
         dischargeDataResponse.setStatus((String) discharge.get("status"));
         dischargeDataResponse.setOsid((String) discharge.get("osid"));
 
-//        dischargeDataResponse.setSubmittedby((String) discharge.get("submittedby"));
-//        dischargeDataResponse.setSpringName((String) discharge.get("springName"));
+        dischargeDataResponse.setSubmittedby((String) discharge.get("submittedby"));
+        //dischargeDataResponse.setSpringName((String) discharge.get("springName"));
 
         try {
             getAdditionalDataWithSpringCode(registryUserCreationResponseForAdditional, null, dischargeDataResponse, "updateDischargeData");
