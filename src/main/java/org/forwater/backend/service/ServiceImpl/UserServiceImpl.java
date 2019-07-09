@@ -906,6 +906,7 @@ public class UserServiceImpl implements UserService {
         notificationDTO.setDischargeDataOsid(osid);
         notificationDTO.setStatus(dischargeData.getStatus());
         notificationDTO.setFirstName(getFirstNameByUserId(dischargeData.getUserId()));
+
         map.put("notifications",notificationDTO);
         try {
             String stringRequest = mapper.writeValueAsString(map);
@@ -1212,7 +1213,7 @@ public class UserServiceImpl implements UserService {
                     response.put("responseCode", 200);
                     response.put("responseStatus", "Discharge data accepted");
                     loginAndRegisterResponseMap.setResponse(response);
-
+                    updateNotificationsData(dischargeData);
                 } else {
                     Map<String, Object> response = new HashMap<>();
                     response.put("responseCode", registryUserCreationResponse.code());
@@ -1245,6 +1246,7 @@ public class UserServiceImpl implements UserService {
                     response.put("responseCode", 451);
                     response.put("responseStatus", "Discharge data Rejected");
                     loginAndRegisterResponseMap.setResponse(response);
+                    updateNotificationsData(dischargeData);
 
                 } else {
                     Map<String, Object> response = new HashMap<>();
@@ -1260,6 +1262,33 @@ public class UserServiceImpl implements UserService {
         }
         return loginAndRegisterResponseMap;
 
+    }
+
+    private void updateNotificationsData(Reviewer dischargeData) throws IOException {
+        Reviewer notificationUpdateEntity=new Reviewer();
+        notificationUpdateEntity.setOsid(dischargeData.getNotificationOsid());
+        notificationUpdateEntity.setStatus(dischargeData.getStatus());
+        String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        Map<String, Object> dischargeMap = new HashMap<>();
+        dischargeMap.put("notifications", notificationUpdateEntity);
+
+        String objectMapper = new ObjectMapper().writeValueAsString(dischargeMap);
+        RegistryRequest registryRequest = new RegistryRequest(null, dischargeMap, RegistryResponse.API_ID.UPDATE.getId(), objectMapper);
+
+        try {
+            Call<RegistryResponse> createRegistryEntryCall = registryDao.updateUser(adminAccessToken, registryRequest);
+            retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
+
+            if (registryUserCreationResponse.isSuccessful() && registryUserCreationResponse.code() == 200) {
+                log.info("Successfully updated notifications entity:");
+
+            } else {
+                log.info("Error updating notifications entity:"+registryUserCreationResponse.errorBody().toString());
+            }
+
+        } catch (IOException e) {
+            log.error("Error creating registry entry : {} ", e.getMessage());
+        }
     }
 
     @Override
@@ -1314,9 +1343,9 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> response = new HashMap<>();
 
         List<LinkedHashMap> activitiesList = (List<LinkedHashMap>) registryResponse.getResult();
-        List<NotificationDTO> activityData = new ArrayList<>();
+        List<NotificationDTOEntity> activityData = new ArrayList<>();
         activitiesList.stream().forEach(activities -> {
-            NotificationDTO activityResponse = new NotificationDTO();
+            NotificationDTOEntity activityResponse = new NotificationDTOEntity();
             convertRegistryResponseToNotifications(activityResponse, activities);
             activityData.add(activityResponse);
         });
@@ -1329,13 +1358,14 @@ public class UserServiceImpl implements UserService {
         return activitiesResponse;
     }
 
-    private void convertRegistryResponseToNotifications(NotificationDTO activityResponse, LinkedHashMap notifications) {
+    private void convertRegistryResponseToNotifications(NotificationDTOEntity activityResponse, LinkedHashMap notifications) {
         activityResponse.setUserId((String) notifications.get("userId"));
         activityResponse.setCreatedAt((long) notifications.get("createdAt"));
         activityResponse.setSpringCode((String)notifications.get("springCode"));
         activityResponse.setDischargeDataOsid((String)notifications.get("dischargeDataOsid"));
         activityResponse.setStatus((String)notifications.get("status"));
         activityResponse.setFirstName((String)notifications.get("firstName"));
+        activityResponse.setOsid((String)notifications.get("osid"));
     }
 
 

@@ -1,16 +1,13 @@
 package org.forwater.backend.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-@JsonIgnoreProperties
-public class NotificationDTO {
+public class NotificationDTOEntity {
     private String userId;
     private String springCode;
     private String dischargeDataOsid;
     private String status;
     private String firstName;
     private long createdAt;
-
+    private String osid;
 
     public String getUserId() {
         return userId;
@@ -44,7 +41,6 @@ public class NotificationDTO {
         this.status = status;
     }
 
-
     public String getFirstName() {
         return firstName;
     }
@@ -59,5 +55,13 @@ public class NotificationDTO {
 
     public void setCreatedAt(long createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getOsid() {
+        return osid;
+    }
+
+    public void setOsid(String osid) {
+        this.osid = osid;
     }
 }
