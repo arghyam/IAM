@@ -905,8 +905,7 @@ public class UserServiceImpl implements UserService {
         notificationDTO.setUserId(dischargeData.getUserId());
         notificationDTO.setDischargeDataOsid(osid);
         notificationDTO.setStatus(dischargeData.getStatus());
-        notificationDTO.setSpringName("aniruddh");
-        notificationDTO.setUserName("9972300202");
+        notificationDTO.setFirstName(getFirstNameByUserId(dischargeData.getUserId()));
         map.put("notifications",notificationDTO);
         try {
             String stringRequest = mapper.writeValueAsString(map);
@@ -922,6 +921,12 @@ public class UserServiceImpl implements UserService {
         } catch (JsonProcessingException e) {
             log.error("error is :" + e);
         }
+    }
+
+    private String getFirstNameByUserId(String userId) throws IOException {
+        String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        UserRepresentation userRepresentation=keycloakService.getUserById(appContext.getRealm(),userId,adminAccessToken);
+        return userRepresentation.getFirstName();
     }
 
 
@@ -1327,10 +1332,10 @@ public class UserServiceImpl implements UserService {
     private void convertRegistryResponseToNotifications(NotificationDTO activityResponse, LinkedHashMap notifications) {
         activityResponse.setUserId((String) notifications.get("userId"));
         activityResponse.setCreatedAt((long) notifications.get("createdAt"));
-        activityResponse.setSpringName((String) notifications.get("springName"));
         activityResponse.setSpringCode((String)notifications.get("springCode"));
         activityResponse.setDischargeDataOsid((String)notifications.get("dischargeDataOsid"));
         activityResponse.setStatus((String)notifications.get("status"));
+        activityResponse.setFirstName((String)notifications.get("firstName"));
     }
 
 

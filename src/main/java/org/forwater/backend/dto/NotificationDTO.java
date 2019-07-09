@@ -5,8 +5,7 @@ public class NotificationDTO {
     private String springCode;
     private String dischargeDataOsid;
     private String status;
-    private String springName;
-    private String userName;
+    private String firstName;
     private long createdAt;
 
     public String getUserId() {
@@ -41,20 +40,13 @@ public class NotificationDTO {
         this.status = status;
     }
 
-    public String getSpringName() {
-        return springName;
+
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setSpringName(String springName) {
-        this.springName = springName;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
     public long getCreatedAt() {
