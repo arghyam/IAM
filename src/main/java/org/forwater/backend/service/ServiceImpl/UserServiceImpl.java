@@ -25,6 +25,7 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
@@ -859,6 +860,8 @@ public class UserServiceImpl implements UserService {
         dischargeData.setMonths(dischargeData.getMonths() == null ? Arrays.asList("") : dischargeData.getMonths());
         dischargeData.setSeasonality(dischargeData.getSeasonality() == null ? "" : dischargeData.getSeasonality());
 
+
+
         Map<String, Object> dischargrMap = new HashMap<>();
         dischargrMap.put("dischargeData", dischargeData);
         String stringRequest = objectMapper.writeValueAsString(dischargrMap);
@@ -872,9 +875,12 @@ public class UserServiceImpl implements UserService {
             BeanUtils.copyProperties(registryUserCreationResponse.body(), registryResponse);
             DischargeOsid dischargeOsid = mapper.convertValue(registryResponse.getResult(), DischargeOsid.class);
             dischargeDataResponse.setOsid(dischargeOsid.getDischargeData().getOsid());
+            UserRepresentation usersInfo=keycloakService.getUserById(appContext.getRealm(),dischargeData.getUserId(),adminAccessToken);
 
-            UserRepresentation userRepresentation = keycloakService.getUserById("Arghyam", dischargeData.getUserId(), adminAccessToken);
-            log.info("********************** SUBMITTED BY USER DETAILS ******************" + objectMapper.writeValueAsString(userRepresentation));
+            if (null!=usersInfo){
+                dischargeDataResponse.setSubmittedby(usersInfo.getFirstName());
+            }
+
             if (!registryUserCreationResponse.isSuccessful()) {
                 log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
             }

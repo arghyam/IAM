@@ -4,9 +4,7 @@ public class DischargeDataResponse extends  DischargeData {
 
     private String osid;
 
-    private String submittedby;
-
-//    private String springName;
+    private String submittedBy;
 
     public String getOsid() {
         return osid;
@@ -16,20 +14,11 @@ public class DischargeDataResponse extends  DischargeData {
         this.osid = osid;
     }
 
-
     public String getSubmittedby() {
-        return submittedby;
+        return submittedBy;
     }
 
     public void setSubmittedby(String submittedby) {
-        this.submittedby = submittedby;
+        this.submittedBy = submittedby;
     }
-
-//    public String getSpringName() {
-//        return springName;
-//    }
-//
-//    public void setSpringName(String springName) {
-//        this.springName = springName;
-//    }
 }

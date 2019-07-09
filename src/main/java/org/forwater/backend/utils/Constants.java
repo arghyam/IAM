@@ -16,7 +16,7 @@ public class Constants {
 
     public static final String SEARCH_USERS = "admin/realms/{realm}/users";
 
-    public static final String SEARCH_USER_BY_ID = "/{realm}/users/{id}";
+    public static final String SEARCH_USER_BY_ID = "admin/realms/{realm}/users/{id}";
 
     public static final String UPDATE_USER = "admin/realms/{realm}/users/{id}";
 
