@@ -11,8 +11,6 @@ import org.forwater.backend.dao.RegistryDAO;
 import org.forwater.backend.dto.*;
 import org.forwater.backend.entity.*;
 import org.forwater.backend.exceptions.InternalServerException;
-import org.forwater.backend.exceptions.BadRequestException;
-import org.forwater.backend.exceptions.UnauthorizedException;
 import org.forwater.backend.exceptions.UnprocessableEntitiesException;
 import org.forwater.backend.exceptions.ValidationError;
 import org.forwater.backend.service.UserService;
@@ -25,7 +23,6 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
-import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
@@ -43,7 +40,6 @@ import org.springframework.web.multipart.MultipartFile;
 import retrofit2.Call;
 import retrofit2.Response;
 
-import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -51,7 +47,6 @@ import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 
@@ -301,8 +296,8 @@ public class UserServiceImpl implements UserService {
                     List<LinkedHashMap> springList = (List<LinkedHashMap>) registryResponse.getResult();
                     springList.stream().forEach(springWithdischarge -> {
                         try {
-                            convertRegistryResponseToSpringDischarge(springResponse, springWithdischarge);
-                        } catch (JsonProcessingException e) {
+                            convertRegistryResponseToSpringDischarge(springResponse, springWithdischarge,adminToken);
+                        } catch (IOException e) {
                             e.printStackTrace();
                         }
                     });
@@ -480,11 +475,16 @@ public class UserServiceImpl implements UserService {
 
 
 
-    private void convertRegistryResponseToSpringDischarge (Springs springResponse, LinkedHashMap spring) throws JsonProcessingException {
+    private void convertRegistryResponseToSpringDischarge(Springs springResponse, LinkedHashMap spring, String adminToken) throws IOException {
         springResponse.setNumberOfHouseholds((Integer) spring.get("numberOfHouseholds"));
         springResponse.setUpdatedTimeStamp((String) spring.get("updatedTimeStamp"));
         springResponse.setOrgId((String) spring.get("orgId"));
         springResponse.setUserId((String) spring.get("userId"));
+        String userId=(String) spring.get("userId");
+        UserRepresentation userRepresentation=keycloakService.getUserById(appContext.getRealm(),userId,adminToken);
+        if (null!=userRepresentation){
+            springResponse.setSubmittedBy(userRepresentation.getFirstName());
+        }
         springResponse.setCreatedTimeStamp((String) spring.get("createdTimeStamp"));
         springResponse.setVillage((String) spring.get("village"));
         springResponse.setSpringCode((String) spring.get("springCode"));
@@ -492,6 +492,7 @@ public class UserServiceImpl implements UserService {
         springResponse.setAccuracy((Double) spring.get("accuracy"));
         springResponse.setElevation((Double) spring.get("elevation"));
         springResponse.setLatitude((Double) spring.get("latitude"));
+
         springResponse.setLongitude((Double) spring.get("longitude"));
         springResponse.setOwnershipType((String) spring.get("ownershipType"));
         springResponse.setSpringName((String) spring.get("springName"));
@@ -1010,8 +1011,8 @@ public class UserServiceImpl implements UserService {
                 if (!springList.isEmpty()) {
                     springList.stream().forEach(springWithdischarge -> {
                         try {
-                            convertRegistryResponseToSpringDischarge(springResponse, springWithdischarge);
-                        } catch (JsonProcessingException e) {
+                            convertRegistryResponseToSpringDischarge(springResponse, springWithdischarge, adminToken);
+                        } catch (IOException e) {
                             e.printStackTrace();
                         }
                     });
@@ -1365,8 +1366,12 @@ public class UserServiceImpl implements UserService {
     }
 
     private void convertRegistryResponseToNotifications(NotificationDTOEntity activityResponse, LinkedHashMap notifications) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
+                Locale.ENGLISH);
+        String date=dateFormat.format(notifications.get("createdAt"));
+
         activityResponse.setUserId((String) notifications.get("userId"));
-        activityResponse.setCreatedAt((long) notifications.get("createdAt"));
+        activityResponse.setCreatedAt(date);
         activityResponse.setSpringCode((String)notifications.get("springCode"));
         activityResponse.setDischargeDataOsid((String)notifications.get("dischargeDataOsid"));
         activityResponse.setStatus((String)notifications.get("status"));

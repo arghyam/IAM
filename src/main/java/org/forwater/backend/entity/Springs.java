@@ -36,6 +36,15 @@ public class Springs extends SpringLocation implements Comparable<Springs> {
 
     private String updatedTimeStamp;
 
+    private String submittedBy;
+
+    public String getSubmittedBy() {
+        return submittedBy;
+    }
+
+    public void setSubmittedBy(String submittedBy) {
+        this.submittedBy = submittedBy;
+    }
 
     public String getSpringName() {
         return springName;

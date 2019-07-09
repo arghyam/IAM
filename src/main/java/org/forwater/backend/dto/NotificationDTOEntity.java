@@ -6,7 +6,7 @@ public class NotificationDTOEntity {
     private String dischargeDataOsid;
     private String status;
     private String firstName;
-    private long createdAt;
+    private String createdAt;
     private String osid;
 
     public String getUserId() {
@@ -49,11 +49,11 @@ public class NotificationDTOEntity {
         this.firstName = firstName;
     }
 
-    public long getCreatedAt() {
+    public String getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(long createdAt) {
+    public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
     }
 
