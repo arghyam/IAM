@@ -8,6 +8,15 @@ public class Reviewer {
 
     private String status;
 
+    private String notificationOsid;
+
+    public String getNotificationOsid() {
+        return notificationOsid;
+    }
+
+    public void setNotificationOsid(String notificationOsid) {
+        this.notificationOsid = notificationOsid;
+    }
 
     public String getStatus() {
         return status;

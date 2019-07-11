@@ -482,9 +482,9 @@ public class UserServiceImpl implements UserService {
         springResponse.setUserId((String) spring.get("userId"));
         String userId=(String) spring.get("userId");
         UserRepresentation userRepresentation=keycloakService.getUserById(appContext.getRealm(),userId,adminToken);
-        /*if (null!=userRepresentation){
+        if (null!=userRepresentation){
             springResponse.setSubmittedBy(userRepresentation.getFirstName());
-        }*/
+        }
         springResponse.setCreatedTimeStamp((String) spring.get("createdTimeStamp"));
         springResponse.setVillage((String) spring.get("village"));
         springResponse.setSpringCode((String) spring.get("springCode"));
@@ -1220,6 +1220,7 @@ public class UserServiceImpl implements UserService {
                     response.put("responseCode", 200);
                     response.put("responseStatus", "Discharge data accepted");
                     loginAndRegisterResponseMap.setResponse(response);
+                    updateNotificationsData(dischargeData);
 
                 } else {
                     Map<String, Object> response = new HashMap<>();
@@ -1253,12 +1254,14 @@ public class UserServiceImpl implements UserService {
                     response.put("responseCode", 451);
                     response.put("responseStatus", "Discharge data Rejected");
                     loginAndRegisterResponseMap.setResponse(response);
+                    updateNotificationsData(dischargeData);
 
                 } else {
                     Map<String, Object> response = new HashMap<>();
                     response.put("responseCode", registryUserCreationResponse.code());
                     response.put("responseStatus", registryUserCreationResponse.message());
                     loginAndRegisterResponseMap.setResponse(response);
+
                 }
 
             } catch (IOException e) {
@@ -1272,12 +1275,13 @@ public class UserServiceImpl implements UserService {
     }
 
     private void updateNotificationsData(Reviewer dischargeData) throws IOException {
-        Reviewer notificationUpdateEntity=new Reviewer();
-        //notificationUpdateEntity.setOsid(dischargeData.getNotificationOsid());
-        notificationUpdateEntity.setStatus(dischargeData.getStatus());
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        NotificationReviewEntity notificationReviewEntity=new NotificationReviewEntity();
+        //notificationReviewEntity.setDischargeDataOsid(dischargeData.getOsid());
+        notificationReviewEntity.setStatus(dischargeData.getStatus());
+        notificationReviewEntity.setOsid(dischargeData.getNotificationOsid());
         Map<String, Object> dischargeMap = new HashMap<>();
-        dischargeMap.put("dischargeData", notificationUpdateEntity);
+        dischargeMap.put("notifications", notificationReviewEntity);
 
         String objectMapper = new ObjectMapper().writeValueAsString(dischargeMap);
         RegistryRequest registryRequest = new RegistryRequest(null, dischargeMap, RegistryResponse.API_ID.UPDATE.getId(), objectMapper);
