@@ -1068,7 +1068,7 @@ public class UserServiceImpl implements UserService {
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         Map<String, Object> response = new HashMap<>();
         response.put("responseCode", 200);
-        response.put("responseStatus", "created discharge data successfully");
+        response.put("responseStatus", "created spring successfully");
         response.put("responseObject", springs);
         loginAndRegisterResponseMap.setResponse(response);
         log.info("********create spring flow ***" + objectMapper.writeValueAsString(loginAndRegisterResponseMap));
