@@ -27,6 +27,7 @@ import retrofit2.Response;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Component
@@ -303,9 +304,20 @@ public class LoginServiceImpl implements LoginService {
     }
 
     private void convertRegistryResponseToActivity(ActivitiesRequestDTO activityResponse, LinkedHashMap activity) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
+                Locale.ENGLISH);
         activityResponse.setUserId((String) activity.get("userId"));
         activityResponse.setAction((String) activity.get("action"));
-        activityResponse.setCreatedAt((String) activity.get("createdAt"));
+        String dateString=(String) activity.get("createdAt");
+        try {
+           Date date= dateFormat.parse(dateString);
+            activityResponse.setCreatedAt(String.valueOf(date.getTime()));
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+
         activityResponse.setSpringName((String) activity.get("springName"));
         activityResponse.setLatitude((double) activity.get("latitude"));
         activityResponse.setLongitude((double) activity.get("longitude"));
