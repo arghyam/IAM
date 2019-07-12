@@ -377,8 +377,17 @@ public class UserServiceImpl implements UserService {
 
 
     private void convertRegistryResponseToDischarge(String adminToken, Springs springResponse, DischargeDataResponse dischargeDataResponse, LinkedHashMap discharge, Response<RegistryResponse> registryUserCreationResponseForAdditional) throws IOException {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
+                Locale.ENGLISH);
         dischargeDataResponse.setUpdatedTimeStamp((String) discharge.get("updatedTimeStamp"));
-        dischargeDataResponse.setCreatedTimeStamp((String) discharge.get("createdTimeStamp"));
+        String dateString=(String) discharge.get("createdTimeStamp");
+        try {
+            Date date=dateFormat.parse(dateString);
+            dischargeDataResponse.setCreatedTimeStamp(String.valueOf(date.getTime()));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
         dischargeDataResponse.setOrgId((String) discharge.get("orgId"));
         dischargeDataResponse.setTenantId((String) discharge.get("tenantId"));
         dischargeDataResponse.setVolumeOfContainer((Double) discharge.get("volumeOfContainer"));
@@ -470,6 +479,8 @@ public class UserServiceImpl implements UserService {
 
 
     private void convertRegistryResponseToSpringDischarge(Springs springResponse, LinkedHashMap spring, String adminToken) throws IOException {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
+                Locale.ENGLISH);
         springResponse.setNumberOfHouseholds((Integer) spring.get("numberOfHouseholds"));
         springResponse.setUpdatedTimeStamp((String) spring.get("updatedTimeStamp"));
         springResponse.setOrgId((String) spring.get("orgId"));
@@ -479,7 +490,17 @@ public class UserServiceImpl implements UserService {
         if (null != userRepresentation) {
             springResponse.setSubmittedBy(userRepresentation.getFirstName());
         }
-        springResponse.setCreatedTimeStamp((String) spring.get("createdTimeStamp"));
+
+        String dateString=(String) spring.get("createdTimeStamp");
+        Date date= null;
+        try {
+            date = dateFormat.parse(dateString);
+            springResponse.setCreatedTimeStamp(String.valueOf(date.getTime()));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+
         springResponse.setVillage((String) spring.get("village"));
         springResponse.setSpringCode((String) spring.get("springCode"));
         springResponse.setTenantId((String) spring.get("tenantId"));
@@ -1346,8 +1367,14 @@ public class UserServiceImpl implements UserService {
         activitiesList.stream().forEach(activities -> {
             NotificationDTOEntity activityResponse = new NotificationDTOEntity();
             convertRegistryResponseToNotifications(activityResponse, activities);
-            activityData.add(activityResponse);
+                activityData.add(activityResponse);
+
         });
+
+        // sorting logic
+        Collections.sort(activityData, Comparator.comparing(NotificationDTOEntity::getCreatedAt));
+        //ascending order
+        Collections.reverse(activityData);
         activitiesMap.put("notifications", activityData);
         responseObjectMap.put("responseObject", activitiesMap);
         responseObjectMap.put("responseCode", 200);
