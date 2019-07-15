@@ -250,6 +250,7 @@ public class UserServiceImpl implements UserService {
                 response.put("responseStatus", "created additional information");
                 BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
                 loginAndRegisterResponseMap.setResponse(response);
+                generateActivitiesForAdditionalDetails(adminToken,additionalInfo);
             }
 
         } catch (IOException e) {
@@ -956,7 +957,7 @@ public class UserServiceImpl implements UserService {
         ActivitiesRequestDTO activitiesRequestDTO = new ActivitiesRequestDTO();
         springsDetails = getSpringDetailsBySpringCode(dischargeData.getSpringCode());
         activitiesRequestDTO.setUserId(dischargeData.getUserId());
-        activitiesRequestDTO.setAction("New discharge data has been created for spring:" + dischargeData.getSpringCode());
+        activitiesRequestDTO.setAction("Discharge data added");
         activitiesRequestDTO.setCreatedAt(dischargeData.getCreatedTimeStamp().toString());
         activitiesRequestDTO.setLongitude(springsDetails.getLongitude());
         activitiesRequestDTO.setLatitude(springsDetails.getLatitude());
@@ -1096,7 +1097,7 @@ public class UserServiceImpl implements UserService {
         activitySearchDto.setLatitude(springs.getLatitude());
         activitySearchDto.setLongitude(springs.getLongitude());
         activitySearchDto.setSpringCode(springs.getSpringCode());
-        activitySearchDto.setAction("new spring has been created for :" + springs.getSpringCode());
+        activitySearchDto.setAction("Spring added");
         map.put("activities", activitySearchDto);
         try {
             String stringRequest = mapper.writeValueAsString(map);
@@ -1204,6 +1205,39 @@ public class UserServiceImpl implements UserService {
 
         }
         return loginAndRegisterResponseMap;
+    }
+
+    private void generateActivitiesForAdditionalDetails(String adminToken, AdditionalInfo additionalInfo) throws IOException {
+        // make a spring profile api call using spring code and get the resp details and save it to registry
+        HashMap<String,Object> map=new HashMap<>();
+        Springs springsDetails=null;
+        ActivitiesRequestDTO activitiesRequestDTO=new ActivitiesRequestDTO();
+        springsDetails=getSpringDetailsBySpringCode(additionalInfo.getSpringCode());
+        activitiesRequestDTO.setUserId(springsDetails.getUserId());
+        activitiesRequestDTO.setAction("Additional info added");
+        activitiesRequestDTO.setCreatedAt(new Date().toString());
+        activitiesRequestDTO.setLongitude(springsDetails.getLongitude());
+        activitiesRequestDTO.setLatitude(springsDetails.getLatitude());
+        activitiesRequestDTO.setSpringName(springsDetails.getSpringName());
+        activitiesRequestDTO.setSpringCode(springsDetails.getSpringCode());
+        map.put("activities",activitiesRequestDTO);
+
+        try {
+            String stringRequest = mapper.writeValueAsString(map);
+            RegistryRequest registryRequest = new RegistryRequest(null, map, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+            Call<RegistryResponse> activitiesResponse = registryDAO.createUser(adminToken, registryRequest);
+            Response response=activitiesResponse.execute();
+
+            if (!response.isSuccessful()) {
+                log.info("response is un successfull due to :" + response.errorBody().toString());
+            } else {
+                // successfull case
+                log.info("response is successfull " + response);
+
+            }
+        } catch (JsonProcessingException e) {
+            log.error("error is :" + e);
+        }
     }
 
 
