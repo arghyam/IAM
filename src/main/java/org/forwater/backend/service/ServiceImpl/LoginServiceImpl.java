@@ -27,6 +27,7 @@ import retrofit2.Response;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Component
@@ -105,7 +106,7 @@ public class LoginServiceImpl implements LoginService {
             Map<String, List<String>> attributes = new HashMap<>();
             attributes.put("otp", otpList);
             attributes.put("createdAt", createdAtList);
-            messageService.sendMessage("<#> OTP for login is :" + otp + "\n" + " P9He0xQtBTT", loginDTO.getUsername());
+            messageService.sendMessage("<#> OTP for login is :" + otp + "\n" + " 9K09mW9fjoT", loginDTO.getUsername());
             userRepresentation.setAttributes(attributes);
             keycloakService.updateUser(userToken, userRepresentation.getId(), userRepresentation, appContext.getRealm());
         }
@@ -303,9 +304,20 @@ public class LoginServiceImpl implements LoginService {
     }
 
     private void convertRegistryResponseToActivity(ActivitiesRequestDTO activityResponse, LinkedHashMap activity) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
+                Locale.ENGLISH);
         activityResponse.setUserId((String) activity.get("userId"));
         activityResponse.setAction((String) activity.get("action"));
-        activityResponse.setCreatedAt((String) activity.get("createdAt"));
+        String dateString=(String) activity.get("createdAt");
+        try {
+           Date date= dateFormat.parse(dateString);
+            activityResponse.setCreatedAt(String.valueOf(date.getTime()));
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+
         activityResponse.setSpringName((String) activity.get("springName"));
         activityResponse.setLatitude((double) activity.get("latitude"));
         activityResponse.setLongitude((double) activity.get("longitude"));

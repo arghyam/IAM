@@ -212,7 +212,7 @@ public class KeycloakServiceImpl implements KeycloakService{
     @Override
     public UserRepresentation getUserById(String realm, String id, String adminAccessToken ) throws IOException {
 
-        Call<UserRepresentation> userRepresentationCall = keycloakDao.searchUserById(appContext.getRealm(),id, adminAccessToken);
+        Call<UserRepresentation> userRepresentationCall = keycloakDao.searchUserById(appContext.getRealm(),id, "Bearer "+adminAccessToken);
 
         Response<UserRepresentation> response = userRepresentationCall.execute();
 

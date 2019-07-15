@@ -11,8 +11,6 @@ import org.forwater.backend.dao.RegistryDAO;
 import org.forwater.backend.dto.*;
 import org.forwater.backend.entity.*;
 import org.forwater.backend.exceptions.InternalServerException;
-import org.forwater.backend.exceptions.BadRequestException;
-import org.forwater.backend.exceptions.UnauthorizedException;
 import org.forwater.backend.exceptions.UnprocessableEntitiesException;
 import org.forwater.backend.exceptions.ValidationError;
 import org.forwater.backend.service.UserService;
@@ -23,6 +21,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 
+import org.joda.time.Instant;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -42,7 +41,6 @@ import org.springframework.web.multipart.MultipartFile;
 import retrofit2.Call;
 import retrofit2.Response;
 
-import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -50,7 +48,6 @@ import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 
@@ -208,7 +205,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ResponseDTO updateProfilePicture(MultipartFile file) {
         URL url = null;
-        String fileName="";
+        String fileName = "";
         try {
             File imageFile = AmazonUtils.convertMultiPartToFile(file);
             fileName = AmazonUtils.generateFileName(file);
@@ -253,6 +250,7 @@ public class UserServiceImpl implements UserService {
                 response.put("responseStatus", "created additional information");
                 BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
                 loginAndRegisterResponseMap.setResponse(response);
+                generateActivitiesForAdditionalDetails(adminToken,additionalInfo);
             }
 
         } catch (IOException e) {
@@ -264,9 +262,8 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
     @Override
-    public Object getSpringById( RequestDTO requestDTO) throws IOException {
+    public Object getSpringById(RequestDTO requestDTO) throws IOException {
         retrofit2.Response registryUserCreationResponse = null;
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         Person springs = new Person();
@@ -282,12 +279,6 @@ public class UserServiceImpl implements UserService {
             String stringRequest = mapper.writeValueAsString(springMap);
             RegistryRequest registryRequest = new RegistryRequest(null, springMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
 
-//                UserRepresentation userRepresentation = keycloakService.getUserById( appContext.getRealm(), dischargeDataResponse.getUserId());
-//              if (userRepresentation != null) {
-//                    userRepresentation.setFirstName(springuser.getName());
-//                }
-//                keycloakService.getUserById( appContext.getRealm(),appCon.);
-
             try {
 
                 Call<RegistryResponse> createRegistryEntryCall = registryDao.findEntitybyId(adminToken, registryRequest);
@@ -295,9 +286,7 @@ public class UserServiceImpl implements UserService {
                 if (!registryUserCreationResponse.isSuccessful()) {
                     log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
 
-                }
-
-              else {
+                } else {
                     RegistryResponse registryResponse = new RegistryResponse();
                     BeanUtils.copyProperties(registryUserCreationResponse.body(), registryResponse);
 
@@ -306,12 +295,11 @@ public class UserServiceImpl implements UserService {
                     List<LinkedHashMap> springList = (List<LinkedHashMap>) registryResponse.getResult();
                     springList.stream().forEach(springWithdischarge -> {
                         try {
-                            convertRegistryResponseToSpringDischarge(springResponse, springWithdischarge);
-                        } catch (JsonProcessingException e) {
+                            convertRegistryResponseToSpringDischarge(springResponse, springWithdischarge, adminToken);
+                        } catch (IOException e) {
                             e.printStackTrace();
                         }
                     });
-
 
 
                     Map<String, Object> addtionalData = new HashMap<>();
@@ -342,7 +330,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private void getAdditionalDataWithSpringCode(Response<RegistryResponse> registryUserCreationResponseForAdditional, Springs springResponse, DischargeDataResponse dischargeDataResponse, String updateFlow) throws IOException{
+    private void getAdditionalDataWithSpringCode(Response<RegistryResponse> registryUserCreationResponseForAdditional, Springs springResponse, DischargeDataResponse dischargeDataResponse, String updateFlow) throws IOException {
         if (registryUserCreationResponseForAdditional.body() != null) {
             RegistryResponse registryResponseForAdditional = new RegistryResponse();
             BeanUtils.copyProperties(registryUserCreationResponseForAdditional.body(), registryResponseForAdditional);
@@ -355,13 +343,13 @@ public class UserServiceImpl implements UserService {
                     } else if (additionalInfo.get("usage").getClass().toString().equals("class java.lang.String")) {
                         String result = (String) additionalInfo.get("usage");
                         result = new StringBuilder(result).deleteCharAt(0).toString();
-                        result = new StringBuilder(result).deleteCharAt(result.length()-1).toString();
+                        result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
                         springResponse.setUsage(Arrays.asList(result));
                     }
                     springResponse.setNumberOfHouseholds((Integer) additionalInfo.get("numberOfHousehold"));
                 } else if (updateFlow.equalsIgnoreCase("updateDischargeData")) {
                     dischargeDataResponse.setSeasonality((String) additionalInfo.get("seasonality"));
-                    convertStringToList(dischargeDataResponse, additionalInfo,  "months");
+                    convertStringToList(dischargeDataResponse, additionalInfo, "months");
                 }
 
             });
@@ -371,7 +359,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private void getDischargeDataWithSpringCode(String adminToken, String springCode, Springs springResponse, Response<RegistryResponse>  registryUserCreationResponseForAdditional) throws IOException {
+    private void getDischargeDataWithSpringCode(String adminToken, String springCode, Springs springResponse, Response<RegistryResponse> registryUserCreationResponseForAdditional) throws IOException {
         Map<String, Object> dischargeData = new HashMap<>();
         dischargeData.put("springCode", springCode);
         Map<String, Object> dischargeDataMap = new HashMap<>();
@@ -379,29 +367,44 @@ public class UserServiceImpl implements UserService {
         String stringDischargeDataRequest = mapper.writeValueAsString(dischargeDataMap);
         RegistryRequest registryRequestForDischarge = new RegistryRequest(null, dischargeDataMap, RegistryResponse.API_ID.SEARCH.getId(), stringDischargeDataRequest);
         Call<RegistryResponse> createRegistryEntryCallForDischargeData = registryDao.searchUser(adminToken, registryRequestForDischarge);
-        retrofit2.Response<RegistryResponse>  registryUserCreationResponseForDischarge = createRegistryEntryCallForDischargeData.execute();
+        retrofit2.Response<RegistryResponse> registryUserCreationResponseForDischarge = createRegistryEntryCallForDischargeData.execute();
 
         if (registryUserCreationResponseForDischarge.body() != null) {
             RegistryResponse registryResponseForDischarge = new RegistryResponse();
             BeanUtils.copyProperties(registryUserCreationResponseForDischarge.body(), registryResponseForDischarge);
-            mapExtraInformationForDisrchargeData (adminToken, springResponse, registryResponseForDischarge, registryUserCreationResponseForAdditional);
+            mapExtraInformationForDisrchargeData(adminToken, springResponse, registryResponseForDischarge, registryUserCreationResponseForAdditional);
         }
     }
 
 
-    private void convertRegistryResponseToDischarge (String adminToken, Springs springResponse, DischargeDataResponse dischargeDataResponse, LinkedHashMap discharge, Response<RegistryResponse> registryUserCreationResponseForAdditional) throws JsonProcessingException {
+    private void convertRegistryResponseToDischarge(String adminToken, Springs springResponse, DischargeDataResponse dischargeDataResponse, LinkedHashMap discharge, Response<RegistryResponse> registryUserCreationResponseForAdditional) throws IOException {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
+                Locale.ENGLISH);
         dischargeDataResponse.setUpdatedTimeStamp((String) discharge.get("updatedTimeStamp"));
-        dischargeDataResponse.setCreatedTimeStamp((String) discharge.get("createdTimeStamp"));
+        String dateString=(String) discharge.get("createdTimeStamp");
+        try {
+            Date date=dateFormat.parse(dateString);
+            dischargeDataResponse.setCreatedTimeStamp(String.valueOf(date.getTime()));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
         dischargeDataResponse.setOrgId((String) discharge.get("orgId"));
         dischargeDataResponse.setTenantId((String) discharge.get("tenantId"));
         dischargeDataResponse.setVolumeOfContainer((Double) discharge.get("volumeOfContainer"));
         dischargeDataResponse.setUserId((String) discharge.get("userId"));
+        String userId = (String) discharge.get("userId");
         dischargeDataResponse.setSpringCode((String) discharge.get("springCode"));
         dischargeDataResponse.setStatus((String) discharge.get("status"));
         dischargeDataResponse.setOsid((String) discharge.get("osid"));
 
-//        dischargeDataResponse.setSubmittedby((String) discharge.get("submittedby"));
-//        dischargeDataResponse.setSpringName((String) discharge.get("springName"));
+        UserRepresentation userRepresentation = keycloakService.getUserById(appContext.getRealm(), userId, adminToken);
+        if (null != userRepresentation) {
+            dischargeDataResponse.setSubmittedby(userRepresentation.getFirstName());
+        }
+
+        //dischargeDataResponse.setSubmittedby((String) discharge.get("submittedby"));
+        //dischargeDataResponse.setSpringName((String) discharge.get("springName"));
 
         try {
             getAdditionalDataWithSpringCode(registryUserCreationResponseForAdditional, null, dischargeDataResponse, "updateDischargeData");
@@ -414,7 +417,7 @@ public class UserServiceImpl implements UserService {
         if (discharge.get("litresPerSecond").getClass().toString().equals("class java.lang.String")) {
             String result = (String) discharge.get("litresPerSecond");
             result = new StringBuilder(result).deleteCharAt(0).toString();
-            result = new StringBuilder(result).deleteCharAt(result.length()-1).toString();
+            result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
             litresPerSecond.add(result);
         } else if (discharge.get("litresPerSecond").getClass().toString().equals("class java.util.ArrayList")) {
             litresPerSecond = (ArrayList<String>) discharge.get("litresPerSecond");
@@ -426,8 +429,8 @@ public class UserServiceImpl implements UserService {
             updatedLitresPerSecond.add(lps);
         });
         dischargeDataResponse.setLitresPerSecond(updatedLitresPerSecond);
-        convertStringToList(dischargeDataResponse, discharge,  "images");
-        convertStringToList(dischargeDataResponse, discharge,  "dischargeTime");
+        convertStringToList(dischargeDataResponse, discharge, "images");
+        convertStringToList(dischargeDataResponse, discharge, "dischargeTime");
     }
 
 
@@ -457,10 +460,10 @@ public class UserServiceImpl implements UserService {
                 dischargeDataResponse.setImages(imageNewList);
             }
 
-        } else if (discharge.get(attribute).getClass().toString().equals("class java.lang.String")){
+        } else if (discharge.get(attribute).getClass().toString().equals("class java.lang.String")) {
             String result = (String) discharge.get(attribute);
             result = new StringBuilder(result).deleteCharAt(0).toString();
-            result = new StringBuilder(result).deleteCharAt(result.length()-1).toString();
+            result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
 
             if (attribute.equals("dischargeTime")) {
                 dischargeDataResponse.setDischargeTime(Arrays.asList(result));
@@ -476,21 +479,36 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
-
-
-    private void convertRegistryResponseToSpringDischarge (Springs springResponse, LinkedHashMap spring) throws JsonProcessingException {
+    private void convertRegistryResponseToSpringDischarge(Springs springResponse, LinkedHashMap spring, String adminToken) throws IOException {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
+                Locale.ENGLISH);
         springResponse.setNumberOfHouseholds((Integer) spring.get("numberOfHouseholds"));
         springResponse.setUpdatedTimeStamp((String) spring.get("updatedTimeStamp"));
         springResponse.setOrgId((String) spring.get("orgId"));
         springResponse.setUserId((String) spring.get("userId"));
-        springResponse.setCreatedTimeStamp((String) spring.get("createdTimeStamp"));
+        String userId = (String) spring.get("userId");
+        UserRepresentation userRepresentation = keycloakService.getUserById(appContext.getRealm(), userId, adminToken);
+        if (null != userRepresentation) {
+            springResponse.setSubmittedBy(userRepresentation.getFirstName());
+        }
+
+        String dateString=(String) spring.get("createdTimeStamp");
+        Date date= null;
+        try {
+            date = dateFormat.parse(dateString);
+            springResponse.setCreatedTimeStamp(String.valueOf(date.getTime()));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+
         springResponse.setVillage((String) spring.get("village"));
         springResponse.setSpringCode((String) spring.get("springCode"));
         springResponse.setTenantId((String) spring.get("tenantId"));
         springResponse.setAccuracy((Double) spring.get("accuracy"));
         springResponse.setElevation((Double) spring.get("elevation"));
         springResponse.setLatitude((Double) spring.get("latitude"));
+
         springResponse.setLongitude((Double) spring.get("longitude"));
         springResponse.setOwnershipType((String) spring.get("ownershipType"));
         springResponse.setSpringName((String) spring.get("springName"));
@@ -506,7 +524,7 @@ public class UserServiceImpl implements UserService {
         } else if (spring.get("usage").getClass().toString().equals("class java.lang.String")) {
             String result = (String) spring.get("usage");
             result = new StringBuilder(result).deleteCharAt(0).toString();
-            result = new StringBuilder(result).deleteCharAt(result.length()-1).toString();
+            result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
             springResponse.setUsage(Arrays.asList(result));
         }
 
@@ -515,11 +533,11 @@ public class UserServiceImpl implements UserService {
             List<String> imageNewList = new ArrayList<>();
             imageList = (List<URL>) spring.get("images");
             for (int i = 0; i < imageList.size(); i++) {
-                URL url = amazonS3.generatePresignedUrl(appContext.getBucketName(),"arghyam/" + imageList.get(i), expiration);
+                URL url = amazonS3.generatePresignedUrl(appContext.getBucketName(), "arghyam/" + imageList.get(i), expiration);
                 imageNewList.add(String.valueOf(url));
             }
             springResponse.setImages(imageNewList);
-        } else if (spring.get("images").getClass().toString().equals("class java.lang.String")){
+        } else if (spring.get("images").getClass().toString().equals("class java.lang.String")) {
             String result = (String) spring.get("images");
             result = new StringBuilder(result).deleteCharAt(0).toString();
             result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
@@ -530,7 +548,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private void mapExtraInformationForDisrchargeData (String adminToken, Springs springResponse, RegistryResponse registryResponseForDischarge, Response<RegistryResponse> registryUserCreationResponseForAdditional) {
+    private void mapExtraInformationForDisrchargeData(String adminToken, Springs springResponse, RegistryResponse registryResponseForDischarge, Response<RegistryResponse> registryUserCreationResponseForAdditional) {
         Map<String, Object> dischargeMap = new HashMap<>();
         List<LinkedHashMap> dischargeDataList = (List<LinkedHashMap>) registryResponseForDischarge.getResult();
         List<DischargeData> updatedDischargeDataList = new ArrayList<>();
@@ -538,10 +556,11 @@ public class UserServiceImpl implements UserService {
             DischargeDataResponse dischargeDataResponse = new DischargeDataResponse();
             try {
                 convertRegistryResponseToDischarge(adminToken, springResponse, dischargeDataResponse, discharge, registryUserCreationResponseForAdditional);
-            } catch (JsonProcessingException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
             updatedDischargeDataList.add(dischargeDataResponse);
+            Collections.sort(updatedDischargeDataList, (o1, o2) -> o2.getCreatedTimeStamp().compareTo(o1.getCreatedTimeStamp()));
         });
         dischargeMap.put("dischargeData", updatedDischargeDataList);
         springResponse.setExtraInformation(dischargeMap);
@@ -553,80 +572,79 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
     @Override
     @Cacheable("springsCache")
     public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult, Integer pageNumber) throws IOException {
 
 
-            LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
-            int startValue=0, endValue=0;
-            String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
-            Map<String, String> springs = new HashMap<>();
-            if (requestDTO.getRequest().keySet().contains("springs")) {
-                springs.put("@type", "springs");
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        int startValue = 0, endValue = 0;
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        Map<String, String> springs = new HashMap<>();
+        if (requestDTO.getRequest().keySet().contains("springs")) {
+            springs.put("@type", "springs");
+        }
+
+        Map<String, Object> entityMap = new HashMap<>();
+        entityMap.put("springs", springs);
+        String stringRequest = objectMapper.writeValueAsString(entityMap);
+        RegistryRequest registryRequest = new RegistryRequest(null, entityMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
+
+        try {
+            Call<RegistryResponse> createRegistryEntryCall = registryDao.searchUser(adminToken, registryRequest);
+            retrofit2.Response<RegistryResponse> registryUserCreationResponse = createRegistryEntryCall.execute();
+            if (!registryUserCreationResponse.isSuccessful()) {
+                log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
             }
 
-            Map<String, Object> entityMap = new HashMap<>();
-            entityMap.put("springs", springs);
-            String stringRequest = objectMapper.writeValueAsString(entityMap);
-            RegistryRequest registryRequest=new RegistryRequest(null,entityMap, RegistryResponse.API_ID.SEARCH.getId(),stringRequest);
+            RegistryResponse registryResponse = new RegistryResponse();
+            registryResponse = registryUserCreationResponse.body();
+            BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+            Map<String, Object> response = new HashMap<>();
+            List<LinkedHashMap> springList = (List<LinkedHashMap>) registryResponse.getResult();
+            List<Springs> springData = new ArrayList<>();
+            springList.stream().forEach(spring -> {
+                Springs springResponse = new Springs();
+                try {
+                    convertRegistryResponseToSpring(adminToken, springResponse, spring);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                springData.add(springResponse);
+            });
 
-            try {
-                Call<RegistryResponse> createRegistryEntryCall = registryDao.searchUser(adminToken, registryRequest);
-                retrofit2.Response<RegistryResponse> registryUserCreationResponse = createRegistryEntryCall.execute();
-                if (!registryUserCreationResponse.isSuccessful()) {
-                    log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+
+            List<SpringsWithFormattedTime> updatedSpringList = new ArrayList<>();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
+                    Locale.ENGLISH);
+            springData.stream().forEach(spring -> {
+                SpringsWithFormattedTime newSpring = new SpringsWithFormattedTime();
+                try {
+                    newSpring.setCreatedTimeStamp(dateFormat.parse(spring.getCreatedTimeStamp()));
+                } catch (ParseException e) {
+                    e.printStackTrace();
                 }
 
-                RegistryResponse registryResponse = new RegistryResponse();
-                registryResponse = registryUserCreationResponse.body();
-                BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
-                Map<String, Object> response = new HashMap<>();
-                List<LinkedHashMap> springList = (List<LinkedHashMap>) registryResponse.getResult();
-                List<Springs> springData = new ArrayList<>();
-                springList.stream().forEach(spring -> {
-                    Springs springResponse = new Springs();
-                    try {
-                        convertRegistryResponseToSpring (adminToken, springResponse, spring);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    springData.add(springResponse);
-                });
 
+                newSpring.setImages(spring.getImages());
+                newSpring.setExtraInformation(spring.getExtraInformation());
+                newSpring.setNumberOfHouseholds(spring.getNumberOfHouseholds());
+                newSpring.setOrgId(spring.getOrgId());
+                newSpring.setOwnershipType(spring.getOwnershipType());
+                newSpring.setSpringCode(spring.getSpringCode());
+                newSpring.setSpringName(spring.getSpringName());
+                newSpring.setTenantId(spring.getTenantId());
+                newSpring.setUsage(spring.getUsage());
+                newSpring.setUserId(spring.getUserId());
+                newSpring.setVillage(spring.getVillage());
+                newSpring.setAccuracy(spring.getAccuracy());
+                newSpring.setElevation(spring.getElevation());
+                newSpring.setLatitude(spring.getLatitude());
+                newSpring.setLongitude(spring.getLongitude());
+                updatedSpringList.add(newSpring);
+            });
 
-                List<SpringsWithFormattedTime> updatedSpringList = new ArrayList<>();
-                SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
-                        Locale.ENGLISH);
-                springData.stream().forEach(spring->{
-                    SpringsWithFormattedTime newSpring = new SpringsWithFormattedTime();
-                    try {
-                        newSpring.setCreatedTimeStamp(dateFormat.parse(spring.getCreatedTimeStamp()));
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
-
-
-                    newSpring.setImages(spring.getImages());
-                    newSpring.setExtraInformation(spring.getExtraInformation());
-                    newSpring.setNumberOfHouseholds(spring.getNumberOfHouseholds());
-                    newSpring.setOrgId(spring.getOrgId());
-                    newSpring.setOwnershipType(spring.getOwnershipType());
-                    newSpring.setSpringCode(spring.getSpringCode());
-                    newSpring.setSpringName(spring.getSpringName());
-                    newSpring.setTenantId(spring.getTenantId());
-                    newSpring.setUsage(spring.getUsage());
-                    newSpring.setUserId(spring.getUserId());
-                    newSpring.setVillage(spring.getVillage());
-                    newSpring.setAccuracy(spring.getAccuracy());
-                    newSpring.setElevation(spring.getElevation());
-                    newSpring.setLatitude(spring.getLatitude());
-                    newSpring.setLongitude(spring.getLongitude());
-                    updatedSpringList.add(newSpring);
-                });
-
-                updatedSpringList.sort(Comparator.comparing(SpringsWithFormattedTime::getCreatedTimeStamp).reversed());
+            updatedSpringList.sort(Comparator.comparing(SpringsWithFormattedTime::getCreatedTimeStamp).reversed());
 //                List<Springs> updatedSprings = new ArrayList<>();
 //                updatedSpringList.stream().forEach(springsWithFormattedTime -> {
 //                    Springs spring1 = new Springs();
@@ -649,30 +667,29 @@ public class UserServiceImpl implements UserService {
 //                    updatedSprings.add(spring1);
 //                });
 
-                PaginatedResponse paginatedResponse = new PaginatedResponse();
-                if (pageNumber != null) {
-                    paginatedResponse(startValue, pageNumber, endValue, updatedSpringList, paginatedResponse);
-                } else {
-                    paginatedResponse.setSprings(updatedSpringList);
-                    paginatedResponse.setTotalSprings(updatedSpringList.size());
-                }
-                response.put("responseObject", paginatedResponse);
-                response.put("responseCode", 200);
-                response.put("responseStatus", "all springs fetched successfully");
-                loginAndRegisterResponseMap.setResponse(response);
-            } catch (IOException e) {
-                log.error("Error creating registry entry : {} ", e.getMessage());
+            PaginatedResponse paginatedResponse = new PaginatedResponse();
+            if (pageNumber != null) {
+                paginatedResponse(startValue, pageNumber, endValue, updatedSpringList, paginatedResponse);
+            } else {
+                paginatedResponse.setSprings(updatedSpringList);
+                paginatedResponse.setTotalSprings(updatedSpringList.size());
             }
-            return loginAndRegisterResponseMap;
+            response.put("responseObject", paginatedResponse);
+            response.put("responseCode", 200);
+            response.put("responseStatus", "all springs fetched successfully");
+            loginAndRegisterResponseMap.setResponse(response);
+        } catch (IOException e) {
+            log.error("Error creating registry entry : {} ", e.getMessage());
+        }
+        return loginAndRegisterResponseMap;
     }
 
 
-
-    private void paginatedResponse (int startValue, int pageNumber, int endValue, List<SpringsWithFormattedTime> newSprings, PaginatedResponse paginatedResponse) {
+    private void paginatedResponse(int startValue, int pageNumber, int endValue, List<SpringsWithFormattedTime> newSprings, PaginatedResponse paginatedResponse) {
         startValue = ((pageNumber - 1) * 5);
-        endValue = (newSprings.size() >5*pageNumber) ? (startValue + 5) : newSprings.size();
+        endValue = (newSprings.size() > 5 * pageNumber) ? (startValue + 5) : newSprings.size();
         List<SpringsWithFormattedTime> springsList = new ArrayList<>();
-        for (int j=startValue; j<endValue; j++) {
+        for (int j = startValue; j < endValue; j++) {
             springsList.add(newSprings.get(j));
         }
         paginatedResponse.setSprings(springsList);
@@ -680,8 +697,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
-    private void convertRegistryResponseToSpring (String adminToken, Springs springResponse, LinkedHashMap spring) throws IOException {
+    private void convertRegistryResponseToSpring(String adminToken, Springs springResponse, LinkedHashMap spring) throws IOException {
 
         springResponse.setUpdatedTimeStamp((String) spring.get("updatedTimeStamp"));
         springResponse.setOrgId((String) spring.get("orgId"));
@@ -712,29 +728,30 @@ public class UserServiceImpl implements UserService {
         String stringAdditionalDataRequest = mapper.writeValueAsString(additionalMap);
         RegistryRequest registryRequestForAdditional = new RegistryRequest(null, additionalMap, RegistryResponse.API_ID.SEARCH.getId(), stringAdditionalDataRequest);
         Call<RegistryResponse> createRegistryEntryCallForAdditional = registryDao.searchUser(adminToken, registryRequestForAdditional);
-        retrofit2.Response<RegistryResponse>  registryUserCreationResponseForAdditional = createRegistryEntryCallForAdditional.execute();
+        retrofit2.Response<RegistryResponse> registryUserCreationResponseForAdditional = createRegistryEntryCallForAdditional.execute();
 
 
-        getAdditionalDataWithSpringCode(registryUserCreationResponseForAdditional, springResponse,null,"updateSpringProfile");
+        getAdditionalDataWithSpringCode(registryUserCreationResponseForAdditional, springResponse, null, "updateSpringProfile");
 
         if (spring.get("images").getClass().toString().equals("class java.util.ArrayList")) {
             List<URL> imageList = new ArrayList<>();
             List<String> imageNewList = new ArrayList<>();
             imageList = (List<URL>) spring.get("images");
             for (int i = 0; i < imageList.size(); i++) {
-                URL url = amazonS3.generatePresignedUrl(appContext.getBucketName(),"arghyam/" + imageList.get(i), expiration);
+                URL url = amazonS3.generatePresignedUrl(appContext.getBucketName(), "arghyam/" + imageList.get(i), expiration);
                 imageNewList.add(String.valueOf(url));
             }
             springResponse.setImages(imageNewList);
-        } else if (spring.get("images").getClass().toString().equals("class java.lang.String")){
+        } else if (spring.get("images").getClass().toString().equals("class java.lang.String")) {
             String result = (String) spring.get("images");
             result = new StringBuilder(result).deleteCharAt(0).toString();
             result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
             List<String> images = Arrays.asList(result);
-            URL url = amazonS3.generatePresignedUrl(appContext.getBucketName(),"arghyam/" + result, expiration);
+            URL url = amazonS3.generatePresignedUrl(appContext.getBucketName(), "arghyam/" + result, expiration);
             springResponse.setImages(Arrays.asList(String.valueOf(url)));
         }
     }
+
     /**
      * Image upload api response
      *
@@ -842,9 +859,9 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
     @Override
     public LoginAndRegisterResponseMap createDischargeData(String springCode, RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+        DischargeOsid dischargeOsid = null;
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         DischargeData dischargeData = mapper.convertValue(requestDTO.getRequest().get("dischargeData"), DischargeData.class);
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
@@ -859,6 +876,7 @@ public class UserServiceImpl implements UserService {
         dischargeData.setMonths(dischargeData.getMonths() == null ? Arrays.asList("") : dischargeData.getMonths());
         dischargeData.setSeasonality(dischargeData.getSeasonality() == null ? "" : dischargeData.getSeasonality());
 
+
         Map<String, Object> dischargrMap = new HashMap<>();
         dischargrMap.put("dischargeData", dischargeData);
         String stringRequest = objectMapper.writeValueAsString(dischargrMap);
@@ -870,11 +888,14 @@ public class UserServiceImpl implements UserService {
             BeanUtils.copyProperties(dischargeData, dischargeDataResponse);
             RegistryResponse registryResponse = new RegistryResponse();
             BeanUtils.copyProperties(registryUserCreationResponse.body(), registryResponse);
-            DischargeOsid dischargeOsid = mapper.convertValue(registryResponse.getResult(), DischargeOsid.class);
+            dischargeOsid = mapper.convertValue(registryResponse.getResult(), DischargeOsid.class);
             dischargeDataResponse.setOsid(dischargeOsid.getDischargeData().getOsid());
+            UserRepresentation usersInfo = keycloakService.getUserById(appContext.getRealm(), dischargeData.getUserId(), adminAccessToken);
 
-            UserRepresentation userRepresentation = keycloakService.getUserById("Arghyam", dischargeData.getUserId(), adminAccessToken);
-            log.info("********************** SUBMITTED BY USER DETAILS ******************" + objectMapper.writeValueAsString(userRepresentation));
+            if (null != usersInfo) {
+                dischargeDataResponse.setSubmittedby(usersInfo.getFirstName());
+            }
+
             if (!registryUserCreationResponse.isSuccessful()) {
                 log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
             }
@@ -883,7 +904,8 @@ public class UserServiceImpl implements UserService {
             log.error("Error creating registry entry : {} ", e.getMessage());
         }
 
-        generateActivityForDischargeData(adminAccessToken,dischargrMap);
+        generateActivityForDischargeData(adminAccessToken, dischargrMap);
+        generateNotifications(adminAccessToken, dischargrMap, dischargeOsid.getDischargeData().getOsid());
 
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         Map<String, Object> response = new HashMap<>();
@@ -894,27 +916,61 @@ public class UserServiceImpl implements UserService {
         return loginAndRegisterResponseMap;
     }
 
+    private void generateNotifications(String adminAccessToken, Map<String, Object> dischargrMap, String osid) throws IOException {
+        HashMap<String, Object> map = new HashMap<>();
+        DischargeData dischargeData = (DischargeData) dischargrMap.get("dischargeData");
+        NotificationDTO notificationDTO = new NotificationDTO();
+        notificationDTO.setCreatedAt(System.currentTimeMillis());
+        notificationDTO.setSpringCode(dischargeData.getSpringCode());
+        notificationDTO.setUserId(dischargeData.getUserId());
+        notificationDTO.setDischargeDataOsid(osid);
+        notificationDTO.setStatus(dischargeData.getStatus());
+        notificationDTO.setFirstName(getFirstNameByUserId(dischargeData.getUserId()));
+
+        map.put("notifications", notificationDTO);
+        try {
+            String stringRequest = mapper.writeValueAsString(map);
+            RegistryRequest registryRequest = new RegistryRequest(null, map, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+            Call<RegistryResponse> notificationResponse = registryDAO.createUser(adminAccessToken, registryRequest);
+            Response response = notificationResponse.execute();
+
+            if (!response.isSuccessful()) {
+                log.info("response is un successfull due to :" + response.errorBody().toString());
+            } else {
+                log.info("response is successfull " + response);
+            }
+        } catch (JsonProcessingException e) {
+            log.error("error is :" + e);
+        }
+    }
+
+    private String getFirstNameByUserId(String userId) throws IOException {
+        String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        UserRepresentation userRepresentation = keycloakService.getUserById(appContext.getRealm(), userId, adminAccessToken);
+        return userRepresentation.getFirstName();
+    }
+
 
     private void generateActivityForDischargeData(String adminToken, Map<String, Object> dischargrMap) throws IOException {
-        Springs springsDetails=new Springs();
-        HashMap<String,Object> map=new HashMap<>();
-        DischargeData dischargeData=(DischargeData) dischargrMap.get("dischargeData");
-        ActivitiesRequestDTO activitiesRequestDTO=new ActivitiesRequestDTO();
-        springsDetails=getSpringDetailsBySpringCode(dischargeData.getSpringCode());
+        Springs springsDetails = new Springs();
+        HashMap<String, Object> map = new HashMap<>();
+        DischargeData dischargeData = (DischargeData) dischargrMap.get("dischargeData");
+        ActivitiesRequestDTO activitiesRequestDTO = new ActivitiesRequestDTO();
+        springsDetails = getSpringDetailsBySpringCode(dischargeData.getSpringCode());
         activitiesRequestDTO.setUserId(dischargeData.getUserId());
-        activitiesRequestDTO.setAction("New discharge data has been created for spring:"+dischargeData.getSpringCode());
+        activitiesRequestDTO.setAction("Discharge data added");
         activitiesRequestDTO.setCreatedAt(dischargeData.getCreatedTimeStamp().toString());
         activitiesRequestDTO.setLongitude(springsDetails.getLongitude());
         activitiesRequestDTO.setLatitude(springsDetails.getLatitude());
         activitiesRequestDTO.setSpringName(springsDetails.getSpringName());
         activitiesRequestDTO.setSpringCode(springsDetails.getSpringCode());
-         map.put("activities",activitiesRequestDTO);
+        map.put("activities", activitiesRequestDTO);
 
         try {
             String stringRequest = mapper.writeValueAsString(map);
             RegistryRequest registryRequest = new RegistryRequest(null, map, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
             Call<RegistryResponse> activitiesResponse = registryDAO.createUser(adminToken, registryRequest);
-            Response response=activitiesResponse.execute();
+            Response response = activitiesResponse.execute();
 
             if (!response.isSuccessful()) {
                 log.info("response is un successfull due to :" + response.errorBody().toString());
@@ -933,10 +989,10 @@ public class UserServiceImpl implements UserService {
         retrofit2.Response dischargeDataResponse = null;
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         Person springs = new Person();
-        HashMap<String,Object> map=new HashMap<>();
-        RequestDTO requestDTO=new RequestDTO();
+        HashMap<String, Object> map = new HashMap<>();
+        RequestDTO requestDTO = new RequestDTO();
         springs.setSpringCode(springCode);
-        map.put("springs",springs);
+        map.put("springs", springs);
         requestDTO.setRequest(map);
 
         if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("springs")) {
@@ -968,8 +1024,8 @@ public class UserServiceImpl implements UserService {
                 if (!springList.isEmpty()) {
                     springList.stream().forEach(springWithdischarge -> {
                         try {
-                            convertRegistryResponseToSpringDischarge(springResponse, springWithdischarge);
-                        } catch (JsonProcessingException e) {
+                            convertRegistryResponseToSpringDischarge(springResponse, springWithdischarge, adminToken);
+                        } catch (IOException e) {
                             e.printStackTrace();
                         }
                     });
@@ -977,12 +1033,11 @@ public class UserServiceImpl implements UserService {
                 return springResponse;
 
             }
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
         return null;
     }
-
 
 
     @Override
@@ -1025,7 +1080,7 @@ public class UserServiceImpl implements UserService {
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         Map<String, Object> response = new HashMap<>();
         response.put("responseCode", 200);
-        response.put("responseStatus", "created discharge data successfully");
+        response.put("responseStatus", "created spring successfully");
         response.put("responseObject", springs);
         loginAndRegisterResponseMap.setResponse(response);
         log.info("********create spring flow ***" + objectMapper.writeValueAsString(loginAndRegisterResponseMap));
@@ -1033,24 +1088,23 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
     private void generateActivity(Map<String, Object> springMap, String adminToken) throws IOException {
         HashMap<String, Object> map = new HashMap<>();
         Springs springs = (Springs) springMap.get("springs");
-        ActivitiesRequestDTO activitySearchDto=new ActivitiesRequestDTO();
+        ActivitiesRequestDTO activitySearchDto = new ActivitiesRequestDTO();
         activitySearchDto.setUserId(springs.getUserId());
         activitySearchDto.setCreatedAt(springs.getCreatedTimeStamp().toString());
         activitySearchDto.setSpringName(springs.getSpringName());
         activitySearchDto.setLatitude(springs.getLatitude());
         activitySearchDto.setLongitude(springs.getLongitude());
         activitySearchDto.setSpringCode(springs.getSpringCode());
-        activitySearchDto.setAction("new spring has been created for :"+springs.getSpringCode());
-        map.put("activities",activitySearchDto);
+        activitySearchDto.setAction("Spring added");
+        map.put("activities", activitySearchDto);
         try {
             String stringRequest = mapper.writeValueAsString(map);
             RegistryRequest registryRequest = new RegistryRequest(null, map, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
             Call<RegistryResponse> activitiesResponse = registryDAO.createUser(adminToken, registryRequest);
-            Response response=activitiesResponse.execute();
+            Response response = activitiesResponse.execute();
 
             if (!response.isSuccessful()) {
                 log.info("response is un successfull due to :" + response.errorBody().toString());
@@ -1124,7 +1178,7 @@ public class UserServiceImpl implements UserService {
                     } else if (additionalData.get("usage").getClass().toString().equals("class java.lang.String")) {
                         String result = (String) additionalData.get("usage");
                         result = new StringBuilder(result).deleteCharAt(0).toString();
-                        result = new StringBuilder(result).deleteCharAt(result.length()-1).toString();
+                        result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
                         fetchedAdditionalData.setUsage(Arrays.asList(result));
                     }
 
@@ -1134,7 +1188,7 @@ public class UserServiceImpl implements UserService {
                     } else if (additionalData.get("months").getClass().toString().equals("class java.lang.String")) {
                         String result = (String) additionalData.get("months");
                         result = new StringBuilder(result).deleteCharAt(0).toString();
-                        result = new StringBuilder(result).deleteCharAt(result.length()-1).toString();
+                        result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
                         fetchedAdditionalData.setMonths(Arrays.asList(result));
                     }
                 });
@@ -1152,6 +1206,39 @@ public class UserServiceImpl implements UserService {
 
         }
         return loginAndRegisterResponseMap;
+    }
+
+    private void generateActivitiesForAdditionalDetails(String adminToken, AdditionalInfo additionalInfo) throws IOException {
+        // make a spring profile api call using spring code and get the resp details and save it to registry
+        HashMap<String,Object> map=new HashMap<>();
+        Springs springsDetails=null;
+        ActivitiesRequestDTO activitiesRequestDTO=new ActivitiesRequestDTO();
+        springsDetails=getSpringDetailsBySpringCode(additionalInfo.getSpringCode());
+        activitiesRequestDTO.setUserId(springsDetails.getUserId());
+        activitiesRequestDTO.setAction("Additional info added");
+        activitiesRequestDTO.setCreatedAt(new Date().toString());
+        activitiesRequestDTO.setLongitude(springsDetails.getLongitude());
+        activitiesRequestDTO.setLatitude(springsDetails.getLatitude());
+        activitiesRequestDTO.setSpringName(springsDetails.getSpringName());
+        activitiesRequestDTO.setSpringCode(springsDetails.getSpringCode());
+        map.put("activities",activitiesRequestDTO);
+
+        try {
+            String stringRequest = mapper.writeValueAsString(map);
+            RegistryRequest registryRequest = new RegistryRequest(null, map, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+            Call<RegistryResponse> activitiesResponse = registryDAO.createUser(adminToken, registryRequest);
+            Response response=activitiesResponse.execute();
+
+            if (!response.isSuccessful()) {
+                log.info("response is un successfull due to :" + response.errorBody().toString());
+            } else {
+                // successfull case
+                log.info("response is successfull " + response);
+
+            }
+        } catch (JsonProcessingException e) {
+            log.error("error is :" + e);
+        }
     }
 
 
@@ -1177,6 +1264,7 @@ public class UserServiceImpl implements UserService {
                     response.put("responseCode", 200);
                     response.put("responseStatus", "Discharge data accepted");
                     loginAndRegisterResponseMap.setResponse(response);
+                    updateNotificationsData(dischargeData);
 
                 } else {
                     Map<String, Object> response = new HashMap<>();
@@ -1191,7 +1279,7 @@ public class UserServiceImpl implements UserService {
 
             return loginAndRegisterResponseMap;
 
-        } else if(dischargeData.getStatus().equalsIgnoreCase("Rejected")){
+        } else if (dischargeData.getStatus().equalsIgnoreCase("Rejected")) {
 
             String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
             Map<String, Object> dischargeMap = new HashMap<>();
@@ -1210,12 +1298,14 @@ public class UserServiceImpl implements UserService {
                     response.put("responseCode", 451);
                     response.put("responseStatus", "Discharge data Rejected");
                     loginAndRegisterResponseMap.setResponse(response);
+                    updateNotificationsData(dischargeData);
 
                 } else {
                     Map<String, Object> response = new HashMap<>();
                     response.put("responseCode", registryUserCreationResponse.code());
                     response.put("responseStatus", registryUserCreationResponse.message());
                     loginAndRegisterResponseMap.setResponse(response);
+
                 }
 
             } catch (IOException e) {
@@ -1225,6 +1315,129 @@ public class UserServiceImpl implements UserService {
         }
         return loginAndRegisterResponseMap;
 
+
+    }
+
+    private void updateNotificationsData(Reviewer dischargeData) throws IOException {
+        String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        NotificationReviewEntity notificationReviewEntity = new NotificationReviewEntity();
+        //notificationReviewEntity.setDischargeDataOsid(dischargeData.getOsid());
+        notificationReviewEntity.setStatus(dischargeData.getStatus());
+        notificationReviewEntity.setOsid(dischargeData.getNotificationOsid());
+        Map<String, Object> dischargeMap = new HashMap<>();
+        dischargeMap.put("notifications", notificationReviewEntity);
+
+        String objectMapper = new ObjectMapper().writeValueAsString(dischargeMap);
+        RegistryRequest registryRequest = new RegistryRequest(null, dischargeMap, RegistryResponse.API_ID.UPDATE.getId(), objectMapper);
+
+        try {
+            Call<RegistryResponse> createRegistryEntryCall = registryDao.updateUser(adminAccessToken, registryRequest);
+            retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
+
+            if (registryUserCreationResponse.isSuccessful() && registryUserCreationResponse.code() == 200) {
+                log.info("Successfully updated notifications entity:");
+
+            } else {
+                log.info("Error updating notifications entity:" + registryUserCreationResponse.errorBody().toString());
+            }
+
+        } catch (IOException e) {
+            log.error("Error creating registry entry : {} ", e.getMessage());
+        }
+    }
+
+    @Override
+    public LoginAndRegisterResponseMap getAllNotifications(RequestDTO requestDTO) throws IOException {
+        retrofit2.Response registryUserCreationResponse = null;
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+
+        HashMap<String, Object> map = new HashMap<>();
+        if (requestDTO.getRequest().containsKey("notifications")) {
+            map.put("@type", "notifications");
+        }
+        Map<String, Object> entityMap = new HashMap<>();
+        entityMap.put("notifications", map);
+        String stringRequest = mapper.writeValueAsString(entityMap);
+        RegistryRequest registryRequest = new RegistryRequest(null, entityMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
+        try {
+
+            Call<RegistryResponse> loginResponseDTOCall = registryDAO.searchUser(adminToken, registryRequest);
+            registryUserCreationResponse = loginResponseDTOCall.execute();
+
+            if (!registryUserCreationResponse.isSuccessful()) {
+                log.info("response is un successfull due to :" + registryUserCreationResponse.errorBody().toString());
+            } else {
+                // successfull case
+                log.info("response is successfull " + registryUserCreationResponse);
+                return getNotificationsResponse(registryUserCreationResponse, requestDTO);
+
+            }
+
+        } catch (Exception e) {
+            log.error("Error creating registry entry : {} ", e.getMessage());
+            throw new InternalServerException("Internal server error");
+
+        }
+
+
+        return null;
+    }
+
+    private LoginAndRegisterResponseMap getNotificationsResponse(Response registryUserCreationResponse, RequestDTO requestDTO) {
+        Map<String, Object> activitiesMap = new HashMap<>();
+        Map<String, Object> responseObjectMap = new HashMap<>();
+        LoginAndRegisterResponseMap activitiesResponse = new LoginAndRegisterResponseMap();
+        activitiesResponse.setId(requestDTO.getId());
+        activitiesResponse.setEts(requestDTO.getEts());
+        activitiesResponse.setVer(requestDTO.getVer());
+        activitiesResponse.setParams(requestDTO.getParams());
+        RegistryResponse registryResponse = new RegistryResponse();
+        registryResponse = (RegistryResponse) registryUserCreationResponse.body();
+        BeanUtils.copyProperties(requestDTO, activitiesResponse);
+        Map<String, Object> response = new HashMap<>();
+
+        List<LinkedHashMap> activitiesList = (List<LinkedHashMap>) registryResponse.getResult();
+        List<NotificationDTOEntity> activityData = new ArrayList<>();
+        activitiesList.stream().forEach(activities -> {
+            NotificationDTOEntity activityResponse = new NotificationDTOEntity();
+            convertRegistryResponseToNotifications(activityResponse, activities);
+                activityData.add(activityResponse);
+
+        });
+
+        // sorting logic
+        Collections.sort(activityData, Comparator.comparing(NotificationDTOEntity::getCreatedAt));
+        //ascending order
+        Collections.reverse(activityData);
+        activitiesMap.put("notifications", activityData);
+        responseObjectMap.put("responseObject", activitiesMap);
+        responseObjectMap.put("responseCode", 200);
+        responseObjectMap.put("responseStatus", "successfull");
+        activitiesResponse.setResponse(responseObjectMap);
+        return activitiesResponse;
+    }
+
+    private void convertRegistryResponseToNotifications(NotificationDTOEntity activityResponse, LinkedHashMap notifications) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
+                Locale.ENGLISH);
+
+        String date = dateFormat.format(notifications.get("createdAt"));
+        try {
+            Date date1=dateFormat.parse(date);
+            activityResponse.setCreatedAt(String.valueOf(date1.getTime()));
+        } catch (ParseException e) {
+            System.out.println("exception0000000:"+e);
+            e.printStackTrace();
+        }
+        activityResponse.setUserId((String) notifications.get("userId"));
+
+
+        activityResponse.setSpringCode((String) notifications.get("springCode"));
+        activityResponse.setDischargeDataOsid((String) notifications.get("dischargeDataOsid"));
+        activityResponse.setStatus((String) notifications.get("status"));
+        activityResponse.setFirstName((String) notifications.get("firstName"));
+        activityResponse.setOsid((String) notifications.get("osid"));
     }
 
 
