@@ -560,6 +560,12 @@ public class UserServiceImpl implements UserService {
                 e.printStackTrace();
             }
             updatedDischargeDataList.add(dischargeDataResponse);
+            Collections.sort(updatedDischargeDataList, new Comparator<DischargeData>() {
+                @Override
+                public int compare(DischargeData o1, DischargeData o2) {
+                    return o2.getCreatedTimeStamp().compareTo(o1.getCreatedTimeStamp());
+                }
+            });
         });
         dischargeMap.put("dischargeData", updatedDischargeDataList);
         springResponse.setExtraInformation(dischargeMap);
