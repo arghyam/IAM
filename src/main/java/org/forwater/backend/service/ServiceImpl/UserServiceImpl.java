@@ -1,6 +1,5 @@
 package org.forwater.backend.service.ServiceImpl;
 
-import com.amazonaws.services.dynamodbv2.xspec.S;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 
@@ -24,10 +23,8 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
-import org.keycloak.admin.client.resource.ClientResource;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
-import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
@@ -942,7 +939,7 @@ public class UserServiceImpl implements UserService {
         }
 
         generateActivityForDischargeData(adminAccessToken, dischargrMap);
-        generateNotifications(adminAccessToken, dischargrMap, dischargeOsid.getDischargeData().getOsid());
+        generateNotifications(Constants.NOTIFICATION_DISCHARGE,adminAccessToken, dischargrMap, dischargeOsid.getDischargeData().getOsid());
 
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         Map<String, Object> response = new HashMap<>();
@@ -953,7 +950,7 @@ public class UserServiceImpl implements UserService {
         return loginAndRegisterResponseMap;
     }
 
-    private void generateNotifications(String adminAccessToken, Map<String, Object> dischargrMap, String osid) throws IOException {
+    private void generateNotifications(String title,String adminAccessToken, Map<String, Object> dischargrMap, String osid) throws IOException {
         HashMap<String, Object> map = new HashMap<>();
         DischargeData dischargeData = (DischargeData) dischargrMap.get("dischargeData");
         NotificationDTO notificationDTO = new NotificationDTO();
@@ -962,7 +959,7 @@ public class UserServiceImpl implements UserService {
         notificationDTO.setUserId(dischargeData.getUserId());
         notificationDTO.setDischargeDataOsid(osid);
         notificationDTO.setStatus(dischargeData.getStatus());
-        notificationDTO.setFirstName(getFirstNameByUserId(dischargeData.getUserId()));
+        notificationDTO.setNotificationTitle(title+getFirstNameByUserId(dischargeData.getUserId()));
 
         map.put("notifications", notificationDTO);
         try {
@@ -1303,6 +1300,7 @@ public class UserServiceImpl implements UserService {
                     loginAndRegisterResponseMap.setResponse(response);
                     updateNotificationsData(dischargeData);
 
+
                 } else {
                     Map<String, Object> response = new HashMap<>();
                     response.put("responseCode", registryUserCreationResponse.code());
@@ -1473,7 +1471,7 @@ public class UserServiceImpl implements UserService {
         activityResponse.setSpringCode((String) notifications.get("springCode"));
         activityResponse.setDischargeDataOsid((String) notifications.get("dischargeDataOsid"));
         activityResponse.setStatus((String) notifications.get("status"));
-        activityResponse.setFirstName((String) notifications.get("firstName"));
+        activityResponse.setNotificationTitle((String) notifications.get("notificationTitle"));
         activityResponse.setOsid((String) notifications.get("osid"));
     }
 

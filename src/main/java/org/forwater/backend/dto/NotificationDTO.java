@@ -8,9 +8,16 @@ public class NotificationDTO {
     private String springCode;
     private String dischargeDataOsid;
     private String status;
-    private String firstName;
+    private String notificationTitle;
     private long createdAt;
 
+    public String getNotificationTitle() {
+        return notificationTitle;
+    }
+
+    public void setNotificationTitle(String notificationTitle) {
+        this.notificationTitle = notificationTitle;
+    }
 
     public String getUserId() {
         return userId;
@@ -42,15 +49,6 @@ public class NotificationDTO {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
     }
 
     public long getCreatedAt() {

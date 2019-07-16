@@ -67,6 +67,7 @@ public class Constants {
 
     public static final String ARGHYAM_S3_FOLDER_LOCATION = "arghyam/";
 
+    public static final String NOTIFICATION_DISCHARGE="Spring discharge data was submitted by ";
 
     public static final String IMAGE_UPLOAD_SUCCESS_MESSAGE="Uploaded successfully";
     public static final String ARGHYAM_USERS="arghyam-user";

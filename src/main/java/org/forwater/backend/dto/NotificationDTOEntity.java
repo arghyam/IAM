@@ -5,7 +5,7 @@ public class NotificationDTOEntity {
     private String springCode;
     private String dischargeDataOsid;
     private String status;
-    private String firstName;
+    private String notificationTitle;
     private String createdAt;
     private String osid;
 
@@ -41,12 +41,12 @@ public class NotificationDTOEntity {
         this.status = status;
     }
 
-    public String getFirstName() {
-        return firstName;
+    public String getNotificationTitle() {
+        return notificationTitle;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
+    public void setNotificationTitle(String notificationTitle) {
+        this.notificationTitle = notificationTitle;
     }
 
     public String getCreatedAt() {
