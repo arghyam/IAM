@@ -1,5 +1,6 @@
 package org.forwater.backend.service.ServiceImpl;
 
+import com.amazonaws.services.dynamodbv2.xspec.S;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 
@@ -175,22 +176,35 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginAndRegisterResponseMap getUserProfile(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+    public LoginAndRegisterResponseMap getUserProfile(RequestDTO requestDTO, BindingResult bindingResult) throws Exception {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         UserRepresentation userRepresentation = getUserFromKeycloak(requestDTO);
+        UserProfileDTO userProfileDTO = new UserProfileDTO();
         Map<String, Object> springUser = new HashMap<>();
         if (userRepresentation != null) {
-            springUser.put("responseObject", userRepresentation);
+            userProfileDTO.setFirstName(userRepresentation.getFirstName());
+            userProfileDTO.setUserName(userRepresentation.getUsername());
+            userProfileDTO.setRole(getUserRoleBasedOnId(userRepresentation.getId()));
+            springUser.put("responseObject", userProfileDTO);
             springUser.put("responseCode", 200);
             springUser.put("responseStatus", "user profile fetched");
         } else {
-            springUser.put("responseObject", userRepresentation);
             springUser.put("responseCode", 404);
             springUser.put("responseStatus", "user profile not found");
         }
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         loginAndRegisterResponseMap.setResponse(springUser);
         return loginAndRegisterResponseMap;
+    }
+
+    private List<String> getUserRoleBasedOnId(String id) throws Exception {
+        List<String> roles = new ArrayList<>();
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        List<RoleRepresentation> list = keycloakService.getUsersBasedOnRoleName(id,adminToken);
+        for (int i = 0; i < list.size(); i++) {
+            roles.add(list.get(i).getName());
+        }
+        return roles;
     }
 
 
@@ -273,7 +287,7 @@ public class UserServiceImpl implements UserService {
                 response.put("responseStatus", "created additional information");
                 BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
                 loginAndRegisterResponseMap.setResponse(response);
-                generateActivitiesForAdditionalDetails(adminToken,additionalInfo);
+                generateActivitiesForAdditionalDetails(adminToken, additionalInfo);
             }
 
         } catch (IOException e) {
@@ -404,9 +418,9 @@ public class UserServiceImpl implements UserService {
         SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
                 Locale.ENGLISH);
         dischargeDataResponse.setUpdatedTimeStamp((String) discharge.get("updatedTimeStamp"));
-        String dateString=(String) discharge.get("createdTimeStamp");
+        String dateString = (String) discharge.get("createdTimeStamp");
         try {
-            Date date=dateFormat.parse(dateString);
+            Date date = dateFormat.parse(dateString);
             dischargeDataResponse.setCreatedTimeStamp(String.valueOf(date.getTime()));
         } catch (ParseException e) {
             e.printStackTrace();
@@ -515,8 +529,8 @@ public class UserServiceImpl implements UserService {
             springResponse.setSubmittedBy(userRepresentation.getFirstName());
         }
 
-        String dateString=(String) spring.get("createdTimeStamp");
-        Date date= null;
+        String dateString = (String) spring.get("createdTimeStamp");
+        Date date = null;
         try {
             date = dateFormat.parse(dateString);
             springResponse.setCreatedTimeStamp(String.valueOf(date.getTime()));
@@ -1233,10 +1247,10 @@ public class UserServiceImpl implements UserService {
 
     private void generateActivitiesForAdditionalDetails(String adminToken, AdditionalInfo additionalInfo) throws IOException {
         // make a spring profile api call using spring code and get the resp details and save it to registry
-        HashMap<String,Object> map=new HashMap<>();
-        Springs springsDetails=null;
-        ActivitiesRequestDTO activitiesRequestDTO=new ActivitiesRequestDTO();
-        springsDetails=getSpringDetailsBySpringCode(additionalInfo.getSpringCode());
+        HashMap<String, Object> map = new HashMap<>();
+        Springs springsDetails = null;
+        ActivitiesRequestDTO activitiesRequestDTO = new ActivitiesRequestDTO();
+        springsDetails = getSpringDetailsBySpringCode(additionalInfo.getSpringCode());
         activitiesRequestDTO.setUserId(springsDetails.getUserId());
         activitiesRequestDTO.setAction("Additional info added");
         activitiesRequestDTO.setCreatedAt(new Date().toString());
@@ -1244,13 +1258,13 @@ public class UserServiceImpl implements UserService {
         activitiesRequestDTO.setLatitude(springsDetails.getLatitude());
         activitiesRequestDTO.setSpringName(springsDetails.getSpringName());
         activitiesRequestDTO.setSpringCode(springsDetails.getSpringCode());
-        map.put("activities",activitiesRequestDTO);
+        map.put("activities", activitiesRequestDTO);
 
         try {
             String stringRequest = mapper.writeValueAsString(map);
             RegistryRequest registryRequest = new RegistryRequest(null, map, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
             Call<RegistryResponse> activitiesResponse = registryDAO.createUser(adminToken, registryRequest);
-            Response response=activitiesResponse.execute();
+            Response response = activitiesResponse.execute();
 
             if (!response.isSuccessful()) {
                 log.info("response is un successfull due to :" + response.errorBody().toString());
@@ -1425,7 +1439,7 @@ public class UserServiceImpl implements UserService {
         activitiesList.stream().forEach(activities -> {
             NotificationDTOEntity activityResponse = new NotificationDTOEntity();
             convertRegistryResponseToNotifications(activityResponse, activities);
-                activityData.add(activityResponse);
+            activityData.add(activityResponse);
 
         });
 
@@ -1447,10 +1461,10 @@ public class UserServiceImpl implements UserService {
 
         String date = dateFormat.format(notifications.get("createdAt"));
         try {
-            Date date1=dateFormat.parse(date);
+            Date date1 = dateFormat.parse(date);
             activityResponse.setCreatedAt(String.valueOf(date1.getTime()));
         } catch (ParseException e) {
-            System.out.println("exception0000000:"+e);
+            System.out.println("exception0000000:" + e);
             e.printStackTrace();
         }
         activityResponse.setUserId((String) notifications.get("userId"));

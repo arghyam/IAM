@@ -6,6 +6,7 @@ public class UserResponseDTO {
     private String username;
     private String userId;
 
+
     public String getUserId() {
         return userId;
     }

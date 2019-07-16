@@ -4,6 +4,7 @@ import org.forwater.backend.dto.AccessTokenResponseDTO;
 import org.forwater.backend.dto.LoginDTO;
 import org.forwater.backend.dto.LoginResponseDTO;
 import org.forwater.backend.dto.ResponseDTO;
+import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.validation.BindingResult;
 
@@ -31,6 +32,8 @@ public interface KeycloakService {
     public List<UserRepresentation> getRegisteredUsers(String token,String realm) throws IOException;
 
     public UserRepresentation getUserById(String realm, String id, String adminAccessToken) throws IOException;
+
+    public List<RoleRepresentation> getUsersBasedOnRoleName(String id,String token) throws Exception;
 
 
 }

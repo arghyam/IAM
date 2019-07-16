@@ -1,8 +1,10 @@
 package org.forwater.backend.dao;
 
+import com.amazonaws.services.dynamodbv2.xspec.S;
 import org.forwater.backend.dto.AccessTokenResponseDTO;
 import org.forwater.backend.dto.LoginResponseDTO;
 import org.forwater.backend.utils.Constants;
+import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.web.bind.annotation.ResponseBody;
 import retrofit2.Call;
@@ -97,9 +99,9 @@ public interface KeycloakDAO {
                                             @Header("Authorization") String token) throws IOException;
 
 
-    @GET(Constants.GET_USERS_BASED_ON_ROLE_NAME)
-    Call<List<UserRepresentation>> getUsersBasedOnRoleName(@Path("realm") String realm,
-                                                           @Path("role_name")String roleName,
+    @GET(Constants.GET_ROLES_FROM_USERID)
+    Call<List<RoleRepresentation>> getRolesBasedOnUserId(@Path("realm") String realm,
+                                                           @Path("id") String id,
                                                            @Header("Authorization")String token) throws Exception;
 
 }

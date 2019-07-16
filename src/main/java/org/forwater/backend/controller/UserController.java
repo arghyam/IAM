@@ -43,7 +43,7 @@ public class UserController {
 
     @PostMapping(value = "/user/getUserProfile")
     public LoginAndRegisterResponseMap getUser(@ApiParam(value = "userProfile", required = true, name="userProfile") @Validated @RequestBody RequestDTO requestDTO,
-                                                  BindingResult bindingResult) throws IOException {
+                                                  BindingResult bindingResult) throws Exception {
         return userService.getUserProfile(requestDTO, bindingResult);
     }
 

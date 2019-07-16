@@ -20,6 +20,8 @@ public class Constants {
 
     public static final String GET_USERS_BASED_ON_ROLE_NAME = "admin/realms/{realm}/roles/{role_name}/users";
 
+    public static final String GET_ROLES_FROM_USERID = "admin/realms/{realm}/users/{id}/role-mappings/realm";
+
     public static final String UPDATE_USER = "admin/realms/{realm}/users/{id}";
 
     public static final String X_HEADER__TOKEN_ID = "X-HEADER-TOKEN-ID";

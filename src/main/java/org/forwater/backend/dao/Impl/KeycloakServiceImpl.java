@@ -12,6 +12,7 @@ import org.forwater.backend.exceptions.UnauthorizedException;
 import org.forwater.backend.exceptions.UserCreateException;
 import org.forwater.backend.dao.KeycloakService;
 import org.forwater.backend.utils.Constants;
+import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ResponseBody;
 import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 
 import java.io.IOException;
@@ -215,6 +217,25 @@ public class KeycloakServiceImpl implements KeycloakService{
         Call<UserRepresentation> userRepresentationCall = keycloakDao.searchUserById(appContext.getRealm(),id, "Bearer "+adminAccessToken);
 
         Response<UserRepresentation> response = userRepresentationCall.execute();
+
+        if (!response.isSuccessful()) {
+            if (response.code() == 401) {
+                throw new UnauthorizedException("User is not Authorized");
+            } else if (response.code() == 404) {
+                return null;
+            }else if (response.code()==403){
+                throw new ForbiddenException("forbidden");
+            }
+        }
+
+        return response.body();
+    }
+
+    @Override
+    public List<RoleRepresentation> getUsersBasedOnRoleName( String id,String admintoken) throws Exception {
+        Call<List<RoleRepresentation>> retrofitCall=keycloakDAO.getRolesBasedOnUserId(appContext.getRealm(),id
+        ,"Bearer "+admintoken);
+        Response<List<RoleRepresentation>> response=retrofitCall.execute();
 
         if (!response.isSuccessful()) {
             if (response.code() == 401) {
