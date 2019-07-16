@@ -21,10 +21,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 
-import org.joda.time.Instant;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.admin.client.resource.ClientResource;
+import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,7 +104,26 @@ public class UserServiceImpl implements UserService {
             credential.setTemporary(false);
             registerResponseDTO.setEnabled(Boolean.TRUE);      // A disabled user cannot login.
             registerResponseDTO.setCredentials(asList(credential));
-            keycloakService.register(userToken, registerResponseDTO);
+            RealmResource realmResource = keycloak.realm(appContext.getRealm());
+            UsersResource userResource = realmResource.users();
+            System.out.println("total number of users : " + String.valueOf(userResource.count()));
+
+            // Create user (requires manage-users role)
+            javax.ws.rs.core.Response response = userResource.create(registerResponseDTO);
+            System.out.println("Repsonse: " + response.getStatusInfo());
+            System.out.println(response.getLocation());
+            String userId = response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
+
+            System.out.printf("User created with userId: %s%n", userId);
+
+            // Get realm role "tester" (requires view-realm role)
+            RoleRepresentation arghyamUserRole = realmResource.roles()//
+                    .get(Constants.ARGHYAM_USERS).toRepresentation();
+
+            // Assign arghyam role to user
+            userResource.get(userId).roles().realmLevel() //
+                    .add(Arrays.asList(arghyamUserRole));
+
         } catch (Exception e) {
             System.out.println("exception" + e);
         }

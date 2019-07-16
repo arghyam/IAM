@@ -11,6 +11,7 @@ import org.forwater.backend.dao.RegistryDAO;
 import org.forwater.backend.utils.Constants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +58,9 @@ public class ServiceConfiguration {
                 .clientId(appContext.getClientId())
                 .clientSecret(appContext.getClientSecret())
                 .realm(appContext.getRealm())
-                .grantType(Constants.OPENID_CLIENT_CREDENTIALS)
+                .username(appContext.getAdminUserName())
+                .password(appContext.getAdminUserpassword())
+                .grantType(OAuth2Constants.PASSWORD)
                 .resteasyClient(new ResteasyClientBuilder().connectionPoolSize(10).build())
                 .build();
 

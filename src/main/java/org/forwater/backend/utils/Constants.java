@@ -18,6 +18,8 @@ public class Constants {
 
     public static final String SEARCH_USER_BY_ID = "admin/realms/{realm}/users/{id}";
 
+    public static final String GET_USERS_BASED_ON_ROLE_NAME = "admin/realms/{realm}/roles/{role_name}/users";
+
     public static final String UPDATE_USER = "admin/realms/{realm}/users/{id}";
 
     public static final String X_HEADER__TOKEN_ID = "X-HEADER-TOKEN-ID";
@@ -65,4 +67,5 @@ public class Constants {
 
 
     public static final String IMAGE_UPLOAD_SUCCESS_MESSAGE="Uploaded successfully";
+    public static final String ARGHYAM_USERS="arghyam-user";
 }

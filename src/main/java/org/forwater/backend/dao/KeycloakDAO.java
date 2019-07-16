@@ -96,4 +96,10 @@ public interface KeycloakDAO {
                                             @Path("id") String id,
                                             @Header("Authorization") String token) throws IOException;
 
+
+    @GET(Constants.GET_USERS_BASED_ON_ROLE_NAME)
+    Call<List<UserRepresentation>> getUsersBasedOnRoleName(@Path("realm") String realm,
+                                                           @Path("role_name")String roleName,
+                                                           @Header("Authorization")String token) throws Exception;
+
 }
