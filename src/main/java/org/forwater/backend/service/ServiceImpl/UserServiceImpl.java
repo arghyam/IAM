@@ -197,7 +197,7 @@ public class UserServiceImpl implements UserService {
     private List<String> getUserRoleBasedOnId(String id) throws Exception {
         List<String> roles = new ArrayList<>();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
-        List<RoleRepresentation> list = keycloakService.getUsersBasedOnRoleName(id,adminToken);
+        List<RoleRepresentation> list = keycloakService.getRolesBasedOnUserId(id,adminToken);
         for (int i = 0; i < list.size(); i++) {
             roles.add(list.get(i).getName());
         }
@@ -1414,7 +1414,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginAndRegisterResponseMap getAllNotifications(RequestDTO requestDTO) throws IOException {
+    public LoginAndRegisterResponseMap getAllNotifications(RequestDTO requestDTO,String userId) throws IOException {
         retrofit2.Response registryUserCreationResponse = null;
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
@@ -1437,7 +1437,7 @@ public class UserServiceImpl implements UserService {
             } else {
                 // successfull case
                 log.info("response is successfull " + registryUserCreationResponse);
-                return getNotificationsResponse(registryUserCreationResponse, requestDTO);
+                return getNotificationsResponse(registryUserCreationResponse, requestDTO,userId);
 
             }
 
@@ -1451,7 +1451,19 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
-    private LoginAndRegisterResponseMap getNotificationsResponse(Response registryUserCreationResponse, RequestDTO requestDTO) {
+
+    private List<UserRepresentation> getAllReviewers(){
+        List<UserRepresentation> a=null;
+        try {
+            String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+            a = keycloakService.getUsersBasedonRoleName("arghyam-reviewer",adminToken);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return a;
+    }
+
+    private LoginAndRegisterResponseMap getNotificationsResponse(Response registryUserCreationResponse, RequestDTO requestDTO, String userId) throws IOException {
         Map<String, Object> activitiesMap = new HashMap<>();
         Map<String, Object> responseObjectMap = new HashMap<>();
         LoginAndRegisterResponseMap activitiesResponse = new LoginAndRegisterResponseMap();
@@ -1466,15 +1478,23 @@ public class UserServiceImpl implements UserService {
 
         List<LinkedHashMap> activitiesList = (List<LinkedHashMap>) registryResponse.getResult();
         List<NotificationDTOEntity> activityData = new ArrayList<>();
-        activitiesList.stream().forEach(activities -> {
+        activitiesList.forEach(activities -> {
             NotificationDTOEntity activityResponse = new NotificationDTOEntity();
-            convertRegistryResponseToNotifications(activityResponse, activities);
-            activityData.add(activityResponse);
+            if (activities.get("userId").equals(userId) && !activities.get("status").equals("Created")) {
+                convertRegistryResponseToNotifications(activityResponse, activities, userId);
+                activityData.add(activityResponse);
+            }else if (activities.get("status").equals("Created") && checkIsReviewer(userId)){
+                convertRegistryResponseToNotifications(activityResponse, activities, userId);
+                activityData.add(activityResponse);
+            }
+
 
         });
 
+
+
         // sorting logic
-        Collections.sort(activityData, Comparator.comparing(NotificationDTOEntity::getCreatedAt));
+        activityData.sort(Comparator.comparing(NotificationDTOEntity::getCreatedAt));
         //ascending order
         Collections.reverse(activityData);
         activitiesMap.put("notifications", activityData);
@@ -1485,27 +1505,36 @@ public class UserServiceImpl implements UserService {
         return activitiesResponse;
     }
 
-    private void convertRegistryResponseToNotifications(NotificationDTOEntity activityResponse, LinkedHashMap notifications) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
-                Locale.ENGLISH);
-
-        String date = dateFormat.format(notifications.get("createdAt"));
-        try {
-            Date date1 = dateFormat.parse(date);
-            activityResponse.setCreatedAt(String.valueOf(date1.getTime()));
-        } catch (ParseException e) {
-            System.out.println("exception0000000:" + e);
-            e.printStackTrace();
+    private boolean checkIsReviewer(String userId) {
+        for (int i = 0; i < getAllReviewers().size(); i++) {
+            if (userId.equalsIgnoreCase(getAllReviewers().get(i).getId())){
+                return true;
+            }
         }
-        activityResponse.setUserId((String) notifications.get("userId"));
+        return false;
+    }
 
-        activityResponse.setFirstName((String)notifications.get("firstName"));
-        activityResponse.setSpringCode((String) notifications.get("springCode"));
-        activityResponse.setDischargeDataOsid((String) notifications.get("dischargeDataOsid"));
-        activityResponse.setStatus((String) notifications.get("status"));
-        activityResponse.setReviewerName((String)notifications.get("reviwerName"));
-        activityResponse.setNotificationTitle((String) notifications.get("notificationTitle"));
-        activityResponse.setOsid((String) notifications.get("osid"));
+    private void convertRegistryResponseToNotifications(NotificationDTOEntity activityResponse, LinkedHashMap notifications, String userId) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
+                    Locale.ENGLISH);
+            String date = dateFormat.format(notifications.get("createdAt"));
+            try {
+                Date date1 = dateFormat.parse(date);
+                activityResponse.setCreatedAt(String.valueOf(date1.getTime()));
+            } catch (ParseException e) {
+                System.out.println("exception0000000:" + e);
+                e.printStackTrace();
+            }
+            activityResponse.setUserId((String) notifications.get("userId"));
+
+            activityResponse.setFirstName((String)notifications.get("firstName"));
+            activityResponse.setSpringCode((String) notifications.get("springCode"));
+            activityResponse.setDischargeDataOsid((String) notifications.get("dischargeDataOsid"));
+            activityResponse.setStatus((String) notifications.get("status"));
+            activityResponse.setReviewerName((String)notifications.get("reviwerName"));
+            activityResponse.setNotificationTitle((String) notifications.get("notificationTitle"));
+            activityResponse.setOsid((String) notifications.get("osid"));
+
     }
 
 

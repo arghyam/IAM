@@ -31,7 +31,7 @@ import java.util.List;
 
 @Component
 @Service
-public class KeycloakServiceImpl implements KeycloakService{
+public class KeycloakServiceImpl implements KeycloakService {
 
     @Autowired
     private KeycloakDAO keycloakDao;
@@ -59,7 +59,7 @@ public class KeycloakServiceImpl implements KeycloakService{
                 throw new UnauthorizedException("User is not Authorized");
             } else if (loginResponseDTOResponse.code() == 409) {
                 throw new UserCreateException("User already exists");
-            }else if (loginResponseDTOResponse.code()==403){
+            } else if (loginResponseDTOResponse.code() == 403) {
                 throw new ForbiddenException("Forbidden");
             }
         }
@@ -68,9 +68,9 @@ public class KeycloakServiceImpl implements KeycloakService{
 
     @Override
     public String generateAccessTokenFromUserName(String username) throws IOException {
-            AccessTokenResponseDTO adminAccessTokenResponse = keycloakDao.generateAccessTokenUsingCredentials(appContext.getRealm(), appContext.getAdminUserName(),
-                    appContext.getAdminUserpassword(), appContext.getClientId(), appContext.getGrantType(), null).execute().body();
-            return adminAccessTokenResponse.getAccessToken();
+        AccessTokenResponseDTO adminAccessTokenResponse = keycloakDao.generateAccessTokenUsingCredentials(appContext.getRealm(), appContext.getAdminUserName(),
+                appContext.getAdminUserpassword(), appContext.getClientId(), appContext.getGrantType(), null).execute().body();
+        return adminAccessTokenResponse.getAccessToken();
 
     }
 
@@ -87,7 +87,7 @@ public class KeycloakServiceImpl implements KeycloakService{
                 throw new UnauthorizedException("User is not Authorized");
             } else if (response.code() == 404) {
                 return null;
-            }else if (response.code()==403){
+            } else if (response.code() == 403) {
                 throw new ForbiddenException("forbidden");
             }
         }
@@ -100,24 +100,22 @@ public class KeycloakServiceImpl implements KeycloakService{
 
     @Override
     public AccessTokenResponseDTO refreshAccessToken(LoginDTO loginDTO) {
-        Call<AccessTokenResponseDTO> loginResponseDTOCall ;
-        Response<AccessTokenResponseDTO> loginResponseDTO ;
+        Call<AccessTokenResponseDTO> loginResponseDTOCall;
+        Response<AccessTokenResponseDTO> loginResponseDTO;
         try {
 
-            if(Constants.REFRESH_TOKEN.equalsIgnoreCase(loginDTO.getGrantType())) {
+            if (Constants.REFRESH_TOKEN.equalsIgnoreCase(loginDTO.getGrantType())) {
                 loginResponseDTOCall = keycloakDao.refreshAccessToken(appContext.getRealm(), loginDTO.getRefreshToken(),
                         appContext.getClientId(), loginDTO.getGrantType(), appContext.getClientSecret());
                 loginResponseDTO = loginResponseDTOCall.execute();
                 return loginResponseDTO.body();
-            }
-            else {
+            } else {
                 loginResponseDTOCall = keycloakDao.login(appContext.getRealm(), loginDTO.getUsername(), loginDTO.getPassword(), appContext.getClientId(),
                         Constants.PASSWORD, appContext.getClientSecret());
                 loginResponseDTO = loginResponseDTOCall.execute();
                 return loginResponseDTO.body();
             }
-        }
-        catch(Exception exception) {
+        } catch (Exception exception) {
 
         }
         return null;
@@ -147,16 +145,16 @@ public class KeycloakServiceImpl implements KeycloakService{
                 adminUserName, adminPassword, appContext.getClientId(), "password",
                 appContext.getClientSecret());
 
-        Response<AccessTokenResponseDTO> response=accessTokenResponseDTOCall.execute();
-        if (response.code()==401){
+        Response<AccessTokenResponseDTO> response = accessTokenResponseDTOCall.execute();
+        if (response.code() == 401) {
             throw new UnauthorizedException("User is not Authorized");
-        }else if (response.code()==404){
+        } else if (response.code() == 404) {
             throw new NotFoundException("not found");
-        }else if (response.isSuccessful()){
+        } else if (response.isSuccessful()) {
             return response.body().getAccessToken();
-        }else {
+        } else {
 
-            return "Internal server error"+response.code();
+            return "Internal server error" + response.code();
         }
     }
 
@@ -164,7 +162,7 @@ public class KeycloakServiceImpl implements KeycloakService{
     @Override
     public void updateUser(String token, String id, UserRepresentation user, String realm) throws IOException {
 
-        Call<ResponseBody> responseBodyCall = keycloakDAO.updateUser("Bearer "+token, id, user, realm);
+        Call<ResponseBody> responseBodyCall = keycloakDAO.updateUser("Bearer " + token, id, user, realm);
         Response<ResponseBody> response = responseBodyCall.execute();
         log.info("update user query" + response.code());
     }
@@ -174,7 +172,7 @@ public class KeycloakServiceImpl implements KeycloakService{
     public LoginResponseDTO login(UserRepresentation loginRequest, BindingResult bindingResult) throws IOException {
         LoginResponseDTO loginResponseDTO;
         Call<LoginResponseDTO> loginResponseDTOCall = keycloakDao.loginWithScope(appContext.getRealm(), loginRequest.getUsername(),
-                Constants.PASSWORD, appContext.getClientId(), "password", appContext.getClientSecret(),"openid profile");
+                Constants.PASSWORD, appContext.getClientId(), "password", appContext.getClientSecret(), "openid profile");
         Response<LoginResponseDTO> response = loginResponseDTOCall.execute();
         if (response.isSuccessful()) {
             loginResponseDTO = response.body();
@@ -190,9 +188,8 @@ public class KeycloakServiceImpl implements KeycloakService{
     }
 
 
-
     @Override
-    public List<UserRepresentation> getRegisteredUsers(String token,String realm) throws IOException {
+    public List<UserRepresentation> getRegisteredUsers(String token, String realm) throws IOException {
         Call<List<UserRepresentation>> userRepresentationCall = keycloakDao.getRegisteredUsers(realm, "Bearer " + token);
         Response<List<UserRepresentation>> response = userRepresentationCall.execute();
         if (!response.isSuccessful()) {
@@ -200,7 +197,7 @@ public class KeycloakServiceImpl implements KeycloakService{
                 throw new UnauthorizedException("User is not Authorized");
             } else if (response.code() == 404) {
                 return null;
-            }else if (response.code()==403){
+            } else if (response.code() == 403) {
                 throw new ForbiddenException("forbidden");
             }
         }
@@ -212,9 +209,9 @@ public class KeycloakServiceImpl implements KeycloakService{
 
 
     @Override
-    public UserRepresentation getUserById(String realm, String id, String adminAccessToken ) throws IOException {
+    public UserRepresentation getUserById(String realm, String id, String adminAccessToken) throws IOException {
 
-        Call<UserRepresentation> userRepresentationCall = keycloakDao.searchUserById(appContext.getRealm(),id, "Bearer "+adminAccessToken);
+        Call<UserRepresentation> userRepresentationCall = keycloakDao.searchUserById(appContext.getRealm(), id, "Bearer " + adminAccessToken);
 
         Response<UserRepresentation> response = userRepresentationCall.execute();
 
@@ -223,7 +220,7 @@ public class KeycloakServiceImpl implements KeycloakService{
                 throw new UnauthorizedException("User is not Authorized");
             } else if (response.code() == 404) {
                 return null;
-            }else if (response.code()==403){
+            } else if (response.code() == 403) {
                 throw new ForbiddenException("forbidden");
             }
         }
@@ -232,22 +229,41 @@ public class KeycloakServiceImpl implements KeycloakService{
     }
 
     @Override
-    public List<RoleRepresentation> getUsersBasedOnRoleName( String id,String admintoken) throws Exception {
-        Call<List<RoleRepresentation>> retrofitCall=keycloakDAO.getRolesBasedOnUserId(appContext.getRealm(),id
-        ,"Bearer "+admintoken);
-        Response<List<RoleRepresentation>> response=retrofitCall.execute();
+    public List<RoleRepresentation> getRolesBasedOnUserId(String id, String admintoken) throws Exception {
+        Call<List<RoleRepresentation>> retrofitCall = keycloakDAO.getRolesBasedOnUserId(appContext.getRealm(), id
+                , "Bearer " + admintoken);
+        Response<List<RoleRepresentation>> response = retrofitCall.execute();
 
         if (!response.isSuccessful()) {
             if (response.code() == 401) {
                 throw new UnauthorizedException("User is not Authorized");
             } else if (response.code() == 404) {
                 return null;
-            }else if (response.code()==403){
+            } else if (response.code() == 403) {
                 throw new ForbiddenException("forbidden");
             }
         }
 
         return response.body();
+    }
+
+    @Override
+    public List<UserRepresentation> getUsersBasedonRoleName(String role, String token) throws Exception {
+        Call<List<UserRepresentation>> retrofitCall = keycloakDAO.getUsersBasedOnRoleName(appContext.getRealm(), role, "Bearer "+token);
+        Response<List<UserRepresentation>> response = retrofitCall.execute();
+
+        if (!response.isSuccessful()) {
+            if (response.code() == 401) {
+                throw new UnauthorizedException("User is not Authorized");
+            } else if (response.code() == 404) {
+                return null;
+            } else if (response.code() == 403) {
+                throw new ForbiddenException("forbidden");
+            }
+        }
+
+        return response.body();
+
     }
 
 }

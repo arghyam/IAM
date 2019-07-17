@@ -17,9 +17,9 @@ public interface KeycloakService {
 
     public String generateAccessTokenFromUserName(String username) throws IOException;
 
-    public UserRepresentation getUserByUsername(String token,String username,String realm) throws IOException;
+    public UserRepresentation getUserByUsername(String token, String username, String realm) throws IOException;
 
-    public AccessTokenResponseDTO refreshAccessToken(LoginDTO loginDTO) ;
+    public AccessTokenResponseDTO refreshAccessToken(LoginDTO loginDTO);
 
     public ResponseDTO logout(String id) throws IOException;
 
@@ -29,11 +29,13 @@ public interface KeycloakService {
 
     public LoginResponseDTO login(UserRepresentation loginRequest, BindingResult bindingResult) throws IOException;
 
-    public List<UserRepresentation> getRegisteredUsers(String token,String realm) throws IOException;
+    public List<UserRepresentation> getRegisteredUsers(String token, String realm) throws IOException;
 
     public UserRepresentation getUserById(String realm, String id, String adminAccessToken) throws IOException;
 
-    public List<RoleRepresentation> getUsersBasedOnRoleName(String id,String token) throws Exception;
+    public List<RoleRepresentation> getRolesBasedOnUserId(String id, String token) throws Exception;
+
+    public List<UserRepresentation> getUsersBasedonRoleName(String role, String token) throws Exception;
 
 
 }

@@ -119,10 +119,12 @@ public class UserController {
     }
 
 
-    @RequestMapping(value = "/notifications", method = RequestMethod.POST)
-    LoginAndRegisterResponseMap myActivities(@ApiParam(value = "generate accessToken body", required = true, name="generate accessToken body")@RequestBody  RequestDTO requestDTO) throws IOException {
+    @RequestMapping(value = "/notifications/{userId}", method = RequestMethod.POST)
+    LoginAndRegisterResponseMap myActivities(@ApiParam(value = "generate accessToken body", required = true,
+            name="generate accessToken body")@RequestBody  RequestDTO requestDTO,
+                                             @PathVariable(value = "userId") String userId) throws IOException {
 
-        return userService.getAllNotifications(requestDTO);
+        return userService.getAllNotifications(requestDTO,userId);
     }
 
 
