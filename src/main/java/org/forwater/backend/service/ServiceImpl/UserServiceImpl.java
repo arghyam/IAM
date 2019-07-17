@@ -1395,10 +1395,10 @@ public class UserServiceImpl implements UserService {
         dischargeMap.put("osid", dischargeData.getNotificationOsid());
 
         String objectMapper = new ObjectMapper().writeValueAsString(dischargeMap);
-        RegistryRequest registryRequest = new RegistryRequest(null, dischargeMap, RegistryResponse.API_ID.READ.getId(), objectMapper);
+        RegistryRequest registryRequest = new RegistryRequest(null, dischargeMap, RegistryResponse.API_ID.DELETE.getId(), objectMapper);
 
         try {
-            Call<RegistryResponse> createRegistryEntryCall = registryDao.deleteEntity(adminAccessToken,registryRequest);
+            Call<RegistryResponse> createRegistryEntryCall = registryDao.deleteEntity(adminAccessToken,dischargeData.getNotificationOsid());
             retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
 
             if (registryUserCreationResponse.isSuccessful() && registryUserCreationResponse.code() == 200) {

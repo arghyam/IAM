@@ -52,7 +52,7 @@ public class Constants {
 
     public static final String REGISRY_SEARCH_USER = "search";
 
-    public static final String REGISRY_DELETE_ENTRY = "delete/{id}";
+    public static final String REGISRY_DELETE_ENTRY = "delete/{osid}";
 
     public static final String REG_ENTRY_CREATED = "registry_entry_created";
 
