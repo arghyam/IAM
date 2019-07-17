@@ -8,6 +8,24 @@ public class NotificationDTOEntity {
     private String notificationTitle;
     private String createdAt;
     private String osid;
+    private String firstName;
+    private String reviewerName;
+
+    public String getReviewerName() {
+        return reviewerName;
+    }
+
+    public void setReviewerName(String reviewerName) {
+        this.reviewerName = reviewerName;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
 
     public String getUserId() {
         return userId;

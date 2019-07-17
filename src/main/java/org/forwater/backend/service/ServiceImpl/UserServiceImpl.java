@@ -958,7 +958,9 @@ public class UserServiceImpl implements UserService {
         notificationDTO.setSpringCode(dischargeData.getSpringCode());
         notificationDTO.setUserId(dischargeData.getUserId());
         notificationDTO.setDischargeDataOsid(osid);
+        notificationDTO.setReviwerName("");
         notificationDTO.setStatus(dischargeData.getStatus());
+        notificationDTO.setFirstName(getFirstNameByUserId(dischargeData.getUserId()));
         notificationDTO.setNotificationTitle(title+getFirstNameByUserId(dischargeData.getUserId()));
 
         map.put("notifications", notificationDTO);
@@ -1299,6 +1301,7 @@ public class UserServiceImpl implements UserService {
                     response.put("responseStatus", "Discharge data accepted");
                     loginAndRegisterResponseMap.setResponse(response);
                     updateNotificationsData(dischargeData);
+                    generateReviwerNotification(Constants.NOTIFICATION_ACCEPTED,adminAccessToken,dischargeData);
 
 
                 } else {
@@ -1334,12 +1337,13 @@ public class UserServiceImpl implements UserService {
                     response.put("responseStatus", "Discharge data Rejected");
                     loginAndRegisterResponseMap.setResponse(response);
                     updateNotificationsData(dischargeData);
-
+                    generateReviwerNotification(Constants.NOTIFICATION_REJECTED,adminAccessToken,dischargeData);
                 } else {
                     Map<String, Object> response = new HashMap<>();
                     response.put("responseCode", registryUserCreationResponse.code());
                     response.put("responseStatus", registryUserCreationResponse.message());
                     loginAndRegisterResponseMap.setResponse(response);
+
 
                 }
 
@@ -1353,24 +1357,52 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    private void generateReviwerNotification(String title, String adminAccessToken, Reviewer dischargeData) throws IOException {
+        HashMap<String, Object> map = new HashMap<>();
+        NotificationDTO notificationDTO = new NotificationDTO();
+        notificationDTO.setCreatedAt(System.currentTimeMillis());
+        notificationDTO.setStatus(dischargeData.getStatus());
+        notificationDTO.setDischargeDataOsid(dischargeData.getOsid());
+        notificationDTO.setUserId(dischargeData.getSubmittedBy());
+        notificationDTO.setSpringCode("");
+        notificationDTO.setReviwerName(getFirstNameByUserId(dischargeData.getReviewerId()));
+        notificationDTO.setFirstName(getFirstNameByUserId(dischargeData.getSubmittedBy()));
+        notificationDTO.setNotificationTitle(title+getFirstNameByUserId(dischargeData.getReviewerId()));
+
+        map.put("notifications", notificationDTO);
+        try {
+            String stringRequest = mapper.writeValueAsString(map);
+            RegistryRequest registryRequest = new RegistryRequest(null, map, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+            Call<RegistryResponse> notificationResponse = registryDAO.createUser(adminAccessToken, registryRequest);
+            Response response = notificationResponse.execute();
+
+            if (!response.isSuccessful()) {
+                log.info("response is un successfull due to :" + response.errorBody().toString());
+            } else {
+                log.info("response is successfull " + response);
+            }
+        } catch (JsonProcessingException e) {
+            log.error("error is :" + e);
+        }
+    }
+
     private void updateNotificationsData(Reviewer dischargeData) throws IOException {
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         NotificationReviewEntity notificationReviewEntity = new NotificationReviewEntity();
-        //notificationReviewEntity.setDischargeDataOsid(dischargeData.getOsid());
         notificationReviewEntity.setStatus(dischargeData.getStatus());
         notificationReviewEntity.setOsid(dischargeData.getNotificationOsid());
         Map<String, Object> dischargeMap = new HashMap<>();
-        dischargeMap.put("notifications", notificationReviewEntity);
+        dischargeMap.put("osid", dischargeData.getNotificationOsid());
 
         String objectMapper = new ObjectMapper().writeValueAsString(dischargeMap);
-        RegistryRequest registryRequest = new RegistryRequest(null, dischargeMap, RegistryResponse.API_ID.UPDATE.getId(), objectMapper);
+        RegistryRequest registryRequest = new RegistryRequest(null, dischargeMap, RegistryResponse.API_ID.READ.getId(), objectMapper);
 
         try {
-            Call<RegistryResponse> createRegistryEntryCall = registryDao.updateUser(adminAccessToken, registryRequest);
+            Call<RegistryResponse> createRegistryEntryCall = registryDao.deleteEntity(adminAccessToken,registryRequest);
             retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
 
             if (registryUserCreationResponse.isSuccessful() && registryUserCreationResponse.code() == 200) {
-                log.info("Successfully updated notifications entity:");
+                log.info("Successfully deleted notifications entity:");
 
             } else {
                 log.info("Error updating notifications entity:" + registryUserCreationResponse.errorBody().toString());
@@ -1467,10 +1499,11 @@ public class UserServiceImpl implements UserService {
         }
         activityResponse.setUserId((String) notifications.get("userId"));
 
-
+        activityResponse.setFirstName((String)notifications.get("firstName"));
         activityResponse.setSpringCode((String) notifications.get("springCode"));
         activityResponse.setDischargeDataOsid((String) notifications.get("dischargeDataOsid"));
         activityResponse.setStatus((String) notifications.get("status"));
+        activityResponse.setReviewerName((String)notifications.get("reviwerName"));
         activityResponse.setNotificationTitle((String) notifications.get("notificationTitle"));
         activityResponse.setOsid((String) notifications.get("osid"));
     }

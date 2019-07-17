@@ -27,4 +27,8 @@ public interface RegistryDAO {
     Call<RegistryResponse> updateUser(@Header("x-authenticated-user-token") String adminAccessToken,
                                       @Body RegistryRequest registryRequest) throws IOException;
 
+    @POST(Constants.REGISRY_DELETE_ENTRY)
+    Call<RegistryResponse> deleteEntity(@Header("x-authenticated-user-token") String adminAccessToken,
+                                        @Body RegistryRequest registryRequest) throws IOException;
+
 }

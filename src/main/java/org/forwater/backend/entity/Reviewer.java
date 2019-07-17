@@ -4,11 +4,30 @@ public class Reviewer {
 
     private String osid;
 
-    private String userId;
+    private String reviewerId;
 
     private String status;
 
     private String notificationOsid;
+
+    private String submittedBy;
+
+
+    public String getReviewerId() {
+        return reviewerId;
+    }
+
+    public void setReviewerId(String reviewerId) {
+        this.reviewerId = reviewerId;
+    }
+
+    public String getSubmittedBy() {
+        return submittedBy;
+    }
+
+    public void setSubmittedBy(String submittedBy) {
+        this.submittedBy = submittedBy;
+    }
 
     public String getNotificationOsid() {
         return notificationOsid;
@@ -26,13 +45,6 @@ public class Reviewer {
         this.status = status;
     }
 
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
 
     public String getOsid() {
         return osid;

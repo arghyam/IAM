@@ -52,6 +52,8 @@ public class Constants {
 
     public static final String REGISRY_SEARCH_USER = "search";
 
+    public static final String REGISRY_DELETE_ENTRY = "delete/{id}";
+
     public static final String REG_ENTRY_CREATED = "registry_entry_created";
 
     public static final String REGISTRY_UPDATE_USER = "update";
@@ -68,6 +70,8 @@ public class Constants {
     public static final String ARGHYAM_S3_FOLDER_LOCATION = "arghyam/";
 
     public static final String NOTIFICATION_DISCHARGE="Spring discharge data was submitted by ";
+    public static final String NOTIFICATION_ACCEPTED="Spring discharge data was approved by ";
+    public static final String NOTIFICATION_REJECTED="Spring discharge data was rejected by ";
 
     public static final String IMAGE_UPLOAD_SUCCESS_MESSAGE="Uploaded successfully";
     public static final String ARGHYAM_USERS="arghyam-user";

@@ -10,6 +10,24 @@ public class NotificationDTO {
     private String status;
     private String notificationTitle;
     private long createdAt;
+    private String firstName;
+    private String reviewerName;
+
+    public String getReviwerName() {
+        return reviewerName;
+    }
+
+    public void setReviwerName(String reviwerName) {
+        this.reviewerName = reviwerName;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
 
     public String getNotificationTitle() {
         return notificationTitle;
