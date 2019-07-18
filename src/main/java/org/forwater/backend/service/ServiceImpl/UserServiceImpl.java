@@ -1451,6 +1451,78 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
+    @Override
+    public LoginAndRegisterResponseMap getNotificationCount(RequestDTO requestDTO, String userId) throws IOException {
+        retrofit2.Response registryUserCreationResponse = null;
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+
+        HashMap<String, Object> map = new HashMap<>();
+        if (requestDTO.getRequest().containsKey("notifications")) {
+            map.put("@type", "notifications");
+        }
+        Map<String, Object> entityMap = new HashMap<>();
+        entityMap.put("notifications", map);
+        String stringRequest = mapper.writeValueAsString(entityMap);
+        RegistryRequest registryRequest = new RegistryRequest(null, entityMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
+        try {
+
+            Call<RegistryResponse> loginResponseDTOCall = registryDAO.searchUser(adminToken, registryRequest);
+            registryUserCreationResponse = loginResponseDTOCall.execute();
+
+            if (!registryUserCreationResponse.isSuccessful()) {
+                log.info("response is un successfull due to :" + registryUserCreationResponse.errorBody().toString());
+            } else {
+                // successfull case
+                log.info("response is successfull " + registryUserCreationResponse);
+                return getNotificationCountResponse(registryUserCreationResponse, requestDTO,userId);
+
+            }
+
+        } catch (Exception e) {
+            log.error("Error creating registry entry : {} ", e.getMessage());
+            throw new InternalServerException("Internal server error");
+
+        }
+        return null;
+    }
+
+    private LoginAndRegisterResponseMap getNotificationCountResponse(Response registryUserCreationResponse, RequestDTO requestDTO, String userId) {
+        Map<String, Object> activitiesMap = new HashMap<>();
+        Map<String, Object> responseObjectMap = new HashMap<>();
+        LoginAndRegisterResponseMap activitiesResponse = new LoginAndRegisterResponseMap();
+        activitiesResponse.setId(requestDTO.getId());
+        activitiesResponse.setEts(requestDTO.getEts());
+        activitiesResponse.setVer(requestDTO.getVer());
+        activitiesResponse.setParams(requestDTO.getParams());
+        RegistryResponse registryResponse = new RegistryResponse();
+        registryResponse = (RegistryResponse) registryUserCreationResponse.body();
+        BeanUtils.copyProperties(requestDTO, activitiesResponse);
+        Map<String, Object> response = new HashMap<>();
+
+        List<LinkedHashMap> activitiesList = (List<LinkedHashMap>) registryResponse.getResult();
+        List<NotificationDTOEntity> activityData = new ArrayList<>();
+        activitiesList.forEach(activities -> {
+            NotificationDTOEntity activityResponse = new NotificationDTOEntity();
+            if (activities.get("userId").equals(userId) && !activities.get("status").equals("Created")) {
+                convertRegistryResponseToNotifications(activityResponse, activities, userId);
+                activityData.add(activityResponse);
+            }else if (activities.get("status").equals("Created") && checkIsReviewer(userId)){
+                convertRegistryResponseToNotifications(activityResponse, activities, userId);
+                activityData.add(activityResponse);
+            }
+
+
+        });
+            activitiesMap.put("notificationCount",activityData.size());
+        responseObjectMap.put("responseObject", activitiesMap);
+        responseObjectMap.put("responseCode", 200);
+        responseObjectMap.put("responseStatus", "successfull");
+        activitiesResponse.setResponse(responseObjectMap);
+        return activitiesResponse;
+
+    }
+
 
     private List<UserRepresentation> getAllReviewers(){
         List<UserRepresentation> a=null;
@@ -1490,8 +1562,6 @@ public class UserServiceImpl implements UserService {
 
 
         });
-
-
 
         // sorting logic
         activityData.sort(Comparator.comparing(NotificationDTOEntity::getCreatedAt));

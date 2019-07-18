@@ -128,6 +128,13 @@ public class UserController {
     }
 
 
+    @RequestMapping(value = "/notificationCount/{userId}", method = RequestMethod.POST)
+    LoginAndRegisterResponseMap getNotificationCount(@ApiParam(value = "generate accessToken body", required = true,
+            name="generate accessToken body")@RequestBody  RequestDTO requestDTO,
+                                             @PathVariable(value = "userId") String userId) throws IOException {
+
+        return userService.getNotificationCount(requestDTO,userId);
+    }
 
 
 }
