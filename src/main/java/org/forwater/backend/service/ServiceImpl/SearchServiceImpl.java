@@ -46,8 +46,6 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public LoginAndRegisterResponseMap postStates(RequestDTO requestDTO) throws IOException {
-        retrofit2.Response registryUserCreationResponse = null;
-        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(),
                 appContext.getAdminUserpassword());
         StatesDTO states = new StatesDTO();
@@ -193,6 +191,8 @@ public class SearchServiceImpl implements SearchService {
         stateDto.setOsId((String) state.get("osid"));
 
     }
+
+
 
 
 }

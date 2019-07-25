@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.forwater.backend.config.AppContext;
 import org.forwater.backend.dao.KeycloakDAO;
 import org.forwater.backend.dao.KeycloakService;
+import org.forwater.backend.dao.MapMyIndiaService;
 import org.forwater.backend.dao.RegistryDAO;
 
 import org.forwater.backend.dto.*;
@@ -82,6 +83,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     LoginServiceImpl loginServiceImpl;
+
+    @Autowired
+    MapMyIndiaService mapMyIndiaService;
 
     @Autowired
     RegistryDAO registryDAO;
@@ -197,7 +201,7 @@ public class UserServiceImpl implements UserService {
     private List<String> getUserRoleBasedOnId(String id) throws Exception {
         List<String> roles = new ArrayList<>();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
-        List<RoleRepresentation> list = keycloakService.getRolesBasedOnUserId(id,adminToken);
+        List<RoleRepresentation> list = keycloakService.getRolesBasedOnUserId(id, adminToken);
         for (int i = 0; i < list.size(); i++) {
             roles.add(list.get(i).getName());
         }
@@ -939,7 +943,7 @@ public class UserServiceImpl implements UserService {
         }
 
         generateActivityForDischargeData(adminAccessToken, dischargrMap);
-        generateNotifications(Constants.NOTIFICATION_DISCHARGE,adminAccessToken, dischargrMap, dischargeOsid.getDischargeData().getOsid());
+        generateNotifications(Constants.NOTIFICATION_DISCHARGE, adminAccessToken, dischargrMap, dischargeOsid.getDischargeData().getOsid());
 
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         Map<String, Object> response = new HashMap<>();
@@ -950,7 +954,7 @@ public class UserServiceImpl implements UserService {
         return loginAndRegisterResponseMap;
     }
 
-    private void generateNotifications(String title,String adminAccessToken, Map<String, Object> dischargrMap, String osid) throws IOException {
+    private void generateNotifications(String title, String adminAccessToken, Map<String, Object> dischargrMap, String osid) throws IOException {
         HashMap<String, Object> map = new HashMap<>();
         DischargeData dischargeData = (DischargeData) dischargrMap.get("dischargeData");
         NotificationDTO notificationDTO = new NotificationDTO();
@@ -961,7 +965,7 @@ public class UserServiceImpl implements UserService {
         notificationDTO.setReviwerName("");
         notificationDTO.setStatus(dischargeData.getStatus());
         notificationDTO.setFirstName(getFirstNameByUserId(dischargeData.getUserId()));
-        notificationDTO.setNotificationTitle(title+getFirstNameByUserId(dischargeData.getUserId()));
+        notificationDTO.setNotificationTitle(title + getFirstNameByUserId(dischargeData.getUserId()));
 
         map.put("notifications", notificationDTO);
         try {
@@ -1095,6 +1099,12 @@ public class UserServiceImpl implements UserService {
         springMap.put("springs", springs);
         String stringRequest = objectMapper.writeValueAsString(springMap);
         log.info("********create spring flow ***" + stringRequest);
+
+        List<MapMyIndiaLocationInfoDTO> addressDetails = mapMyIndiaService.
+                getAddressDetails(springs.getLatitude(), springs.getLongitude());
+
+
+
         RegistryRequest registryRequest = new RegistryRequest(null, springMap, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
 
         log.info("********create spring flow ***" + objectMapper.writeValueAsString(registryRequest));
@@ -1301,7 +1311,7 @@ public class UserServiceImpl implements UserService {
                     response.put("responseStatus", "Discharge data accepted");
                     loginAndRegisterResponseMap.setResponse(response);
                     updateNotificationsData(dischargeData);
-                    generateReviwerNotification(Constants.NOTIFICATION_ACCEPTED,adminAccessToken,dischargeData);
+                    generateReviwerNotification(Constants.NOTIFICATION_ACCEPTED, adminAccessToken, dischargeData);
 
 
                 } else {
@@ -1337,7 +1347,7 @@ public class UserServiceImpl implements UserService {
                     response.put("responseStatus", "Discharge data Rejected");
                     loginAndRegisterResponseMap.setResponse(response);
                     updateNotificationsData(dischargeData);
-                    generateReviwerNotification(Constants.NOTIFICATION_REJECTED,adminAccessToken,dischargeData);
+                    generateReviwerNotification(Constants.NOTIFICATION_REJECTED, adminAccessToken, dischargeData);
                 } else {
                     Map<String, Object> response = new HashMap<>();
                     response.put("responseCode", registryUserCreationResponse.code());
@@ -1367,7 +1377,7 @@ public class UserServiceImpl implements UserService {
         notificationDTO.setSpringCode("");
         notificationDTO.setReviwerName(getFirstNameByUserId(dischargeData.getReviewerId()));
         notificationDTO.setFirstName(getFirstNameByUserId(dischargeData.getSubmittedBy()));
-        notificationDTO.setNotificationTitle(title+getFirstNameByUserId(dischargeData.getReviewerId()));
+        notificationDTO.setNotificationTitle(title + getFirstNameByUserId(dischargeData.getReviewerId()));
 
         map.put("notifications", notificationDTO);
         try {
@@ -1398,7 +1408,7 @@ public class UserServiceImpl implements UserService {
         RegistryRequest registryRequest = new RegistryRequest(null, dischargeMap, RegistryResponse.API_ID.DELETE.getId(), objectMapper);
 
         try {
-            Call<RegistryResponse> createRegistryEntryCall = registryDao.deleteEntity(adminAccessToken,dischargeData.getNotificationOsid());
+            Call<RegistryResponse> createRegistryEntryCall = registryDao.deleteEntity(adminAccessToken, dischargeData.getNotificationOsid());
             retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
 
             if (registryUserCreationResponse.isSuccessful() && registryUserCreationResponse.code() == 200) {
@@ -1414,7 +1424,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginAndRegisterResponseMap getAllNotifications(RequestDTO requestDTO,String userId) throws IOException {
+    public LoginAndRegisterResponseMap getAllNotifications(RequestDTO requestDTO, String userId) throws IOException {
         retrofit2.Response registryUserCreationResponse = null;
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
@@ -1437,7 +1447,7 @@ public class UserServiceImpl implements UserService {
             } else {
                 // successfull case
                 log.info("response is successfull " + registryUserCreationResponse);
-                return getNotificationsResponse(registryUserCreationResponse, requestDTO,userId);
+                return getNotificationsResponse(registryUserCreationResponse, requestDTO, userId);
 
             }
 
@@ -1475,7 +1485,7 @@ public class UserServiceImpl implements UserService {
             } else {
                 // successfull case
                 log.info("response is successfull " + registryUserCreationResponse);
-                return getNotificationCountResponse(registryUserCreationResponse, requestDTO,userId);
+                return getNotificationCountResponse(registryUserCreationResponse, requestDTO, userId);
 
             }
 
@@ -1507,14 +1517,14 @@ public class UserServiceImpl implements UserService {
             if (activities.get("userId").equals(userId) && !activities.get("status").equals("Created")) {
                 convertRegistryResponseToNotifications(activityResponse, activities, userId);
                 activityData.add(activityResponse);
-            }else if (activities.get("status").equals("Created") && checkIsReviewer(userId)){
+            } else if (activities.get("status").equals("Created") && checkIsReviewer(userId)) {
                 convertRegistryResponseToNotifications(activityResponse, activities, userId);
                 activityData.add(activityResponse);
             }
 
 
         });
-            activitiesMap.put("notificationCount",activityData.size());
+        activitiesMap.put("notificationCount", activityData.size());
         responseObjectMap.put("responseObject", activitiesMap);
         responseObjectMap.put("responseCode", 200);
         responseObjectMap.put("responseStatus", "successfull");
@@ -1524,11 +1534,11 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private List<UserRepresentation> getAllReviewers(){
-        List<UserRepresentation> a=null;
+    private List<UserRepresentation> getAllReviewers() {
+        List<UserRepresentation> a = null;
         try {
             String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
-            a = keycloakService.getUsersBasedonRoleName("arghyam-reviewer",adminToken);
+            a = keycloakService.getUsersBasedonRoleName("arghyam-reviewer", adminToken);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1555,7 +1565,7 @@ public class UserServiceImpl implements UserService {
             if (activities.get("userId").equals(userId) && !activities.get("status").equals("Created")) {
                 convertRegistryResponseToNotifications(activityResponse, activities, userId);
                 activityData.add(activityResponse);
-            }else if (activities.get("status").equals("Created") && checkIsReviewer(userId)){
+            } else if (activities.get("status").equals("Created") && checkIsReviewer(userId)) {
                 convertRegistryResponseToNotifications(activityResponse, activities, userId);
                 activityData.add(activityResponse);
             }
@@ -1577,7 +1587,7 @@ public class UserServiceImpl implements UserService {
 
     private boolean checkIsReviewer(String userId) {
         for (int i = 0; i < getAllReviewers().size(); i++) {
-            if (userId.equalsIgnoreCase(getAllReviewers().get(i).getId())){
+            if (userId.equalsIgnoreCase(getAllReviewers().get(i).getId())) {
                 return true;
             }
         }
@@ -1585,25 +1595,25 @@ public class UserServiceImpl implements UserService {
     }
 
     private void convertRegistryResponseToNotifications(NotificationDTOEntity activityResponse, LinkedHashMap notifications, String userId) {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
-                    Locale.ENGLISH);
-            String date = dateFormat.format(notifications.get("createdAt"));
-            try {
-                Date date1 = dateFormat.parse(date);
-                activityResponse.setCreatedAt(String.valueOf(date1.getTime()));
-            } catch (ParseException e) {
-                System.out.println("exception0000000:" + e);
-                e.printStackTrace();
-            }
-            activityResponse.setUserId((String) notifications.get("userId"));
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
+                Locale.ENGLISH);
+        String date = dateFormat.format(notifications.get("createdAt"));
+        try {
+            Date date1 = dateFormat.parse(date);
+            activityResponse.setCreatedAt(String.valueOf(date1.getTime()));
+        } catch (ParseException e) {
+            System.out.println("exception0000000:" + e);
+            e.printStackTrace();
+        }
+        activityResponse.setUserId((String) notifications.get("userId"));
 
-            activityResponse.setFirstName((String)notifications.get("firstName"));
-            activityResponse.setSpringCode((String) notifications.get("springCode"));
-            activityResponse.setDischargeDataOsid((String) notifications.get("dischargeDataOsid"));
-            activityResponse.setStatus((String) notifications.get("status"));
-            activityResponse.setReviewerName((String)notifications.get("reviwerName"));
-            activityResponse.setNotificationTitle((String) notifications.get("notificationTitle"));
-            activityResponse.setOsid((String) notifications.get("osid"));
+        activityResponse.setFirstName((String) notifications.get("firstName"));
+        activityResponse.setSpringCode((String) notifications.get("springCode"));
+        activityResponse.setDischargeDataOsid((String) notifications.get("dischargeDataOsid"));
+        activityResponse.setStatus((String) notifications.get("status"));
+        activityResponse.setReviewerName((String) notifications.get("reviwerName"));
+        activityResponse.setNotificationTitle((String) notifications.get("notificationTitle"));
+        activityResponse.setOsid((String) notifications.get("osid"));
 
     }
 
