@@ -76,18 +76,13 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public LoginAndRegisterResponseMap getStates(RequestDTO requestDTO) throws IOException {
+    public LoginAndRegisterResponseMap getStates(RequestDTO requestDTO, String flag) throws IOException {
         retrofit2.Response<RegistryResponse> registryUserCreationResponse = null;
-        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
-        StatesDTO states = new StatesDTO();
         Map<String, String> statesMap = new HashMap<>();
-
-
         if (requestDTO.getRequest().keySet().contains("states")) {
             statesMap.put("@type", "states");
         }
-
         HashMap<String, Object> map = new HashMap<>();
         map.put("states", statesMap);
         String stringRequest = mapper.writeValueAsString(map);
@@ -102,7 +97,7 @@ public class SearchServiceImpl implements SearchService {
             } else {
                 // successfull case
                 log.info("response is successfull " + registryUserCreationResponse);
-                return generateStatesResponse(requestDTO, registryUserCreationResponse, adminToken);
+                return generateStatesResponse(requestDTO, registryUserCreationResponse, flag);
 
             }
 
@@ -114,7 +109,39 @@ public class SearchServiceImpl implements SearchService {
         return null;
     }
 
-    private LoginAndRegisterResponseMap generateStatesResponse(RequestDTO requestDTO, Response<RegistryResponse> statesResponse, String adminToken) {
+    @Override
+    public LoginAndRegisterResponseMap getStateByName(RequestDTO requestDTO) throws IOException {
+        List<StatesDTO> statesDTOList = new ArrayList<>();
+        Map<String, Object> map = new HashMap<>();
+        Map<String, Object> responseMap = new HashMap<>();
+        LoginAndRegisterResponseMap response = new LoginAndRegisterResponseMap();
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = getStates(requestDTO, "2");
+        Map<String, Object> statesMap = loginAndRegisterResponseMap.getResponse();
+        if (statesMap.containsKey("states")) {
+            statesDTOList = (List<StatesDTO>) statesMap.get("states");
+        }
+        if (!statesDTOList.isEmpty()) {
+            States statesDTO = mapper.convertValue(requestDTO.getRequest().get("states"), States.class);
+            log.info(statesDTO.getStates());
+            for (int i = 0; i < statesDTOList.size(); i++) {
+                if (statesDTOList.get(i).getStates().toLowerCase().contains(statesDTO.getStates().toLowerCase())) {
+                    map.put("state",statesDTOList.get(i));
+                }
+            }
+            responseMap.put("responseObject",map);
+            response.setId(requestDTO.getId());
+            response.setVer(requestDTO.getVer());
+            response.setEts(requestDTO.getEts());
+            response.setParams(requestDTO.getParams());
+            response.setResponse(responseMap);
+            return response;
+        } else {
+            log.error("empty list");
+        }
+        return null;
+    }
+
+    private LoginAndRegisterResponseMap generateStatesResponse(RequestDTO requestDTO, Response<RegistryResponse> statesResponse, String flag) {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         RegistryResponse registryResponse = statesResponse.body();
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
@@ -128,14 +155,21 @@ public class SearchServiceImpl implements SearchService {
             convertStateListData(stateDto, state);
             statesDTOList.add(stateDto);
         });
-        statesMap.put("states",statesDTOList);
-        statesResponseMap.put("responseObject",statesMap);
-        loginAndRegisterResponseMap.setId(requestDTO.getId());
-        loginAndRegisterResponseMap.setId(requestDTO.getEts());
-        loginAndRegisterResponseMap.setId(requestDTO.getVer());
-        loginAndRegisterResponseMap.setParams(requestDTO.getParams());
-        loginAndRegisterResponseMap.setResponse(statesResponseMap);
-        return loginAndRegisterResponseMap;
+        statesMap.put("states", statesDTOList);
+        statesResponseMap.put("responseObject", statesMap);
+        if (flag.equals("1")) {
+
+            loginAndRegisterResponseMap.setId(requestDTO.getId());
+            loginAndRegisterResponseMap.setId(requestDTO.getEts());
+            loginAndRegisterResponseMap.setId(requestDTO.getVer());
+            loginAndRegisterResponseMap.setParams(requestDTO.getParams());
+            loginAndRegisterResponseMap.setResponse(statesResponseMap);
+            return loginAndRegisterResponseMap;
+        } else {
+            loginAndRegisterResponseMap.setResponse(statesMap);
+            return loginAndRegisterResponseMap;
+        }
+
     }
 
     private void convertStateListData(StatesDTO stateDto, LinkedHashMap state) {

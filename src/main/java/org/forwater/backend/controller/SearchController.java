@@ -31,6 +31,14 @@ public class SearchController {
     LoginAndRegisterResponseMap getStates(@ApiParam(value = "generate accessToken body", required = true,
             name = "generate accessToken body") @RequestBody RequestDTO requestDTO) throws IOException {
 
-        return searchService.getStates(requestDTO);
+        return searchService.getStates(requestDTO,"1");
+    }
+
+
+    @RequestMapping(value = "/getStateByName", method = RequestMethod.POST)
+    LoginAndRegisterResponseMap getStateByName(@ApiParam(value = "generate accessToken body", required = true,
+            name = "generate accessToken body") @RequestBody RequestDTO requestDTO) throws IOException {
+
+        return searchService.getStateByName(requestDTO);
     }
 }
