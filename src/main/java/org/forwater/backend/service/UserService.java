@@ -49,4 +49,6 @@ public interface UserService {
     LoginAndRegisterResponseMap getAllNotifications(RequestDTO requestDTO, String userId) throws IOException;
 
     LoginAndRegisterResponseMap getNotificationCount(RequestDTO requestDTO, String userId) throws IOException;
+
+
 }
