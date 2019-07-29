@@ -84,17 +84,20 @@ public class SearchServiceImpl implements SearchService {
      * @throws IOException
      */
     @Override
-    public LoginAndRegisterResponseMap postDistricts(String districtName, String fKeyState) throws IOException {
+    public LoginAndRegisterResponseMap postDistricts( RequestDTO requestDTO , String districtName, String fKeyState) throws IOException {
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(),
                 appContext.getAdminUserpassword());
         DistrictsDTO districtsDTO = new DistrictsDTO();
-//        if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("districts")) {
-//            districtsDTO = mapper.convertValue(requestDTO.getRequest().get("districts"), DistrictsDTO.class);
-//        }
+        if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("districts")) {
+            districtsDTO = mapper.convertValue(requestDTO.getRequest().get("districts"), DistrictsDTO.class);
+        }
+        fKeyState=fKeyState.substring(2);
 
+        districtsDTO.setDistricts(districtName);
+        districtsDTO.setfKeyState(fKeyState);
         HashMap<String, Object> map = new HashMap<>();
-        map.put("districts", districtName);
-        map.put("fKeyState", fKeyState);
+        map.put("districts", districtsDTO);
+//        map.put("fKeyState", fKeyState);
         String stringRequest = mapper.writeValueAsString(map);
         RegistryRequest registryRequest = new RegistryRequest(null, map,
                 RegistryResponse.API_ID.CREATE.getId(), stringRequest);

@@ -9,7 +9,7 @@ import java.io.IOException;
 public interface SearchService {
     LoginAndRegisterResponseMap postStates(RequestDTO requestDTO) throws IOException;
 
-    LoginAndRegisterResponseMap postDistricts(String districtName, String fKeyState) throws IOException;
+    LoginAndRegisterResponseMap postDistricts( RequestDTO requestDTO, String districtName, String fKeyState) throws IOException;
 
     LoginAndRegisterResponseMap getStates(RequestDTO requestDTO,String flag) throws IOException;
 

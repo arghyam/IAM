@@ -1,11 +1,10 @@
 package org.forwater.backend.dao.Impl;
 
 import com.google.gson.Gson;
-import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.Moshi;
-import com.squareup.moshi.Types;
-import okhttp3.*;
-import org.forwater.backend.dao.MapMyIndiaDAO;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.forwater.backend.dao.MapMyIndiaService;
 import org.forwater.backend.dto.MapMyIndiaDTO;
 import org.forwater.backend.dto.MapMyIndiaLocationInfoDTO;
@@ -13,13 +12,10 @@ import org.forwater.backend.service.ServiceImpl.SearchServiceImpl;
 import org.forwater.backend.utils.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-import retrofit2.Call;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 @Component

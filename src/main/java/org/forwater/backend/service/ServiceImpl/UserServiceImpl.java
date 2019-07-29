@@ -1110,7 +1110,7 @@ public class UserServiceImpl implements UserService {
 
         // save district
         String stateOsid = searchService.getStateOsidByName(requestDTO,addressDetails.get(0).getState());
-        searchService.postDistricts(addressDetails.get(0).getDistrict(),stateOsid);
+        searchService.postDistricts(requestDTO,addressDetails.get(0).getDistrict(),stateOsid);
 
 
 
