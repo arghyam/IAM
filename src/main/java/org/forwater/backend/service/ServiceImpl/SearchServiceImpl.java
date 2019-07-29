@@ -87,6 +87,9 @@ public class SearchServiceImpl implements SearchService {
     public LoginAndRegisterResponseMap postDistricts( RequestDTO requestDTO , String districtName, String fKeyState) throws IOException {
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(),
                 appContext.getAdminUserpassword());
+        Boolean flag = true;
+        List<DistrictsDTO> districtDTOList = null;
+        List<String> districtsList = new ArrayList<>();
         DistrictsDTO districtsDTO = new DistrictsDTO();
         if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("districts")) {
             districtsDTO = mapper.convertValue(requestDTO.getRequest().get("districts"), DistrictsDTO.class);
@@ -97,19 +100,58 @@ public class SearchServiceImpl implements SearchService {
         districtsDTO.setfKeyState(fKeyState);
         HashMap<String, Object> map = new HashMap<>();
         map.put("districts", districtsDTO);
-//        map.put("fKeyState", fKeyState);
         String stringRequest = mapper.writeValueAsString(map);
         RegistryRequest registryRequest = new RegistryRequest(null, map,
                 RegistryResponse.API_ID.CREATE.getId(), stringRequest);
-        try {
-            Call<RegistryResponse> loginResponseDTOCall = registryDAO.createUser(adminToken, registryRequest);
-            loginResponseDTOCall.execute();
-
-        } catch (Exception e) {
-            log.error("Error creating registry entry : {} ", e.getMessage());
-            throw new InternalServerException("Internal server error");
-
+        LoginAndRegisterResponseMap a = getDistricts(requestDTO,"2");
+        Map<String, Object> statesMap = a.getResponse();
+        if (statesMap.containsKey("districts")) {
+             districtDTOList = (List<DistrictsDTO>) statesMap.get("districts");
         }
+        for (int i = 0; i < districtDTOList.size(); i++) {
+            districtsList.add(districtDTOList.get(i).getDistricts());
+        }
+        for (int i = 0; i < districtsList.size(); i++) {
+            if (districtsList.get(i).equals(districtName)){
+                flag = false;
+            }
+        }
+        if (flag){
+            try {
+                Call<RegistryResponse> loginResponseDTOCall = registryDAO.createUser(adminToken, registryRequest);
+                loginResponseDTOCall.execute();
+
+            } catch (Exception e) {
+                log.error("Error creating registry entry : {} ", e.getMessage());
+                throw new InternalServerException("Internal server error");
+
+            }
+        }
+//        for (int i = 0; i <= districtDTOList.size(); i++) {
+//            if (districtDTOList.size()>0&&!districtDTOList.get(i).getDistricts().contains(districtName)) {
+//                try {
+//                    Call<RegistryResponse> loginResponseDTOCall = registryDAO.createUser(adminToken, registryRequest);
+//                    loginResponseDTOCall.execute();
+//
+//                } catch (Exception e) {
+//                    log.error("Error creating registry entry : {} ", e.getMessage());
+//                    throw new InternalServerException("Internal server error");
+//
+//                }
+//            }
+//            else if (districtDTOList.size()==0){
+//                try {
+//                    Call<RegistryResponse> loginResponseDTOCall = registryDAO.createUser(adminToken, registryRequest);
+//                    loginResponseDTOCall.execute();
+//
+//                } catch (Exception e) {
+//                    log.error("Error creating registry entry : {} ", e.getMessage());
+//                    throw new InternalServerException("Internal server error");
+//
+//                }
+//            }
+//        }
+
         return null;
     }
 
@@ -184,7 +226,6 @@ public class SearchServiceImpl implements SearchService {
             if (!registryUserCreationResponse.isSuccessful()) {
             } else {
                 return generateDistrictsResponse(requestDTO, registryUserCreationResponse, flag);
-
             }
 
         } catch (Exception e) {
@@ -262,6 +303,7 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public LoginAndRegisterResponseMap getDistrictsByStateOSID(RequestDTO requestDTO) throws IOException {
         List<DistrictsDTO> districtDTOList = new ArrayList<>();
+        List<DistrictsDTO> districtResponseDTOList = new ArrayList<>();
         Map<String, Object> map = new HashMap<>();
         Map<String, Object> responseMap = new HashMap<>();
         LoginAndRegisterResponseMap response = new LoginAndRegisterResponseMap();
@@ -271,13 +313,14 @@ public class SearchServiceImpl implements SearchService {
             districtDTOList = (List<DistrictsDTO>) statesMap.get("districts");
         }
         if (!districtDTOList.isEmpty()) {
-            Districts districts = mapper.convertValue(requestDTO.getRequest().get("states"), Districts.class);
+            Districts districts = mapper.convertValue(requestDTO.getRequest().get("districts"), Districts.class);
             log.info(districts.getfKeyState());
             for (int i = 0; i < districtDTOList.size(); i++) {
                 if (districtDTOList.get(i).getfKeyState().toLowerCase().contains(districts.getfKeyState().toLowerCase())) {
-                    map.put("districts", districtDTOList.get(i));
+                    districtResponseDTOList.add(districtDTOList.get(i));
                 }
             }
+            map.put("districts", districtResponseDTOList );
             responseMap.put("responseObject", map);
             response.setId(requestDTO.getId());
             response.setVer(requestDTO.getVer());
@@ -334,9 +377,9 @@ public class SearchServiceImpl implements SearchService {
         List<LinkedHashMap> statesList = (List<LinkedHashMap>) registryResponse.getResult();
         List<DistrictsDTO> districtsDTOList = new ArrayList<>();
 
-        statesList.stream().forEach(state -> {
+        statesList.stream().forEach(districts -> {
             DistrictsDTO districtsDTO = new DistrictsDTO();
-            convertDistrictListData(districtsDTO, state);
+            convertDistrictListData(districtsDTO, districts);
             districtsDTOList.add(districtsDTO);
         });
         districtsMap.put("districts", districtsDTOList);
@@ -361,9 +404,9 @@ public class SearchServiceImpl implements SearchService {
         stateDto.setOsid((String) state.get("osid"));
 
     }
-    private void convertDistrictListData(DistrictsDTO districtsDTO, LinkedHashMap state) {
-        districtsDTO.setDistricts((String) state.get("districts"));
-        districtsDTO.setfKeyState((String) state.get("fKeyState"));
+    private void convertDistrictListData(DistrictsDTO districtsDTO, LinkedHashMap districts) {
+        districtsDTO.setDistricts((String) districts.get("districts"));
+        districtsDTO.setfKeyState((String) districts.get("fKeyState"));
 
     }
 

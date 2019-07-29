@@ -35,7 +35,8 @@ public class SearchController {
 
     @RequestMapping(value = "/getDistricts", method = RequestMethod.POST)
     LoginAndRegisterResponseMap getDistricts(@ApiParam(value = "generate accessToken body", required = true,
-            name = "generate accessToken body") @RequestBody RequestDTO requestDTO) throws IOException {
+            name = "generate accessToken body") @RequestBody RequestDTO requestDTO)
+            throws IOException {
 
         return searchService.getDistricts(requestDTO,"1");
     }
