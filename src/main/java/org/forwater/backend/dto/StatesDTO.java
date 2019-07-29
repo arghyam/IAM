@@ -2,15 +2,15 @@ package org.forwater.backend.dto;
 
 public class StatesDTO {
     private String states;
-    private String osId;
+    private String osid;
 
 
-    public String getOsId() {
-        return osId;
+    public String getOsid() {
+        return osid;
     }
 
-    public void setOsId(String osId) {
-        this.osId = osId;
+    public void setOsid(String osid) {
+        this.osid = osid;
     }
 
     public String getStates() {

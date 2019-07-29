@@ -26,12 +26,18 @@ public class SearchController {
         return searchService.postStates(requestDTO);
     }
 
-
     @RequestMapping(value = "/getStates", method = RequestMethod.POST)
     LoginAndRegisterResponseMap getStates(@ApiParam(value = "generate accessToken body", required = true,
             name = "generate accessToken body") @RequestBody RequestDTO requestDTO) throws IOException {
 
         return searchService.getStates(requestDTO,"1");
+    }
+
+    @RequestMapping(value = "/getDistricts", method = RequestMethod.POST)
+    LoginAndRegisterResponseMap getDistricts(@ApiParam(value = "generate accessToken body", required = true,
+            name = "generate accessToken body") @RequestBody RequestDTO requestDTO) throws IOException {
+
+        return searchService.getDistricts(requestDTO,"1");
     }
 
 
@@ -40,6 +46,13 @@ public class SearchController {
             name = "generate accessToken body") @RequestBody RequestDTO requestDTO) throws IOException {
 
         return searchService.getStateByName(requestDTO);
+    }
+
+    @RequestMapping(value = "/getDistrictsByStateOSID", method = RequestMethod.POST)
+    LoginAndRegisterResponseMap getDistrictsByStateOSID(@ApiParam(value = "generate accessToken body", required = true,
+            name = "generate accessToken body") @RequestBody RequestDTO requestDTO) throws IOException {
+
+        return searchService.getDistrictsByStateOSID(requestDTO);
     }
 
 

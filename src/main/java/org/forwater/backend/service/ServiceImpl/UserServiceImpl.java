@@ -14,6 +14,7 @@ import org.forwater.backend.entity.*;
 import org.forwater.backend.exceptions.InternalServerException;
 import org.forwater.backend.exceptions.UnprocessableEntitiesException;
 import org.forwater.backend.exceptions.ValidationError;
+import org.forwater.backend.service.SearchService;
 import org.forwater.backend.service.UserService;
 import org.forwater.backend.utils.AmazonUtils;
 import org.forwater.backend.utils.Constants;
@@ -89,6 +90,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     RegistryDAO registryDAO;
+
+    @Autowired
+    SearchService searchService;
 
     ObjectMapper mapper = new ObjectMapper();
 
@@ -1099,12 +1103,22 @@ public class UserServiceImpl implements UserService {
         springMap.put("springs", springs);
         String stringRequest = objectMapper.writeValueAsString(springMap);
         log.info("********create spring flow ***" + stringRequest);
-
+        //list contains location and address details
         List<MapMyIndiaLocationInfoDTO> addressDetails = mapMyIndiaService.
                 getAddressDetails(springs.getLatitude(), springs.getLongitude());
 
 
+        // save district
+        String stateOsid = searchService.getStateOsidByName(requestDTO,addressDetails.get(0).getState());
+        searchService.postDistricts(addressDetails.get(0).getDistrict(),stateOsid);
 
+
+
+       /* log.info("test "+ responseRequest.getOsid());
+        searchService.postDistricts(addressDetails.get(0).getDistrict(),responseRequest.getOsid());*/
+
+
+        // create spring logic
         RegistryRequest registryRequest = new RegistryRequest(null, springMap, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
 
         log.info("********create spring flow ***" + objectMapper.writeValueAsString(registryRequest));
