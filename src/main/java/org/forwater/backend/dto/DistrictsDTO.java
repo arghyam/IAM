@@ -3,9 +3,15 @@ package org.forwater.backend.dto;
 
 public class DistrictsDTO {
     private String districts;
-
+    private String osid;
     private String fKeyState;
 
+    public String getOsid() {
+        return osid;
+    }
+    public void setOsid(String osid) {
+        this.osid = osid;
+    }
     public String getDistricts() {
         return districts;
     }

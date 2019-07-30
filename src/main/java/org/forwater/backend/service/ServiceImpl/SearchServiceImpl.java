@@ -386,7 +386,7 @@ public class SearchServiceImpl implements SearchService {
             JSONObject value = subSubObject.getJSONObject(i);
             String districtname = value.getString("districts");
             if (districtname.equals(district)){
-                a = (String) value.get("fKeyState");
+                a = (String) value.get("osid");
             }
         }
         return a;
@@ -584,11 +584,15 @@ public class SearchServiceImpl implements SearchService {
     private void convertDistrictListData(DistrictsDTO districtsDTO, LinkedHashMap districts) {
         districtsDTO.setDistricts((String) districts.get("districts"));
         districtsDTO.setfKeyState((String) districts.get("fKeyState"));
+        String districtsOsid = (String)districts.get("osid");
+        districtsDTO.setOsid( districtsOsid.substring(2));
 
     }
     private void convertSubDistrictListData(SubDistrictsDTO subDistrictsDTO, LinkedHashMap subDistricts){
         subDistrictsDTO.setSubDistricts((String) subDistricts.get("subDistricts"));
         subDistrictsDTO.setfKeyDistricts((String) subDistricts.get("fKeyDistricts"));
+        String subDistrictOsid = (String) subDistricts.get("osid");
+        subDistrictsDTO.setOsid(subDistrictOsid.substring(2));
     }
 
 
