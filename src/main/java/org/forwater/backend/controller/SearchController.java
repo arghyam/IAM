@@ -41,12 +41,12 @@ public class SearchController {
         return searchService.getDistricts(requestDTO,"1");
     }
 
+    @RequestMapping(value = "/getSubDistricts", method = RequestMethod.POST)
+    LoginAndRegisterResponseMap getSubDistricts(@ApiParam(value = "generate accessToken body", required = true,
+            name = "generate accessToken body") @RequestBody RequestDTO requestDTO)
+            throws IOException {
 
-    @RequestMapping(value = "/getStateByName", method = RequestMethod.POST)
-    LoginAndRegisterResponseMap getStateByName(@ApiParam(value = "generate accessToken body", required = true,
-            name = "generate accessToken body") @RequestBody RequestDTO requestDTO) throws IOException {
-
-        return searchService.getStateByName(requestDTO);
+        return searchService.getSubDistricts(requestDTO,"1");
     }
 
     @RequestMapping(value = "/getDistrictsByStateOSID", method = RequestMethod.POST)
@@ -56,5 +56,19 @@ public class SearchController {
         return searchService.getDistrictsByStateOSID(requestDTO);
     }
 
+    @RequestMapping(value = "/getSubDistrictsByDistrictOSID", method = RequestMethod.POST)
+    LoginAndRegisterResponseMap getSubDistrictsByDistrictOSID(@ApiParam(value = "generate accessToken body", required = true,
+            name = "generate accessToken body") @RequestBody RequestDTO requestDTO) throws IOException {
+
+        return searchService.getSubDistrictsByDistrictOSID(requestDTO);
+    }
+
+
+    @RequestMapping(value = "/getStateByName", method = RequestMethod.POST)
+    LoginAndRegisterResponseMap getStateByName(@ApiParam(value = "generate accessToken body", required = true,
+            name = "generate accessToken body") @RequestBody RequestDTO requestDTO) throws IOException {
+
+        return searchService.getStateByName(requestDTO);
+    }
 
 }
