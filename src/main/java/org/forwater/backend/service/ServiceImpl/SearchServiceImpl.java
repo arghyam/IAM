@@ -186,7 +186,6 @@ public class SearchServiceImpl implements SearchService {
             if (!registryUserCreationResponse.isSuccessful()) {
             } else {
                 return generateStatesResponse(requestDTO, registryUserCreationResponse, flag);
-
             }
 
         } catch (Exception e) {
@@ -344,12 +343,18 @@ public class SearchServiceImpl implements SearchService {
         Map<String, Object> statesResponseMap = new HashMap<>();
         List<LinkedHashMap> statesList = (List<LinkedHashMap>) registryResponse.getResult();
         List<StatesDTO> statesDTOList = new ArrayList<>();
-
         statesList.stream().forEach(state -> {
             StatesDTO stateDto = new StatesDTO();
             convertStateListData(stateDto, state);
             statesDTOList.add(stateDto);
         });
+        Comparator<StatesDTO> compareById = new Comparator<StatesDTO>() {
+            @Override
+            public int compare(StatesDTO o1, StatesDTO o2) {
+                return o1.getStates().compareTo(o2.getStates());
+            }
+        };
+        Collections.sort(statesDTOList,compareById);
         statesMap.put("states", statesDTOList);
         statesResponseMap.put("responseObject", statesMap);
         if (flag.equals("1")) {
@@ -374,14 +379,21 @@ public class SearchServiceImpl implements SearchService {
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         Map<String, Object> districtsMap = new HashMap<>();
         Map<String, Object> districtsResponseMap = new HashMap<>();
-        List<LinkedHashMap> statesList = (List<LinkedHashMap>) registryResponse.getResult();
+        List<LinkedHashMap> districtsList = (List<LinkedHashMap>) registryResponse.getResult();
         List<DistrictsDTO> districtsDTOList = new ArrayList<>();
 
-        statesList.stream().forEach(districts -> {
+        districtsList.stream().forEach(districts -> {
             DistrictsDTO districtsDTO = new DistrictsDTO();
             convertDistrictListData(districtsDTO, districts);
             districtsDTOList.add(districtsDTO);
         });
+        Comparator<DistrictsDTO> compareById = new Comparator<DistrictsDTO>() {
+            @Override
+            public int compare(DistrictsDTO o1, DistrictsDTO o2) {
+                return o1.getDistricts().compareTo(o2.getDistricts());
+            }
+        };
+        Collections.sort(districtsDTOList,compareById);
         districtsMap.put("districts", districtsDTOList);
         districtsResponseMap.put("responseObject", districtsMap);
         if (flag.equals("1")) {
