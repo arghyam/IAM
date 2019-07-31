@@ -63,6 +63,13 @@ public class SearchController {
         return searchService.getSubDistrictsByDistrictOSID(requestDTO);
     }
 
+    @RequestMapping(value = "/getCitiesBySubDistrictOSID", method = RequestMethod.POST)
+    LoginAndRegisterResponseMap getCitiesBySubDistrictOSID(@ApiParam(value = "generate accessToken body", required = true,
+            name = "generate accessToken body") @RequestBody RequestDTO requestDTO) throws IOException {
+
+        return searchService.getCitiesBySubDistrictOSID(requestDTO);
+    }
+
 
     @RequestMapping(value = "/getStateByName", method = RequestMethod.POST)
     LoginAndRegisterResponseMap getStateByName(@ApiParam(value = "generate accessToken body", required = true,

@@ -171,6 +171,51 @@ public class SearchServiceImpl implements SearchService {
         return null;
     }
 
+    @Override
+    public LoginAndRegisterResponseMap postCities(RequestDTO requestDTO, String cities, String fKeySubDistrict) throws IOException {
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(),
+                appContext.getAdminUserpassword());
+        Boolean flag = true;
+        List<CityDTO> citiesDTOList = new ArrayList<>();
+        List<String> citiesList = new ArrayList<>();
+        CityDTOWithoutOSID citiesDTO = new CityDTOWithoutOSID();
+        if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("cities")) {
+            citiesDTO = mapper.convertValue(requestDTO.getRequest().get("cities"), CityDTOWithoutOSID.class);
+        }
+
+        citiesDTO.setCities(cities);
+        citiesDTO.setfKeySubDistricts(fKeySubDistrict);
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("cities", citiesDTO);
+        String stringRequest = mapper.writeValueAsString(map);
+        RegistryRequest registryRequest = new RegistryRequest(null, map,
+                RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+        LoginAndRegisterResponseMap a = getCities(requestDTO,"2");
+        Map<String, Object> citiesMap = a.getResponse();
+        if (citiesMap.containsKey("cities")) {
+            citiesDTOList = (List<CityDTO>) citiesMap.get("cities");
+        }
+        for (int i = 0; i < citiesDTOList.size(); i++) {
+            citiesList.add(citiesDTOList.get(i).getCities());
+        }
+        for (int i = 0; i < citiesList.size(); i++) {
+            if (citiesList.get(i).equals(cities)){
+                flag = false;
+            }
+        }
+        if (flag){
+            try {
+                Call<RegistryResponse> loginResponseDTOCall = registryDAO.createUser(adminToken, registryRequest);
+                loginResponseDTOCall.execute();
+
+            } catch (Exception e) {
+                log.error("Error creating registry entry : {} ", e.getMessage());
+                throw new InternalServerException("Internal server error");
+
+            }
+        }
+        return null;
+    }
 
     /**
      * This api gives all the states from the Db
@@ -220,6 +265,38 @@ public class SearchServiceImpl implements SearchService {
      * @throws IOException
      */
     @Override
+    public LoginAndRegisterResponseMap getSubDistrictsOsid(RequestDTO requestDTO, String flag) throws IOException {
+        retrofit2.Response<RegistryResponse> registryUserCreationResponse = null;
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(),
+                appContext.getAdminUserpassword());
+        Map<String, String> districtsMap = new HashMap<>();
+        if (requestDTO.getRequest().keySet().contains("subDistricts")) {
+            districtsMap.put("@type", "subDistricts");
+        }
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("subDistricts", districtsMap);
+        String stringRequest = mapper.writeValueAsString(map);
+        RegistryRequest registryRequest = new RegistryRequest(null, map,
+                RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
+        try {
+
+            Call<RegistryResponse> loginResponseDTOCall = registryDAO.searchUser(adminToken, registryRequest);
+            registryUserCreationResponse = loginResponseDTOCall.execute();
+
+            if (!registryUserCreationResponse.isSuccessful()) {
+            } else {
+                return SubDistrictResponse(requestDTO, registryUserCreationResponse, flag);
+            }
+
+        } catch (Exception e) {
+            log.error("Error creating registry entry : {} ", e.getMessage());
+            throw new InternalServerException("Internal server error");
+
+        }
+        return null;
+    }
+
+    @Override
     public LoginAndRegisterResponseMap getDistricts(RequestDTO requestDTO, String flag) throws IOException {
         retrofit2.Response<RegistryResponse> registryUserCreationResponse = null;
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(),
@@ -250,7 +327,6 @@ public class SearchServiceImpl implements SearchService {
         }
         return null;
     }
-
     /**
      * This api returns all the districts available from the Db
      * @param requestDTO
@@ -290,6 +366,37 @@ public class SearchServiceImpl implements SearchService {
         return null;
     }
 
+    @Override
+    public LoginAndRegisterResponseMap getCities(RequestDTO requestDTO, String flag) throws IOException {
+        retrofit2.Response<RegistryResponse> registryUserCreationResponse = null;
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(),
+                appContext.getAdminUserpassword());
+        Map<String, String> citiesMap = new HashMap<>();
+        if (requestDTO.getRequest().keySet().contains("cities")) {
+            citiesMap.put("@type", "cities");
+        }
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("cities", citiesMap);
+        String stringRequest = mapper.writeValueAsString(map);
+        RegistryRequest registryRequest = new RegistryRequest(null, map,
+                RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
+        try {
+
+            Call<RegistryResponse> loginResponseDTOCall = registryDAO.searchUser(adminToken, registryRequest);
+            registryUserCreationResponse = loginResponseDTOCall.execute();
+
+            if (!registryUserCreationResponse.isSuccessful()) {
+            } else {
+                return generateCitiesResponse(requestDTO, registryUserCreationResponse, flag);
+            }
+
+        } catch (Exception e) {
+            log.error("Error creating registry entry : {} ", e.getMessage());
+            throw new InternalServerException("Internal server error");
+
+        }
+        return null;
+    }
 
     /**
      * This method returns state entity by name
@@ -389,6 +496,40 @@ public class SearchServiceImpl implements SearchService {
     }
 
 
+    @Override
+    public String getsubDistrictOsid(RequestDTO requestDTO, String subDistrict, String fKeyDistricts) throws IOException {
+        SubDistrict district=new SubDistrict();
+        Map<String, Object> request = new HashMap<>() ;
+        Map<String, Object> requestMap = new HashMap<>() ;
+        LoginAndRegisterResponseMap response ;
+        fKeyDistricts = fKeyDistricts.substring(2);
+        request.put("fKeyDistricts",fKeyDistricts);
+        requestMap.put("subDistricts",request);
+        requestDTO.setId(Constants.ID_SEARCH_STATE);
+        requestDTO.setRequest(requestMap);
+        response = getSubDistrictsOsid(requestDTO,"2");
+        log.info("response============"+response);
+        Gson gson = new Gson();
+        String json = gson.toJson(response);
+        JSONObject object = new JSONObject(json);
+        log.info("object=========="+object);
+        JSONObject subObject = object.getJSONObject("response");
+        log.info("subobject========"+subObject);
+        JSONArray subSubObject = subObject.getJSONArray("subDistricts");
+        log.info("subsubobject========"+subSubObject);
+
+        String a = "";
+
+        for (int i = 0; i < subSubObject.length(); i++) {
+            JSONObject value = subSubObject.getJSONObject(i);
+            String subDistrictname = value.getString("subDistricts");
+            if (subDistrictname.equals(subDistrict)){
+                a = (String) value.get("osid");
+            }
+        }
+        return a;
+    }
+
     private LoginAndRegisterResponseMap generateStatesResponse(RequestDTO requestDTO,
                                                                Response<RegistryResponse> statesResponse, String flag) {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
@@ -466,6 +607,46 @@ public class SearchServiceImpl implements SearchService {
 
     }
 
+
+    private LoginAndRegisterResponseMap SubDistrictResponse(RequestDTO requestDTO,
+                                                                  Response<RegistryResponse> subDistrictResponse, String flag) {
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        RegistryResponse registryResponse = subDistrictResponse.body();
+        BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+        Map<String, Object> subDistrictsMap = new HashMap<>();
+        Map<String, Object> subDistrictsResponseMap = new HashMap<>();
+        List<LinkedHashMap> subDistrictsList = (List<LinkedHashMap>) registryResponse.getResult();
+        List<SubDistrictDTO> subDistrictsDTOList = new ArrayList<>();
+
+        subDistrictsList.stream().forEach(subDstricts -> {
+            SubDistrictDTO districtsDTO = new SubDistrictDTO();
+            convertSubDistrictsListData(districtsDTO, subDstricts);
+            subDistrictsDTOList.add(districtsDTO);
+        });
+        Comparator<SubDistrictDTO> compareById = new Comparator<SubDistrictDTO>() {
+            @Override
+            public int compare(SubDistrictDTO o1, SubDistrictDTO o2) {
+                return o1.getSubDistricts().compareTo(o2.getSubDistricts());
+            }
+        };
+        Collections.sort(subDistrictsDTOList,compareById);
+        subDistrictsMap.put("subDistricts", subDistrictsDTOList);
+        subDistrictsResponseMap.put("responseObject", subDistrictsMap);
+        if (flag.equals("1")) {
+
+            loginAndRegisterResponseMap.setId(requestDTO.getId());
+            loginAndRegisterResponseMap.setId(requestDTO.getEts());
+            loginAndRegisterResponseMap.setId(requestDTO.getVer());
+            loginAndRegisterResponseMap.setParams(requestDTO.getParams());
+            loginAndRegisterResponseMap.setResponse(subDistrictsResponseMap);
+            return loginAndRegisterResponseMap;
+        } else {
+            loginAndRegisterResponseMap.setResponse(subDistrictsMap);
+            return loginAndRegisterResponseMap;
+        }
+
+    }
+
     private LoginAndRegisterResponseMap generateSubDistrictsResponse(RequestDTO requestDTO, Response<RegistryResponse> subDistrictResponse, String flag) {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         RegistryResponse registryResponse = subDistrictResponse.body();
@@ -499,6 +680,42 @@ public class SearchServiceImpl implements SearchService {
             return loginAndRegisterResponseMap;
         } else {
             loginAndRegisterResponseMap.setResponse(subDistrictsMap);
+            return loginAndRegisterResponseMap;
+        }
+    }
+    private LoginAndRegisterResponseMap generateCitiesResponse(RequestDTO requestDTO, Response<RegistryResponse> citiesResponse, String flag) {
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        RegistryResponse registryResponse = citiesResponse.body();
+        BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+        Map<String, Object> citiesMap = new HashMap<>();
+        Map<String, Object> citiesResponseMap = new HashMap<>();
+        List<LinkedHashMap> citiesList = (List<LinkedHashMap>) registryResponse.getResult();
+        List<CityDTO> citiesDTOList = new ArrayList<>();
+
+        citiesList.stream().forEach(cities -> {
+            CityDTO citiesDTO = new CityDTO();
+            convertCities(citiesDTO, cities);
+            citiesDTOList.add(citiesDTO);
+        });
+        Comparator<CityDTO> compareById = new Comparator<CityDTO>() {
+            @Override
+            public int compare(CityDTO o1, CityDTO o2) {
+                return o1.getCities().compareTo(o2.getCities());
+            }
+        };
+        Collections.sort(citiesDTOList,compareById);
+        citiesMap.put("cities", citiesDTOList);
+        citiesResponseMap.put("responseObject", citiesMap);
+        if (flag.equals("1")) {
+
+            loginAndRegisterResponseMap.setId(requestDTO.getId());
+            loginAndRegisterResponseMap.setId(requestDTO.getEts());
+            loginAndRegisterResponseMap.setId(requestDTO.getVer());
+            loginAndRegisterResponseMap.setParams(requestDTO.getParams());
+            loginAndRegisterResponseMap.setResponse(citiesResponseMap);
+            return loginAndRegisterResponseMap;
+        } else {
+            loginAndRegisterResponseMap.setResponse(citiesMap);
             return loginAndRegisterResponseMap;
         }
     }
@@ -537,6 +754,8 @@ public class SearchServiceImpl implements SearchService {
         return null;
     }
 
+
+
     @Override
     public LoginAndRegisterResponseMap getSubDistrictsByDistrictOSID(RequestDTO requestDTO) throws IOException {
         List<SubDistrictsDTO> subDistrictDTOList = new ArrayList<>();
@@ -570,7 +789,39 @@ public class SearchServiceImpl implements SearchService {
         }
         return null;
     }
-
+    @Override
+    public LoginAndRegisterResponseMap getCitiesBySubDistrictOSID(RequestDTO requestDTO) throws IOException {
+        List<CityDTO> citiesDTOList = new ArrayList<>();
+        List<CityDTO> citiesResponseDTOList = new ArrayList<>();
+        Map<String, Object> map = new HashMap<>();
+        Map<String, Object> responseMap = new HashMap<>();
+        LoginAndRegisterResponseMap response = new LoginAndRegisterResponseMap();
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = getCities(requestDTO, "2");
+        Map<String, Object> statesMap = loginAndRegisterResponseMap.getResponse();
+        if (statesMap.containsKey("cities")) {
+            citiesDTOList = (List<CityDTO>) statesMap.get("cities");
+        }
+        if (!citiesDTOList.isEmpty()) {
+            Cities cities = mapper.convertValue(requestDTO.getRequest().get("cities"), Cities.class);
+            log.info(cities.getfKeySubDistricts());
+            for (int i = 0; i < citiesDTOList.size(); i++) {
+                if (citiesDTOList.get(i).getfKeySubDistricts().toLowerCase().contains(cities.getfKeySubDistricts().toLowerCase())) {
+                    citiesResponseDTOList.add(citiesDTOList.get(i));
+                }
+            }
+            map.put("cities", citiesResponseDTOList );
+            responseMap.put("responseObject", map);
+            response.setId(requestDTO.getId());
+            response.setVer(requestDTO.getVer());
+            response.setEts(requestDTO.getEts());
+            response.setParams(requestDTO.getParams());
+            response.setResponse(responseMap);
+            return response;
+        } else {
+            log.error("empty list");
+        }
+        return null;
+    }
 
     private void convertStateListData(StatesDTO stateDto, LinkedHashMap state) {
         stateDto.setStates((String) state.get("states"));
@@ -591,7 +842,17 @@ public class SearchServiceImpl implements SearchService {
         subDistrictsDTO.setOsid(subDistrictOsid.substring(2));
     }
 
+    private void convertSubDistrictsListData(SubDistrictDTO subDistrictsData, LinkedHashMap subDistricts){
+        subDistrictsData.setSubDistricts((String) subDistricts.get("subDistricts"));
+        subDistrictsData.setfKeysubDistricts((String) subDistricts.get("fKeyDistricts"));
+        String subDistrictOsid = (String) subDistricts.get("osid");
+        subDistrictsData.setOsid(subDistrictOsid.substring(2));
+    }
 
-
-
+    private void convertCities( CityDTO cityDTO, LinkedHashMap cities){
+        cityDTO.setCities((String) cities.get("city"));
+        cityDTO.setfKeySubDistricts((String) cities.get("fKeySubDistrict"));
+        String citiesOsid = (String) cities.get("osid");
+        cityDTO.setOsid(citiesOsid.substring(2));
+    }
 }
