@@ -1,6 +1,9 @@
 package org.forwater.backend.dto;
 
 public class DistrictDTO {
+    private String district;
+    private String osid;
+
     public String getDistrict() {
         return district;
     }
@@ -17,6 +20,5 @@ public class DistrictDTO {
         this.osid = osid;
     }
 
-    private String district;
-    private String osid;
+
 }

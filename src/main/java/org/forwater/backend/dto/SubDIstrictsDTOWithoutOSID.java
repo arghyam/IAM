@@ -2,6 +2,7 @@ package org.forwater.backend.dto;
 
 public class SubDIstrictsDTOWithoutOSID {
     private String subDistricts;
+    private String fKeyDistricts;
 
     public String getSubDistricts() {
         return subDistricts;
@@ -19,5 +20,4 @@ public class SubDIstrictsDTOWithoutOSID {
         this.fKeyDistricts = fKeyDistricts;
     }
 
-    private String fKeyDistricts;
 }
