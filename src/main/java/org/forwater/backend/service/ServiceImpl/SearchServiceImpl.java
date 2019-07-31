@@ -720,16 +720,16 @@ public class SearchServiceImpl implements SearchService {
         Map<String, Object> subDistrictsMap = new HashMap<>();
         Map<String, Object> subDistrictsResponseMap = new HashMap<>();
         List<LinkedHashMap> subDistrictsList = (List<LinkedHashMap>) registryResponse.getResult();
-        List<SubDistrictDTO> subDistrictsDTOList = new ArrayList<>();
+        List<SubDistrictsDTO> subDistrictsDTOList = new ArrayList<>();
 
         subDistrictsList.stream().forEach(subDstricts -> {
-            SubDistrictDTO districtsDTO = new SubDistrictDTO();
+            SubDistrictsDTO districtsDTO = new SubDistrictsDTO();
             convertSubDistrictsListData(districtsDTO, subDstricts);
             subDistrictsDTOList.add(districtsDTO);
         });
-        Comparator<SubDistrictDTO> compareById = new Comparator<SubDistrictDTO>() {
+        Comparator<SubDistrictsDTO> compareById = new Comparator<SubDistrictsDTO>() {
             @Override
-            public int compare(SubDistrictDTO o1, SubDistrictDTO o2) {
+            public int compare(SubDistrictsDTO o1, SubDistrictsDTO o2) {
                 return o1.getSubDistricts().compareTo(o2.getSubDistricts());
             }
         };
@@ -1025,16 +1025,16 @@ public class SearchServiceImpl implements SearchService {
     }
 
 
-    private void convertSubDistrictsListData(SubDistrictDTO subDistrictsData, LinkedHashMap subDistricts){
+    private void convertSubDistrictsListData(SubDistrictsDTO subDistrictsData, LinkedHashMap subDistricts){
         subDistrictsData.setSubDistricts((String) subDistricts.get("subDistricts"));
-        subDistrictsData.setfKeysubDistricts((String) subDistricts.get("fKeyDistricts"));
+        subDistrictsData.setfKeyDistricts((String) subDistricts.get("fKeyDistricts"));
         String subDistrictOsid = (String) subDistricts.get("osid");
         subDistrictsData.setOsid(subDistrictOsid.substring(2));
     }
 
     private void convertCities( CityDTO cityDTO, LinkedHashMap cities){
-        cityDTO.setCities((String) cities.get("city"));
-        cityDTO.setfKeySubDistricts((String) cities.get("fKeySubDistrict"));
+        cityDTO.setCities((String) cities.get("cities"));
+        cityDTO.setfKeySubDistricts((String) cities.get("fKeySubDistricts"));
         String citiesOsid = (String) cities.get("osid");
         cityDTO.setOsid(citiesOsid.substring(2));
     }
