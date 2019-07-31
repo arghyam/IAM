@@ -19,6 +19,8 @@ public interface SearchService {
 
     LoginAndRegisterResponseMap getDistricts(RequestDTO requestDTO,String flag) throws IOException;
 
+    LoginAndRegisterResponseMap getSubDistrictsOsid(RequestDTO requestDTO,String flag) throws IOException;
+
     LoginAndRegisterResponseMap getSubDistricts(RequestDTO requestDTO,String flag) throws IOException;
 
     LoginAndRegisterResponseMap getStateByName(RequestDTO requestDTO) throws IOException;
@@ -33,6 +35,12 @@ public interface SearchService {
 
     LoginAndRegisterResponseMap getSubDistrictsByDistrictOSID (RequestDTO requestDTO) throws IOException;
 
+    String getsubDistrictOsid(RequestDTO requestDTO, String subDistrict, String fKeyDistrict) throws IOException;
+
+    LoginAndRegisterResponseMap postCities(RequestDTO requestDTO, String cities, String subDistrictOsid) throws IOException;
     LoginAndRegisterResponseMap getVillagesBySubDistrictOSID (RequestDTO requestDTO) throws IOException;
 
+    LoginAndRegisterResponseMap getCities(RequestDTO requestDTO,String flag) throws IOException;
+
+    LoginAndRegisterResponseMap getCitiesBySubDistrictOSID(RequestDTO requestDTO) throws IOException;
 }

@@ -1119,6 +1119,11 @@ public class UserServiceImpl implements UserService {
             String subDistrictOsid = searchService.getSubDistrictOsidBySubDistrictName(requestDTO,addressDetails.get(0).getSubDistrict(),districtOsid);
             searchService.postVillage(requestDTO,addressDetails.get(0).getVillage(),subDistrictOsid);
         }
+        if(!addressDetails.get(0).getCity().isEmpty()){
+            String subDistrictOsid = searchService.getsubDistrictOsid(requestDTO,addressDetails.get(0).getSubDistrict(),districtOsid);
+            searchService.postCities(requestDTO,addressDetails.get(0).getCity(),subDistrictOsid);
+
+        }
 
 
        /* log.info("test "+ responseRequest.getOsid());
