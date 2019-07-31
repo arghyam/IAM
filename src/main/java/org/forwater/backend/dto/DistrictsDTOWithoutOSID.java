@@ -1,19 +1,10 @@
 package org.forwater.backend.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+public class DistrictsDTOWithoutOSID {
 
-@JsonIgnoreProperties
-public class DistrictsDTO {
     private String districts;
-    private String osid;
-    private String fKeyState;
+   private String fKeyState;
 
-    public String getOsid() {
-        return osid;
-    }
-    public void setOsid(String osid) {
-        this.osid = osid;
-    }
     public String getDistricts() {
         return districts;
     }
@@ -21,6 +12,7 @@ public class DistrictsDTO {
     public void setDistricts(String districts) {
         this.districts = districts;
     }
+
     public String getfKeyState() {
         return fKeyState;
     }

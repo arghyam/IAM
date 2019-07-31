@@ -1,7 +1,6 @@
 package org.forwater.backend.service.ServiceImpl;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import org.forwater.backend.config.AppContext;
 import org.forwater.backend.dao.KeycloakService;
 import org.forwater.backend.dao.RegistryDAO;
@@ -88,12 +87,10 @@ public class SearchServiceImpl implements SearchService {
         Boolean flag = true;
         List<DistrictsDTO> districtDTOList = null;
         List<String> districtsList = new ArrayList<>();
-        DistrictsDTO districtsDTO = new DistrictsDTO();
+        DistrictsDTOWithoutOSID districtsDTO = new DistrictsDTOWithoutOSID();
         if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("districts")) {
-            districtsDTO = mapper.convertValue(requestDTO.getRequest().get("districts"), DistrictsDTO.class);
+            districtsDTO = mapper.convertValue(requestDTO.getRequest().get("districts"), DistrictsDTOWithoutOSID.class);
         }
-        fKeyState=fKeyState.substring(2);
-
         districtsDTO.setDistricts(districtName);
         districtsDTO.setfKeyState(fKeyState);
         HashMap<String, Object> map = new HashMap<>();
@@ -133,13 +130,12 @@ public class SearchServiceImpl implements SearchService {
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(),
                 appContext.getAdminUserpassword());
         Boolean flag = true;
-        List<SubDistrictsDTO> subDistrictDTOList = null;
+        List<SubDistrictsDTO> subDistrictDTOList = new ArrayList<>();
         List<String> subDistrictsList = new ArrayList<>();
-        SubDistrictsDTO subDistrictsDTO = new SubDistrictsDTO();
+        SubDIstrictsDTOWithoutOSID subDistrictsDTO = new SubDIstrictsDTOWithoutOSID();
         if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("subDistricts")) {
-            subDistrictsDTO = mapper.convertValue(requestDTO.getRequest().get("subDistricts"), SubDistrictsDTO.class);
+            subDistrictsDTO = mapper.convertValue(requestDTO.getRequest().get("subDistricts"), SubDIstrictsDTOWithoutOSID.class);
         }
-        fKeyDistrict=fKeyDistrict.substring(2);
 
         subDistrictsDTO.setSubDistricts(subDistrictName);
         subDistrictsDTO.setfKeyDistricts(fKeyDistrict);
