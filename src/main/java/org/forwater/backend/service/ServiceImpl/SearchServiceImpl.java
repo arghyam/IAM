@@ -549,7 +549,7 @@ public class SearchServiceImpl implements SearchService {
         Map<String, Object> request = new HashMap<>() ;
         Map<String, Object> requestMap = new HashMap<>() ;
         LoginAndRegisterResponseMap response ;
-        fKeyState = fKeyState.substring(2);
+//        fKeyState = fKeyState.substring(2);
         request.put("fKeyState",fKeyState);
         requestMap.put("districts",request);
         requestDTO.setId(Constants.ID_SEARCH_STATE);
@@ -578,7 +578,7 @@ public class SearchServiceImpl implements SearchService {
         Map<String, Object> request = new HashMap<>() ;
         Map<String, Object> requestMap = new HashMap<>() ;
         LoginAndRegisterResponseMap response ;
-        fKeyDistrict = fKeyDistrict.substring(2);
+//        fKeyDistrict = fKeyDistrict.substring(2);
         request.put("fKeyDistrict",fKeyDistrict);
         requestMap.put("subDistricts",request);
         requestDTO.setId(Constants.ID_SEARCH_STATE);
@@ -609,7 +609,7 @@ public class SearchServiceImpl implements SearchService {
         Map<String, Object> request = new HashMap<>() ;
         Map<String, Object> requestMap = new HashMap<>() ;
         LoginAndRegisterResponseMap response ;
-        fKeyDistricts = fKeyDistricts.substring(2);
+//        fKeyDistricts = fKeyDistricts.substring(2);
         request.put("fKeyDistricts",fKeyDistricts);
         requestMap.put("subDistricts",request);
         requestDTO.setId(Constants.ID_SEARCH_STATE);
