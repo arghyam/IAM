@@ -1,10 +1,16 @@
 package org.forwater.backend.service.ServiceImpl;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import org.forwater.backend.config.AppContext;
 import org.forwater.backend.dao.KeycloakService;
 import org.forwater.backend.dao.RegistryDAO;
 import org.forwater.backend.dto.*;
+import org.forwater.backend.entity.DischargeData;
+import org.forwater.backend.entity.DischargeDataResponse;
+import org.forwater.backend.entity.SearchEntity;
+import org.forwater.backend.entity.Springs;
 import org.forwater.backend.exceptions.InternalServerException;
 import org.forwater.backend.service.SearchService;
 import org.forwater.backend.utils.Constants;
@@ -16,10 +22,14 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BindingResult;
 import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static org.keycloak.util.JsonSerialization.mapper;
@@ -36,6 +46,14 @@ public class SearchServiceImpl implements SearchService {
 
     @Autowired
     RegistryDAO registryDAO;
+
+    @Autowired
+    AmazonS3 amazonS3;
+
+    @Autowired
+    ObjectMapper objectMapper;
+
+    ObjectMapper mapper = new ObjectMapper();
 
     private static Logger log = LoggerFactory.getLogger(SearchServiceImpl.class);
 
@@ -1000,6 +1018,64 @@ public class SearchServiceImpl implements SearchService {
         return null;
     }
 
+    @Override
+    public LoginAndRegisterResponseMap search(RequestDTO requestDTO) throws IOException {
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(),appContext.getAdminUserpassword());
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        Map<String, String> springs = new HashMap<>();
+        if (requestDTO.getRequest().keySet().contains("springs")) {
+            springs.put("@type", "springs");
+        }
+
+        Map<String, Object> entityMap = new HashMap<>();
+        entityMap.put("springs", springs);
+        String stringRequest = objectMapper.writeValueAsString(entityMap);
+        RegistryRequest registryRequest = new RegistryRequest(null, entityMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
+        SearchEntity searchEntity = mapper.convertValue(requestDTO.getRequest().get("springs"), SearchEntity.class);
+        String searchString =searchEntity.getAddress();
+
+        try {
+            Call<RegistryResponse> createRegistryEntryCall = registryDAO.searchUser(adminToken, registryRequest);
+            retrofit2.Response<RegistryResponse> registryUserCreationResponse = createRegistryEntryCall.execute();
+            if (!registryUserCreationResponse.isSuccessful()) {
+                log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+            }
+
+
+            RegistryResponse registryResponse;
+            registryResponse = registryUserCreationResponse.body();
+            BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+            Map<String, Object> response = new HashMap<>();
+            List<LinkedHashMap> springList = (List<LinkedHashMap>) registryResponse.getResult();
+            List<String> addressFromDB = new ArrayList<>();
+            String springCode = "";
+            String springName = "";
+            List<Springs> springData = new ArrayList<>();
+
+            for (int i = 0; i < springList.size(); i++) {
+                addressFromDB.add((String) springList.get(i).get("address"));
+                Springs springResponse = new Springs();
+                springCode = (String) springList.get(i).get("springCode");
+                springName = (String) springList.get(i).get("springName");
+                if(addressFromDB.get(i).contains(searchString)||springCode.equalsIgnoreCase(searchString)||springName.equalsIgnoreCase(searchString)){
+                    convertRegistryResponseToSpring(springResponse, springList.get(i));
+                    springData.add(springResponse);
+                }
+
+            }
+            response.put("responseObject", springData);
+            response.put("responseCode", 200);
+            response.put("responseStatus", "all springs fetched successfully");
+            loginAndRegisterResponseMap.setResponse(response);
+
+
+        } catch (IOException e) {
+            log.error("Error creating registry entry : {} ", e.getMessage());
+        }
+        return loginAndRegisterResponseMap;
+    }
+
+
     private void convertStateListData(StatesDTO stateDto, LinkedHashMap state) {
         stateDto.setStates((String) state.get("states"));
         String statesOsid = (String)state.get("osid");
@@ -1038,4 +1114,62 @@ public class SearchServiceImpl implements SearchService {
         String citiesOsid = (String) cities.get("osid");
         cityDTO.setOsid(citiesOsid.substring(2));
     }
+
+
+    private void convertRegistryResponseToSpring(Springs springResponse, LinkedHashMap spring) throws IOException {
+
+        springResponse.setUpdatedTimeStamp((String) spring.get("updatedTimeStamp"));
+        springResponse.setCreatedTimeStamp((String) spring.get("createdTimeStamp"));
+        ArrayList<String> location = new ArrayList<>();
+
+        if (spring.get("location").getClass().toString().equals("class java.lang.String")) {
+            String result = (String) spring.get("location");
+            result = new StringBuilder(result).deleteCharAt(0).toString();
+            result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
+            location.add(result);
+        } else if (spring.get("location").getClass().toString().equals("class java.util.ArrayList")) {
+            location = (ArrayList<String>) spring.get("location");
+        }
+
+        final String[] updatedLocation = {""};
+        location.forEach(locations -> {
+            String loc = String.valueOf(locations);
+            if (!updatedLocation[0].isEmpty())
+                updatedLocation[0] = updatedLocation[0] + ", " +loc;
+            else
+                updatedLocation[0] = loc;
+        });
+        springResponse.setLocation(String.valueOf(updatedLocation[0]));
+        springResponse.setSpringCode((String) spring.get("springCode"));
+        springResponse.setSpringName((String) spring.get("springName"));
+        springResponse.setLatitude((Double) spring.get("latitude"));
+        springResponse.setLongitude((Double) spring.get("longitude"));
+        springResponse.setOwnershipType((String) spring.get("ownershipType"));
+
+
+        java.util.Date expiration = new java.util.Date();
+        long expTimeMillis = expiration.getTime();
+        expTimeMillis += 1000 * 60 * 60;
+        expiration.setTime(expTimeMillis);
+
+        if (spring.get("images").getClass().toString().equals("class java.util.ArrayList")) {
+            List<URL> imageList = new ArrayList<>();
+            List<String> imageNewList = new ArrayList<>();
+            imageList = (List<URL>) spring.get("images");
+            for (int i = 0; i < imageList.size(); i++) {
+                URL url = amazonS3.generatePresignedUrl(appContext.getBucketName(), "arghyam/" + imageList.get(i), expiration);
+                imageNewList.add(String.valueOf(url));
+            }
+            springResponse.setImages(imageNewList);
+        } else if (spring.get("images").getClass().toString().equals("class java.lang.String")) {
+            String result = (String) spring.get("images");
+            result = new StringBuilder(result).deleteCharAt(0).toString();
+            result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
+            List<String> images = Arrays.asList(result);
+            URL url = amazonS3.generatePresignedUrl(appContext.getBucketName(), "arghyam/" + result, expiration);
+            springResponse.setImages(Arrays.asList(String.valueOf(url)));
+        }
+    }
+
+
 }

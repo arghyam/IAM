@@ -2,6 +2,7 @@ package org.forwater.backend.service;
 
 import org.forwater.backend.dto.LoginAndRegisterResponseMap;
 import org.forwater.backend.dto.RequestDTO;
+import org.springframework.validation.BindingResult;
 
 import java.io.IOException;
 import java.util.List;
@@ -43,4 +44,6 @@ public interface SearchService {
     LoginAndRegisterResponseMap getCities(RequestDTO requestDTO,String flag) throws IOException;
 
     LoginAndRegisterResponseMap getCitiesBySubDistrictOSID(RequestDTO requestDTO) throws IOException;
+
+    LoginAndRegisterResponseMap search(RequestDTO requestDTO) throws IOException;
 }

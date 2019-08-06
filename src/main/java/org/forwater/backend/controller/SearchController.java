@@ -5,10 +5,8 @@ import org.forwater.backend.dto.LoginAndRegisterResponseMap;
 import org.forwater.backend.dto.RequestDTO;
 import org.forwater.backend.service.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
@@ -82,6 +80,13 @@ public class SearchController {
             name = "generate accessToken body") @RequestBody RequestDTO requestDTO) throws IOException {
 
         return searchService.getStateByName(requestDTO);
+    }
+
+    @RequestMapping(value = "/search", method = RequestMethod.POST)
+    LoginAndRegisterResponseMap search(@ApiParam(value = "generate accessToken body", required = true,
+            name = "generate accessToken body") @RequestBody RequestDTO requestDTO) throws IOException {
+
+        return searchService.search(requestDTO);
     }
 
 }
