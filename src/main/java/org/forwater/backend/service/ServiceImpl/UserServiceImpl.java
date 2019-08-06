@@ -1129,6 +1129,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public LoginAndRegisterResponseMap createSpring(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+        String address = "";
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         Springs springs = mapper.convertValue(requestDTO.getRequest().get("springs"), Springs.class);
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
@@ -1155,17 +1156,19 @@ public class UserServiceImpl implements UserService {
         searchService.postSubDistricts(requestDTO,addressDetails.get(0).getSubDistrict(),districtOsid);
 
         if (!addressDetails.get(0).getVillage().isEmpty()){
+            address = addressDetails.get(0).getState() +" | "+addressDetails.get(0).getDistrict()+" | "+ addressDetails.get(0).getSubDistrict() +" | "+addressDetails.get(0).getVillage();
             springs.setLocation(addressDetails.get(0).getVillage()+", "+addressDetails.get(0).getState());
             String subDistrictOsid = searchService.getSubDistrictOsidBySubDistrictName(requestDTO,addressDetails.get(0).getSubDistrict(),districtOsid);
             searchService.postVillage(requestDTO,addressDetails.get(0).getVillage(),subDistrictOsid);
         }
         if(!addressDetails.get(0).getCity().isEmpty()){
+            address = addressDetails.get(0).getState() +" | "+addressDetails.get(0).getDistrict()+" | "+ addressDetails.get(0).getSubDistrict() +" | "+ addressDetails.get(0).getCity();
             springs.setLocation(addressDetails.get(0).getCity()+", "+addressDetails.get(0).getState());
             String subDistrictOsid = searchService.getsubDistrictOsid(requestDTO,addressDetails.get(0).getSubDistrict(),districtOsid);
             searchService.postCities(requestDTO,addressDetails.get(0).getCity(),subDistrictOsid);
-
         }
 
+        springs.setAddress(address);
         springMap.put("springs", springs);
         String stringRequest = objectMapper.writeValueAsString(springMap);
         log.info("********create spring flow ***" + stringRequest);

@@ -37,6 +37,8 @@ public class Springs extends SpringLocation implements Comparable<Springs> {
 
     private String submittedBy;
 
+    private String address;
+
     public String getSubmittedBy() {
         return submittedBy;
     }
@@ -148,6 +150,14 @@ public class Springs extends SpringLocation implements Comparable<Springs> {
 
     public void setUpdatedTimeStamp(String updatedTimeStamp) {
         this.updatedTimeStamp = updatedTimeStamp;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     @Override
