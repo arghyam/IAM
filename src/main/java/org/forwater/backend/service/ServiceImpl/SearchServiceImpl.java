@@ -1,6 +1,7 @@
 package org.forwater.backend.service.ServiceImpl;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import org.forwater.backend.config.AppContext;
@@ -1055,8 +1056,8 @@ public class SearchServiceImpl implements SearchService {
                     convertRegistryResponseToSpring(springResponse, springList.get(i));
                     springData.add(springResponse);
                 }
-
             }
+            recentSearches(adminToken,searchEntity);
             responseSpring.put("springs",springData);
             response.put("responseObject", responseSpring);
             response.put("responseCode", 200);
@@ -1068,6 +1069,27 @@ public class SearchServiceImpl implements SearchService {
             log.error("Error creating registry entry : {} ", e.getMessage());
         }
         return loginAndRegisterResponseMap;
+    }
+
+    private void recentSearches(String adminToken,SearchEntity searchEntity) {
+        Map<String, Object> entityMap = new HashMap<>();
+        Map<String, Object> searchEntityMap = new HashMap<>();
+        entityMap.put("searchString",searchEntity.getSearchString());
+        entityMap.put("userId",searchEntity.getUserId());
+        searchEntityMap.put("recentSearches",entityMap);
+        try {
+            String stringRequest = mapper.writeValueAsString(searchEntityMap);
+            RegistryRequest registryRequest = new RegistryRequest(null, searchEntityMap, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+            Call<RegistryResponse> searchResponse = registryDAO.createUser(adminToken, registryRequest);
+            Response response = searchResponse.execute();
+            if (!response.isSuccessful()) {
+                log.info("response is un successfull due to :" + response.errorBody().toString());
+            } else {
+                log.info("response is successfull " + response);
+            }
+        } catch (IOException e) {
+            log.error("error is :" + e);
+        }
     }
 
 

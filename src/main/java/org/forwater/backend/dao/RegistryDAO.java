@@ -22,7 +22,6 @@ public interface RegistryDAO {
     Call<RegistryResponse> searchUser(@Header("x-authenticated-user-token") String adminAccessToken,
                                       @Body RegistryRequest registryRequest) throws IOException;
 
-
     @POST(Constants.REGISTRY_UPDATE_USER)
     Call<RegistryResponse> updateUser(@Header("x-authenticated-user-token") String adminAccessToken,
                                       @Body RegistryRequest registryRequest) throws IOException;
