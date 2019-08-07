@@ -7,8 +7,6 @@ import org.forwater.backend.config.AppContext;
 import org.forwater.backend.dao.KeycloakService;
 import org.forwater.backend.dao.RegistryDAO;
 import org.forwater.backend.dto.*;
-import org.forwater.backend.entity.DischargeData;
-import org.forwater.backend.entity.DischargeDataResponse;
 import org.forwater.backend.entity.SearchEntity;
 import org.forwater.backend.entity.Springs;
 import org.forwater.backend.exceptions.InternalServerException;
@@ -22,17 +20,12 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BindingResult;
 import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
 import java.net.URL;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
-
-import static org.keycloak.util.JsonSerialization.mapper;
 
 @Component
 @Service
@@ -1032,7 +1025,7 @@ public class SearchServiceImpl implements SearchService {
         String stringRequest = objectMapper.writeValueAsString(entityMap);
         RegistryRequest registryRequest = new RegistryRequest(null, entityMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
         SearchEntity searchEntity = mapper.convertValue(requestDTO.getRequest().get("springs"), SearchEntity.class);
-        String searchString =searchEntity.getAddress();
+        String searchString =searchEntity.getSearchString();
 
         try {
             Call<RegistryResponse> createRegistryEntryCall = registryDAO.searchUser(adminToken, registryRequest);
@@ -1046,6 +1039,7 @@ public class SearchServiceImpl implements SearchService {
             registryResponse = registryUserCreationResponse.body();
             BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
             Map<String, Object> response = new HashMap<>();
+            Map<String, Object> responseSpring = new HashMap<>();
             List<LinkedHashMap> springList = (List<LinkedHashMap>) registryResponse.getResult();
             List<String> addressFromDB = new ArrayList<>();
             String springCode = "";
@@ -1057,13 +1051,14 @@ public class SearchServiceImpl implements SearchService {
                 Springs springResponse = new Springs();
                 springCode = (String) springList.get(i).get("springCode");
                 springName = (String) springList.get(i).get("springName");
-                if(addressFromDB.get(i).contains(searchString)||springCode.equalsIgnoreCase(searchString)||springName.equalsIgnoreCase(searchString)){
+                if(addressFromDB.get(i).toLowerCase().contains(searchString.toLowerCase())||springCode.equalsIgnoreCase(searchString)||springName.toLowerCase().contains(searchString.toLowerCase())){
                     convertRegistryResponseToSpring(springResponse, springList.get(i));
                     springData.add(springResponse);
                 }
 
             }
-            response.put("responseObject", springData);
+            responseSpring.put("springs",springData);
+            response.put("responseObject", responseSpring);
             response.put("responseCode", 200);
             response.put("responseStatus", "all springs fetched successfully");
             loginAndRegisterResponseMap.setResponse(response);

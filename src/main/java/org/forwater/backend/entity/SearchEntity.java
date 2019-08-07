@@ -2,13 +2,13 @@ package org.forwater.backend.entity;
 
 public class SearchEntity {
 
-    private String address;
+    private String searchString;
 
-    public String getAddress() {
-        return address;
+    public String getSearchString() {
+        return searchString;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setSearchString(String searchString) {
+        this.searchString = searchString;
     }
 }

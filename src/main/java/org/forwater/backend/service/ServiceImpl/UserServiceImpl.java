@@ -709,7 +709,7 @@ public class UserServiceImpl implements UserService {
             });
 
             updatedSpringList.sort(Comparator.comparing(SpringsWithFormattedTime::getCreatedTimeStamp).reversed());
-//                List<Springs> updatedSprings = new ArrayList<>();
+//                List<SpringstoLowerCase> updatedSprings = new ArrayList<>();
 //                updatedSpringList.stream().forEach(springsWithFormattedTime -> {
 //                    Springs spring1 = new Springs();
 //                    spring1.setCreatedTimeStamp(springsWithFormattedTime.getCreatedTimeStamp().toString());
