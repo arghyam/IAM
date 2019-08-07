@@ -1071,6 +1071,48 @@ public class SearchServiceImpl implements SearchService {
         return loginAndRegisterResponseMap;
     }
 
+    @Override
+    public LoginAndRegisterResponseMap getRecentSearches(RequestDTO requestDTO) throws IOException {
+
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        RecentSearchesDTO recentSearchesDTO = mapper.convertValue(requestDTO.getRequest().get("recentSearches"), RecentSearchesDTO.class);
+        Map<String, Object> entityMap = new HashMap<>();
+        Map<String, Object> searchEntityMap = new HashMap<>();
+        Map<String, Object> responseFromDB = new HashMap<>();
+        Map<String, Object> responseSearch = new HashMap<>();
+        List<String> recentSearchList = new ArrayList<>();
+        entityMap.put("userId",recentSearchesDTO.getUserId());
+         searchEntityMap.put("recentSearches",entityMap);
+        String stringRequest = mapper.writeValueAsString(searchEntityMap);
+        RegistryRequest registryRequest = new RegistryRequest(null, searchEntityMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
+        try {
+            Call<RegistryResponse> searchResponse = registryDAO.searchUser(adminToken, registryRequest);
+            retrofit2.Response<RegistryResponse>  response = searchResponse.execute();
+            if (!response.isSuccessful()) {
+                log.info("response is un successfull due to :" + response.errorBody().toString());
+            } else {
+                RegistryResponse registryResponse;
+                registryResponse = response.body();
+                BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+                List<LinkedHashMap> searchResponseList = (List<LinkedHashMap>) registryResponse.getResult();
+                for (int i = searchResponseList.size()-1; i > searchResponseList.size()-4; i--) {
+                    recentSearchList.add((String) searchResponseList.get(i).get("searchString"));
+                }
+                log.info("response is successfull " + response);
+                responseSearch.put("search",recentSearchList);
+                responseFromDB.put("responseObject", responseSearch);
+                responseFromDB.put("responseCode", 200);
+                responseFromDB.put("responseStatus", "all springs fetched successfully");
+                loginAndRegisterResponseMap.setResponse(responseFromDB);
+            }
+        } catch (IOException e) {
+            log.error("error is :" + e);
+        }
+
+        return loginAndRegisterResponseMap;
+    }
+
     private void recentSearches(String adminToken,SearchEntity searchEntity) {
         Map<String, Object> entityMap = new HashMap<>();
         Map<String, Object> searchEntityMap = new HashMap<>();

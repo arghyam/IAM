@@ -46,4 +46,6 @@ public interface SearchService {
     LoginAndRegisterResponseMap getCitiesBySubDistrictOSID(RequestDTO requestDTO) throws IOException;
 
     LoginAndRegisterResponseMap search(RequestDTO requestDTO) throws IOException;
+
+    LoginAndRegisterResponseMap getRecentSearches(RequestDTO requestDTO ) throws IOException;
 }
