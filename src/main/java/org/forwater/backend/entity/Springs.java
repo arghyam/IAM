@@ -19,8 +19,6 @@ public class Springs extends SpringLocation implements Comparable<Springs> {
 
     private String orgId;
 
-    private String location;
-
     private Integer numberOfHouseholds;
 
     private String ownershipType;
@@ -78,14 +76,6 @@ public class Springs extends SpringLocation implements Comparable<Springs> {
 
     public void setOrgId(String orgId) {
         this.orgId = orgId;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
     }
 
     public Integer getNumberOfHouseholds() {

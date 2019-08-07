@@ -531,26 +531,6 @@ public class UserServiceImpl implements UserService {
         springResponse.setOrgId((String) spring.get("orgId"));
         springResponse.setUserId((String) spring.get("userId"));
         String userId = (String) spring.get("userId");
-        ArrayList<String> location = new ArrayList<>();
-
-        if (spring.get("location").getClass().toString().equals("class java.lang.String")) {
-            String result = (String) spring.get("location");
-            result = new StringBuilder(result).deleteCharAt(0).toString();
-            result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
-            location.add(result);
-        } else if (spring.get("location").getClass().toString().equals("class java.util.ArrayList")) {
-            location = (ArrayList<String>) spring.get("location");
-        }
-
-        final String[] updatedLocation = {""};
-        location.forEach(locations -> {
-            String loc = String.valueOf(locations);
-            if (!updatedLocation[0].isEmpty())
-                updatedLocation[0] = updatedLocation[0] + ", " +loc;
-            else
-                updatedLocation[0] = loc;
-        });
-        springResponse.setLocation(String.valueOf(updatedLocation[0]));
 
         UserRepresentation userRepresentation = keycloakService.getUserById(appContext.getRealm(), userId, adminToken);
         if (null != userRepresentation) {
@@ -566,7 +546,7 @@ public class UserServiceImpl implements UserService {
             e.printStackTrace();
         }
 
-
+        springResponse.setAddress((String) spring.get("address"));
         springResponse.setSpringCode((String) spring.get("springCode"));
         springResponse.setTenantId((String) spring.get("tenantId"));
         springResponse.setAccuracy((Double) spring.get("accuracy"));
@@ -700,7 +680,7 @@ public class UserServiceImpl implements UserService {
                 newSpring.setTenantId(spring.getTenantId());
                 newSpring.setUsage(spring.getUsage());
                 newSpring.setUserId(spring.getUserId());
-                newSpring.setLocation(spring.getLocation());
+                newSpring.setAddress(spring.getAddress());
                 newSpring.setAccuracy(spring.getAccuracy());
                 newSpring.setElevation(spring.getElevation());
                 newSpring.setLatitude(spring.getLatitude());
@@ -768,28 +748,7 @@ public class UserServiceImpl implements UserService {
         springResponse.setUserId((String) spring.get("userId"));
         mapExtraInformationForSpring(springResponse, spring);
         springResponse.setCreatedTimeStamp((String) spring.get("createdTimeStamp"));
-        ArrayList<String> location = new ArrayList<>();
-
-        if (spring.get("location").getClass().toString().equals("class java.lang.String")) {
-            String result = (String) spring.get("location");
-            result = new StringBuilder(result).deleteCharAt(0).toString();
-            result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
-            location.add(result);
-        } else if (spring.get("location").getClass().toString().equals("class java.util.ArrayList")) {
-            location = (ArrayList<String>) spring.get("location");
-        }
-
-        final String[] updatedLocation = {""};
-        location.forEach(locations -> {
-            String loc = String.valueOf(locations);
-            if (!updatedLocation[0].isEmpty())
-                updatedLocation[0] = updatedLocation[0] + ", " +loc;
-            else
-                updatedLocation[0] = loc;
-        });
-        springResponse.setLocation(String.valueOf(updatedLocation[0]));
-//
-//        springResponse.setLocation((String) spring.get("location"));
+        springResponse.setAddress((String)spring.get("address"));
         springResponse.setSpringCode((String) spring.get("springCode"));
         springResponse.setTenantId((String) spring.get("tenantId"));
         springResponse.setAccuracy((Double) spring.get("accuracy"));
@@ -1157,13 +1116,11 @@ public class UserServiceImpl implements UserService {
 
         if (!addressDetails.get(0).getVillage().isEmpty()){
             address = addressDetails.get(0).getState() +" | "+addressDetails.get(0).getDistrict()+" | "+ addressDetails.get(0).getSubDistrict() +" | "+addressDetails.get(0).getVillage();
-            springs.setLocation(addressDetails.get(0).getVillage()+", "+addressDetails.get(0).getState());
             String subDistrictOsid = searchService.getSubDistrictOsidBySubDistrictName(requestDTO,addressDetails.get(0).getSubDistrict(),districtOsid);
             searchService.postVillage(requestDTO,addressDetails.get(0).getVillage(),subDistrictOsid);
         }
         if(!addressDetails.get(0).getCity().isEmpty()){
             address = addressDetails.get(0).getState() +" | "+addressDetails.get(0).getDistrict()+" | "+ addressDetails.get(0).getSubDistrict() +" | "+ addressDetails.get(0).getCity();
-            springs.setLocation(addressDetails.get(0).getCity()+", "+addressDetails.get(0).getState());
             String subDistrictOsid = searchService.getsubDistrictOsid(requestDTO,addressDetails.get(0).getSubDistrict(),districtOsid);
             searchService.postCities(requestDTO,addressDetails.get(0).getCity(),subDistrictOsid);
         }

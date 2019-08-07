@@ -21,7 +21,7 @@ public class SpringsWithFormattedTime extends SpringLocation {
 
     private String orgId;
 
-    private String location;
+    private String address;
 
     private Integer numberOfHouseholds;
 
@@ -77,12 +77,12 @@ public class SpringsWithFormattedTime extends SpringLocation {
         this.orgId = orgId;
     }
 
-    public String getLocation() {
-        return location;
+    public String getAddress() {
+        return address;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public Integer getNumberOfHouseholds() {
