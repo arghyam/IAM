@@ -1096,11 +1096,19 @@ public class SearchServiceImpl implements SearchService {
                 registryResponse = response.body();
                 BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
                 List<LinkedHashMap> searchResponseList = (List<LinkedHashMap>) registryResponse.getResult();
-                for (int i = searchResponseList.size()-1; i > searchResponseList.size()-4; i--) {
-                    recentSearchList.add((String) searchResponseList.get(i).get("searchString"));
+                if (searchResponseList.size()>3){
+                    for (int i = searchResponseList.size()-1; i > searchResponseList.size()-4; i--) {
+                        recentSearchList.add((String) searchResponseList.get(i).get("searchString"));
+                    }
                 }
+                else{
+                    for (int i = 0; i < searchResponseList.size(); i++) {
+                        recentSearchList.add((String) searchResponseList.get(i).get("searchString"));
+                    }
+                }
+
                 log.info("response is successfull " + response);
-                responseSearch.put("search",recentSearchList);
+                responseSearch.put("recentSearch",recentSearchList);
                 responseFromDB.put("responseObject", responseSearch);
                 responseFromDB.put("responseCode", 200);
                 responseFromDB.put("responseStatus", "all springs fetched successfully");
