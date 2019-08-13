@@ -137,4 +137,14 @@ public class UserController {
     }
 
 
+    @RequestMapping(value = "/deduplication", method = RequestMethod.POST)
+    LoginAndRegisterResponseMap deduplication(@ApiParam(value = "generate accessToken body", required = true,
+            name="generate accessToken body")@RequestBody  RequestDTO requestDTO) throws IOException {
+        return userService.deduplication(requestDTO);
+    }
+
+//    @PostMapping(value = "/deduplication")
+//    public Object deduplication(@Validated @RequestBody RequestDTO requestDTO) throws IOException {
+//        return userService.deduplication(requestDTO);
+//    }
 }

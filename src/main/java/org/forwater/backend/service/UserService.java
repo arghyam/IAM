@@ -51,4 +51,5 @@ public interface UserService {
     LoginAndRegisterResponseMap getNotificationCount(RequestDTO requestDTO, String userId) throws IOException;
 
 
+    LoginAndRegisterResponseMap deduplication(RequestDTO requestDTO) throws IOException;
 }

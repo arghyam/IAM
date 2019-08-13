@@ -34,6 +34,9 @@ dependencies {
     // https://mvnrepository.com/artifact/org.keycloak/keycloak-admin-client
     compile group: 'org.keycloak', name: 'keycloak-admin-client', version: '4.7.0.Final'
 
+    compile group: 'com.vividsolutions', name: 'jts', version: '1.13'
+
+
     // https://mvnrepository.com/artifact/javax.ws.rs/javax.ws.rs-api
     compile group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
 

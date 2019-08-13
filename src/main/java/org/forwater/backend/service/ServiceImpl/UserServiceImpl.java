@@ -2,15 +2,18 @@ package org.forwater.backend.service.ServiceImpl;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.util.GeometricShapeFactory;
 import org.forwater.backend.config.AppContext;
 import org.forwater.backend.dao.KeycloakDAO;
 import org.forwater.backend.dao.KeycloakService;
 import org.forwater.backend.dao.MapMyIndiaService;
 import org.forwater.backend.dao.RegistryDAO;
-
 import org.forwater.backend.dto.*;
 import org.forwater.backend.entity.*;
 import org.forwater.backend.exceptions.InternalServerException;
@@ -20,11 +23,7 @@ import org.forwater.backend.service.SearchService;
 import org.forwater.backend.service.UserService;
 import org.forwater.backend.utils.AmazonUtils;
 import org.forwater.backend.utils.Constants;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
@@ -36,13 +35,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-
 import org.springframework.web.multipart.MultipartFile;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -1525,6 +1522,83 @@ public class UserServiceImpl implements UserService {
         }
         return null;
     }
+
+    @Override
+    public LoginAndRegisterResponseMap deduplication(RequestDTO requestDTO) throws IOException {
+
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        DeduplicationDTO deduplicationDTO = mapper.convertValue(requestDTO.getRequest().get("location"), DeduplicationDTO.class);
+        Double point = 0.0;
+        Map<String, Object> response = new HashMap<>();
+        List<String> finalPoint= new ArrayList<>();
+
+        if (deduplicationDTO.getAccuracy() > 50f) {
+            point = deduplicationDTO.getAccuracy();
+        } else if (deduplicationDTO.getAccuracy() <= 50f) {
+            point = 50.0;
+        }
+
+        GeometricShapeFactory shapeFactory = new GeometricShapeFactory();
+        shapeFactory.setNumPoints(64);
+        shapeFactory.setCentre(new Coordinate(deduplicationDTO.getLatitude(), deduplicationDTO.getLongitude()));
+        shapeFactory.setWidth(point / 111320d);
+        shapeFactory.setHeight(point / (40075000 * Math.cos(Math.toRadians(deduplicationDTO.getLatitude())) / 360));
+        Polygon circle = shapeFactory.createEllipse();
+        List<PointsDTO> geograhicalPointsList = getAllPoints(requestDTO, adminToken);
+
+        for (int i = 0; i < geograhicalPointsList.size(); i++) {
+            if (circle.contains(geograhicalPointsList.get(i).getPoint())) {
+                finalPoint.add(geograhicalPointsList.get(i).getSpringCode());
+            }
+        }
+        response.put("responseCode", 200);
+        response.put("responseStatus", "successfull");
+        response.put("responseObject", finalPoint);
+        BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+        loginAndRegisterResponseMap.setResponse(response);
+        return loginAndRegisterResponseMap;
+    }
+
+    private List<PointsDTO> getAllPoints(RequestDTO requestDTO, String adminToken) throws IOException {
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        Map<String, String> retrievePointsData = new HashMap<>();
+        List<PointsDTO> pointsDTOList = new ArrayList<>();
+        GeometryFactory geometryFactory = new GeometryFactory();
+        if (requestDTO.getRequest().keySet().contains("location")) {
+            retrievePointsData.put("@type", "springs");
+        }
+        Map<String, Object> entityMap = new HashMap<>();
+        entityMap.put("springs", retrievePointsData);
+        String stringRequest = objectMapper.writeValueAsString(entityMap);
+        RegistryRequest registryRequest = new RegistryRequest(null, entityMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
+        try {
+            Call<RegistryResponse> createRegistryEntryCall = registryDAO.searchUser(adminToken, registryRequest);
+            retrofit2.Response<RegistryResponse> registryUserCreationResponse = createRegistryEntryCall.execute();
+            if (!registryUserCreationResponse.isSuccessful()) {
+                log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+            } else {
+                RegistryResponse registryResponse;
+                registryResponse = registryUserCreationResponse.body();
+                BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+                List<LinkedHashMap> pointsList = (List<LinkedHashMap>) registryResponse.getResult();
+                pointsList.stream().forEach(points -> {
+                    Point point = geometryFactory.createPoint(
+                            new Coordinate((double) points.get("latitude"), (double) points.get("longitude"))
+                    );
+                    PointsDTO pointResponse = new PointsDTO();
+                    pointResponse.setPoint(point);
+                    pointResponse.setSpringCode((String) points.get("springCode"));
+                    pointsDTOList.add(pointResponse);
+                });
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return pointsDTOList;
+    }
+
+
 
     private LoginAndRegisterResponseMap getNotificationCountResponse(Response registryUserCreationResponse, RequestDTO requestDTO, String userId) {
         Map<String, Object> activitiesMap = new HashMap<>();
