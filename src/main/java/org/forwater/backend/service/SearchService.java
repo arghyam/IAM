@@ -2,7 +2,6 @@ package org.forwater.backend.service;
 
 import org.forwater.backend.dto.LoginAndRegisterResponseMap;
 import org.forwater.backend.dto.RequestDTO;
-import org.springframework.validation.BindingResult;
 
 import java.io.IOException;
 import java.util.List;
@@ -26,7 +25,7 @@ public interface SearchService {
 
     LoginAndRegisterResponseMap getStateByName(RequestDTO requestDTO) throws IOException;
 
-    String getStateOsidByName(RequestDTO requestDTO, String stateName) throws IOException;
+    List<String>  getStateOsidByName(RequestDTO requestDTO, String stateName) throws IOException;
 
     String getDistrictOsidByDistrictName(RequestDTO requestDTO, String district, String fKeyState) throws IOException;
 

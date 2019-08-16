@@ -143,8 +143,4 @@ public class UserController {
         return userService.deduplication(requestDTO);
     }
 
-//    @PostMapping(value = "/deduplication")
-//    public Object deduplication(@Validated @RequestBody RequestDTO requestDTO) throws IOException {
-//        return userService.deduplication(requestDTO);
-//    }
 }

@@ -352,7 +352,6 @@ public class UserServiceImpl implements UserService {
                     Call<RegistryResponse> createRegistryEntryCallForAdditional = registryDao.searchUser(adminToken, registryRequestForAdditional);
                     retrofit2.Response<RegistryResponse> registryUserCreationResponseForAdditional = createRegistryEntryCallForAdditional.execute();
 
-
                     getAdditionalDataWithSpringCode(registryUserCreationResponseForAdditional, springResponse, null, "updateSpringProfile");
                     getDischargeDataWithSpringCode(adminToken, springs.getSpringCode(), springResponse, registryUserCreationResponseForAdditional);
                     response.put("responseCode", 200);
@@ -1106,7 +1105,10 @@ public class UserServiceImpl implements UserService {
                 getAddressDetails(springs.getLatitude(), springs.getLongitude());
 
         // save district
-        String stateOsid = searchService.getStateOsidByName(requestDTO,addressDetails.get(0).getState());
+        List<String> stateData = searchService.getStateOsidByName(requestDTO, addressDetails.get(0).getState());
+        String stateOsid = stateData.get(0);
+                Integer count = Integer.valueOf(stateData.get(1));
+        count+=1;
         searchService.postDistricts(requestDTO,addressDetails.get(0).getDistrict(),stateOsid);
         String districtOsid = searchService.getDistrictOsidByDistrictName(requestDTO,addressDetails.get(0).getDistrict(),stateOsid);
         searchService.postSubDistricts(requestDTO,addressDetails.get(0).getSubDistrict(),districtOsid);
@@ -1141,6 +1143,10 @@ public class UserServiceImpl implements UserService {
             if (!registryUserCreationResponse.isSuccessful()) {
                 log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
             }
+            else {
+                updateSpringCount(adminAccessToken, requestDTO, stateOsid, count);
+            }
+
 
         } catch (IOException e) {
             log.error("Error creating registry entry : {} ", e.getMessage());
@@ -1157,6 +1163,31 @@ public class UserServiceImpl implements UserService {
         loginAndRegisterResponseMap.setResponse(response);
         log.info("********create spring flow ***" + objectMapper.writeValueAsString(loginAndRegisterResponseMap));
         return loginAndRegisterResponseMap;
+    }
+
+    private void updateSpringCount(String adminAccessToken, RequestDTO requestDTO, String stateOsid, Integer count) throws IOException {
+        UpdatepointsDTO updatepointsDTO = new UpdatepointsDTO();
+        States states = new States();
+        updatepointsDTO.setOsid(stateOsid);
+        updatepointsDTO.setCount(count);
+        Map<String, Object>map =new HashMap<>();
+        map.put("states",updatepointsDTO);
+        try {
+            String stringRequest = mapper.writeValueAsString(map);
+            RegistryRequest registryRequest = new RegistryRequest(null, map, RegistryResponse.API_ID.UPDATE.getId(), stringRequest);
+            Call<RegistryResponse> activitiesResponse = registryDAO.updateUser(adminAccessToken, registryRequest);
+            Response response = activitiesResponse.execute();
+
+            if (!response.isSuccessful()) {
+                log.info("response is un successfull due to :" + response.errorBody().toString());
+            } else {
+                // successfull case
+                log.info("response is successfull " + response);
+
+            }
+        } catch (JsonProcessingException e) {
+            log.error("error is :" + e);
+        }
     }
 
 
@@ -1329,13 +1360,14 @@ public class UserServiceImpl implements UserService {
             try {
                 Call<RegistryResponse> createRegistryEntryCall = registryDao.updateUser(adminAccessToken, registryRequest);
                 retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
-
                 if (registryUserCreationResponse.isSuccessful() && registryUserCreationResponse.code() == 200) {
                     BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
                     Map<String, Object> response = new HashMap<>();
                     response.put("responseCode", 200);
+                    Object obj = registryUserCreationResponse.code();
                     response.put("responseStatus", "Discharge data accepted");
                     loginAndRegisterResponseMap.setResponse(response);
+                    System.out.println(registryUserCreationResponse.code());
                     updateNotificationsData(dischargeData);
                     generateReviwerNotification(Constants.NOTIFICATION_ACCEPTED, adminAccessToken, dischargeData);
 
@@ -1431,10 +1463,10 @@ public class UserServiceImpl implements UserService {
         dischargeMap.put("osid", dischargeData.getNotificationOsid());
 
         String objectMapper = new ObjectMapper().writeValueAsString(dischargeMap);
-        RegistryRequest registryRequest = new RegistryRequest(null, dischargeMap, RegistryResponse.API_ID.DELETE.getId(), objectMapper);
+        RegistryRequest registryRequest = new RegistryRequest(null, dischargeMap, RegistryResponse.API_ID.UPDATE.getId(), objectMapper);
 
         try {
-            Call<RegistryResponse> createRegistryEntryCall = registryDao.deleteEntity(adminAccessToken, dischargeData.getNotificationOsid());
+            Call<RegistryResponse> createRegistryEntryCall = registryDao.updateUser(adminAccessToken, registryRequest);
             retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
 
             if (registryUserCreationResponse.isSuccessful() && registryUserCreationResponse.code() == 200) {

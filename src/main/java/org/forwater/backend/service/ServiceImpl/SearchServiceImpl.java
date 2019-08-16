@@ -1,7 +1,6 @@
 package org.forwater.backend.service.ServiceImpl;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import org.forwater.backend.config.AppContext;
@@ -67,6 +66,7 @@ public class SearchServiceImpl implements SearchService {
         States states = new States();
         if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("states")) {
             states = mapper.convertValue(requestDTO.getRequest().get("states"), States.class);
+            states.setCount(0);
         }
         HashMap<String, Object> map = new HashMap<>();
         map.put("states", states);
@@ -535,10 +535,12 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public String getStateOsidByName(RequestDTO requestDTO,String stateName) throws IOException {
+    public List<String> getStateOsidByName(RequestDTO requestDTO,String stateName) throws IOException {
         StatesDTO states=new StatesDTO();
         Map<String, Object> request = new HashMap<>() ;
         Map<String, Object> requestMap = new HashMap<>() ;
+        List<String> stateDataMap= new ArrayList<>();
+
         LoginAndRegisterResponseMap response ;
 
         request.put("states",stateName);
@@ -550,8 +552,11 @@ public class SearchServiceImpl implements SearchService {
         JSONObject subObject = object.getJSONObject("response");
         JSONObject object1 = subObject.getJSONObject("responseObject");
         JSONObject subSubObject = object1.getJSONObject("state");
+
         String value = (String) subSubObject.get("osid");
-        return value;
+        stateDataMap.add(value);
+        stateDataMap.add(String.valueOf(subSubObject.get("count")));
+        return stateDataMap;
     }
 
 
@@ -1146,6 +1151,8 @@ public class SearchServiceImpl implements SearchService {
     private void convertStateListData(StatesDTO stateDto, LinkedHashMap state) {
         stateDto.setStates((String) state.get("states"));
         String statesOsid = (String)state.get("osid");
+        stateDto.setCount((Integer) state.get("count"));
+
         stateDto.setOsid(statesOsid.substring(2));
     }
     private void convertDistrictListData(DistrictsDTO districtsDTO, LinkedHashMap districts) {
