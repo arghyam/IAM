@@ -536,7 +536,6 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public List<String> getStateOsidByName(RequestDTO requestDTO,String stateName) throws IOException {
-        StatesDTO states=new StatesDTO();
         Map<String, Object> request = new HashMap<>() ;
         Map<String, Object> requestMap = new HashMap<>() ;
         List<String> stateDataMap= new ArrayList<>();

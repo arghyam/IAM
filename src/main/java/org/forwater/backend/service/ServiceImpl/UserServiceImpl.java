@@ -1591,6 +1591,160 @@ public class UserServiceImpl implements UserService {
         return loginAndRegisterResponseMap;
     }
 
+    @Override
+    public LoginAndRegisterResponseMap favourites(RequestDTO requestDTO) throws IOException {
+        retrofit2.Response registryUserCreationResponse = null;
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        FavouritesDTO favouritesDTO =mapper.convertValue(requestDTO.getRequest().get("favourites"), FavouritesDTO.class);
+        Map<String,Object> map =new HashMap<>();
+        map.put("favourites", favouritesDTO);
+        String stringRequest = objectMapper.writeValueAsString(map);
+        RegistryRequest registryRequest = new RegistryRequest(null, map, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+        try {
+
+            Call<RegistryResponse> loginResponseDTOCall = registryDAO.createUser(adminToken, registryRequest);
+            registryUserCreationResponse = loginResponseDTOCall.execute();
+
+            if (!registryUserCreationResponse.isSuccessful()) {
+                log.info("response is un successfull due to :" + registryUserCreationResponse.errorBody().toString());
+            } else {
+                // successfull case
+                log.info("response is successfull " + registryUserCreationResponse);
+
+            }
+
+        } catch (Exception e) {
+            log.error("Error creating registry entry : {} ", e.getMessage());
+            throw new InternalServerException("Internal server error");
+
+        }
+        BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+        Map<String, Object> response = new HashMap<>();
+        response.put("responseCode", 200);
+        response.put("responseStatus", "added to favourites successfully");
+        response.put("responseObject", favouritesDTO);
+        loginAndRegisterResponseMap.setResponse(response);
+        return loginAndRegisterResponseMap;
+    }
+
+    @Override
+    public LoginAndRegisterResponseMap getFavourites(RequestDTO requestDTO) throws IOException {
+        retrofit2.Response registryUserCreationResponse = null;
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        Map<String, Object> response = new HashMap<>();
+        if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("favourites")) {
+            RetrieveFavouritesDTO getfavouritesData =new RetrieveFavouritesDTO();
+            getfavouritesData = mapper.convertValue(requestDTO.getRequest().get("favourites"), RetrieveFavouritesDTO.class);
+            Map<String, Object> FavouritesData = new HashMap<>();
+            List<FavouriteSpringsDTO> favouriteSpringsList = new ArrayList<>();
+            FavouritesData.put("favourites", getfavouritesData);
+            String stringRequest = objectMapper.writeValueAsString(FavouritesData);
+            RegistryRequest registryRequest = new RegistryRequest(null, FavouritesData, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
+
+            try {
+
+                List<String> springCodeList= new ArrayList<>();
+                Call<RegistryResponse> createRegistryEntryCall = registryDao.findEntitybyId(adminToken, registryRequest);
+                registryUserCreationResponse = createRegistryEntryCall.execute();
+                if (!registryUserCreationResponse.isSuccessful()) {
+                    log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+
+                } else {
+                    RegistryResponse registryResponse = new RegistryResponse();
+                    BeanUtils.copyProperties(registryUserCreationResponse.body(), registryResponse);
+                    List<LinkedHashMap> springsList = (List<LinkedHashMap>) registryResponse.getResult();
+                    springsList.stream().forEach(springs -> {
+                        springCodeList.add((String) springs.get("springCode")) ;
+                    });
+
+                    favouriteSpringsList = getAllSpringsForFavourites(adminToken, requestDTO, springCodeList);
+                 log.info("######################","");
+
+                    response.put("responseCode", 200);
+                    response.put("responseStatus", "successfull");
+                    response.put("responseObject", favouriteSpringsList);
+                    BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+                    loginAndRegisterResponseMap.setResponse(response);
+                }
+            } catch (Exception e) {
+                log.error("Error creating registry entry : {} ", e.getMessage());
+                throw new InternalServerException("Internal server error");
+
+            }
+        }
+        return loginAndRegisterResponseMap;
+
+    }
+
+    private List<FavouriteSpringsDTO> getAllSpringsForFavourites(String adminToken, RequestDTO requestDTO, List<String> springCodeList) throws IOException {
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        Map<String, String> favouritesMap = new HashMap<>();
+        List<FavouriteSpringsDTO> springDetailsDTOList = new ArrayList<>();
+        List<FavouriteSpringsDTO> favouritesDTOList = new ArrayList<>();
+
+        if (requestDTO.getRequest().keySet().contains("favourites")) {
+            favouritesMap.put("@type", "springs");
+        }
+        Map<String, Object> entityMap = new HashMap<>();
+        entityMap.put("springs", favouritesMap);
+        String stringRequest = objectMapper.writeValueAsString(entityMap);
+        RegistryRequest registryRequest = new RegistryRequest(null, entityMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
+        try {
+            Call<RegistryResponse> createRegistryEntryCall = registryDAO.searchUser(adminToken, registryRequest);
+            retrofit2.Response<RegistryResponse> registryUserCreationResponse = createRegistryEntryCall.execute();
+            if (!registryUserCreationResponse.isSuccessful()) {
+                log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+            } else {
+                RegistryResponse registryResponse;
+                registryResponse = registryUserCreationResponse.body();
+                BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+                List<LinkedHashMap> springsDTOList = (List<LinkedHashMap>) registryResponse.getResult();
+
+//                springsDTOList = (List<Springs>) registryResponse.getResult();
+
+//                for (int i = 0; i < springsDTOList.size() ; i++) {
+//                    FavouriteSpringsDTO favouritesData = new FavouriteSpringsDTO();
+//                    log.info((String) springsDTOList.get(i).get("address"));
+//                    favouritesData.setAddress((String) springsDTOList.get(i).get("address"));
+//                    favouritesData.setImages((String) springsDTOList.get(i).get("images"));
+//                    favouritesData.setOwnershipType((String) springsDTOList.get(i).get("ownershipType"));
+//                    favouritesData.setSpringCode((String) springsDTOList.get(i).get("springCode"));
+//                    favouritesData.setSpringName((String) springsDTOList.get(i).get("springName"));
+//                    favouritesData.setUserId((String) springsDTOList.get(i).get("userId"));
+//                    springDetailsDTOList.add(favouritesData);
+//
+//                }
+                springsDTOList.stream().forEach(springs -> {
+                    FavouriteSpringsDTO favouritesData = new FavouriteSpringsDTO();
+
+                    log.info("        ***********            "+ springs.get("springCode"));
+                    favouritesData.setAddress((String) springs.get("address"));
+                    favouritesData.setImages((String) springs.get("images"));
+                    favouritesData.setOwnershipType((String) springs.get("ownershipType"));
+                    favouritesData.setSpringCode((String) springs.get("springCode"));
+                    favouritesData.setSpringName((String) springs.get("springName"));
+                    favouritesData.setUserId((String) springs.get("userId"));
+                    springDetailsDTOList.add(favouritesData);
+                });
+//                springDetailsDTOList.add(favouritesData);
+
+                for (int i = 0; i < springDetailsDTOList.size() ; i++) {
+                    for (int j = 0; j < springCodeList.size(); j++) {
+                        log.info("**********8");
+                        if (springDetailsDTOList.get(i).getSpringCode().equals(springCodeList.get(j))){
+                            favouritesDTOList.add(springDetailsDTOList.get(i));
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return favouritesDTOList;
+    }
+
     private List<PointsDTO> getAllPoints(RequestDTO requestDTO, String adminToken) throws IOException {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         Map<String, String> retrievePointsData = new HashMap<>();

@@ -45,11 +45,13 @@ public interface UserService {
 
     public LoginAndRegisterResponseMap reviewerData(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
-
     LoginAndRegisterResponseMap getAllNotifications(RequestDTO requestDTO, String userId) throws IOException;
 
     LoginAndRegisterResponseMap getNotificationCount(RequestDTO requestDTO, String userId) throws IOException;
 
-
     LoginAndRegisterResponseMap deduplication(RequestDTO requestDTO) throws IOException;
+
+    LoginAndRegisterResponseMap favourites(RequestDTO requestDTO) throws IOException;
+
+    LoginAndRegisterResponseMap getFavourites(RequestDTO requestDTO) throws IOException;
 }
