@@ -143,4 +143,16 @@ public class UserController {
         return userService.deduplication(requestDTO);
     }
 
+    @RequestMapping(value = "/favourites", method = RequestMethod.POST)
+    LoginAndRegisterResponseMap favourites(@ApiParam(value = "generate accessToken body", required = true,
+            name="generate accessToken body")@RequestBody  RequestDTO requestDTO) throws IOException {
+        return userService.favourites(requestDTO);
+    }
+
+    @RequestMapping(value = "/getFavourites", method = RequestMethod.POST)
+    LoginAndRegisterResponseMap getFavourites(@ApiParam(value = "generate accessToken body", required = true,
+            name="generate accessToken body")@RequestBody  RequestDTO requestDTO) throws IOException {
+        return userService.getFavourites(requestDTO);
+    }
+
 }
