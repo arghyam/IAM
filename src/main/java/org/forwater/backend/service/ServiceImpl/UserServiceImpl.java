@@ -1368,7 +1368,7 @@ public class UserServiceImpl implements UserService {
                     response.put("responseStatus", "Discharge data accepted");
                     loginAndRegisterResponseMap.setResponse(response);
                     System.out.println(registryUserCreationResponse.code());
-                    updateNotificationsData(dischargeData);
+                    updateNotificationsData(adminAccessToken, dischargeData);
                     generateReviwerNotification(Constants.NOTIFICATION_ACCEPTED, adminAccessToken, dischargeData);
 
 
@@ -1404,7 +1404,7 @@ public class UserServiceImpl implements UserService {
                     response.put("responseCode", 451);
                     response.put("responseStatus", "Discharge data Rejected");
                     loginAndRegisterResponseMap.setResponse(response);
-                    updateNotificationsData(dischargeData);
+                    updateNotificationsData(adminAccessToken,dischargeData);
                     generateReviwerNotification(Constants.NOTIFICATION_REJECTED, adminAccessToken, dischargeData);
                 } else {
                     Map<String, Object> response = new HashMap<>();
@@ -1454,13 +1454,12 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    private void updateNotificationsData(Reviewer dischargeData) throws IOException {
-        String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+    private void updateNotificationsData(String adminAccessToken, Reviewer dischargeData) throws IOException {
         NotificationReviewEntity notificationReviewEntity = new NotificationReviewEntity();
-        notificationReviewEntity.setStatus(dischargeData.getStatus());
+        notificationReviewEntity.setStatus("Done");
         notificationReviewEntity.setOsid(dischargeData.getNotificationOsid());
         Map<String, Object> dischargeMap = new HashMap<>();
-        dischargeMap.put("osid", dischargeData.getNotificationOsid());
+        dischargeMap.put("notifications", notificationReviewEntity);
 
         String objectMapper = new ObjectMapper().writeValueAsString(dischargeMap);
         RegistryRequest registryRequest = new RegistryRequest(null, dischargeMap, RegistryResponse.API_ID.UPDATE.getId(), objectMapper);
@@ -1470,7 +1469,7 @@ public class UserServiceImpl implements UserService {
             retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
 
             if (registryUserCreationResponse.isSuccessful() && registryUserCreationResponse.code() == 200) {
-                log.info("Successfully deleted notifications entity:");
+                log.info("Successfully updated notifications entity:");
 
             } else {
                 log.info("Error updating notifications entity:" + registryUserCreationResponse.errorBody().toString());
