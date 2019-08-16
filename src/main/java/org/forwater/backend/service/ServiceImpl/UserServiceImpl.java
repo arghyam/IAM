@@ -1648,7 +1648,7 @@ public class UserServiceImpl implements UserService {
         List<NotificationDTOEntity> activityData = new ArrayList<>();
         activitiesList.forEach(activities -> {
             NotificationDTOEntity activityResponse = new NotificationDTOEntity();
-            if (activities.get("userId").equals(userId) && !activities.get("status").equals("Created")) {
+            if (activities.get("userId").equals(userId) && !activities.get("status").equals("Created") && !activities.get("status").equals("Done")) {
                 convertRegistryResponseToNotifications(activityResponse, activities, userId);
                 activityData.add(activityResponse);
             } else if (activities.get("status").equals("Created") && checkIsReviewer(userId)) {
