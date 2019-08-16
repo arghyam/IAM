@@ -969,18 +969,19 @@ public class SearchServiceImpl implements SearchService {
                     villagesResponseDTOList.add(villagesDTOList.get(i));
                 }
             }
-            map.put("villages", villagesResponseDTOList );
-            responseMap.put("responseObject", map);
-            response.setId(requestDTO.getId());
-            response.setVer(requestDTO.getVer());
-            response.setEts(requestDTO.getEts());
-            response.setParams(requestDTO.getParams());
-            response.setResponse(responseMap);
-            return response;
-        } else {
+
+        }
+        else {
             log.error("empty list");
         }
-        return null;
+        map.put("villages", villagesResponseDTOList );
+        responseMap.put("responseObject", map);
+        response.setId(requestDTO.getId());
+        response.setVer(requestDTO.getVer());
+        response.setEts(requestDTO.getEts());
+        response.setParams(requestDTO.getParams());
+        response.setResponse(responseMap);
+        return response;
     }
 
     @Override
@@ -1003,18 +1004,18 @@ public class SearchServiceImpl implements SearchService {
                     citiesResponseDTOList.add(citiesDTOList.get(i));
                 }
             }
-            map.put("cities", citiesResponseDTOList );
-            responseMap.put("responseObject", map);
-            response.setId(requestDTO.getId());
-            response.setVer(requestDTO.getVer());
-            response.setEts(requestDTO.getEts());
-            response.setParams(requestDTO.getParams());
-            response.setResponse(responseMap);
-            return response;
+
         } else {
             log.error("empty list");
         }
-        return null;
+        map.put("cities", citiesResponseDTOList );
+        responseMap.put("responseObject", map);
+        response.setId(requestDTO.getId());
+        response.setVer(requestDTO.getVer());
+        response.setEts(requestDTO.getEts());
+        response.setParams(requestDTO.getParams());
+        response.setResponse(responseMap);
+        return response;
     }
 
     @Override
