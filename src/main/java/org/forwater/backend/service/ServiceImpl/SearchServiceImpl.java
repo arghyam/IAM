@@ -1057,7 +1057,10 @@ public class SearchServiceImpl implements SearchService {
                     springData.add(springResponse);
                 }
             }
-            recentSearches(adminToken,searchEntity);
+            if (!searchEntity.getUserId().isEmpty())
+                recentSearches(adminToken,searchEntity);
+            else
+                log.info("User Not Logged In");
             responseSpring.put("springs",springData);
             response.put("responseObject", responseSpring);
             response.put("responseCode", 200);
