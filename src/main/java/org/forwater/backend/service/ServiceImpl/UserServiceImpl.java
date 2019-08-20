@@ -24,6 +24,7 @@ import org.forwater.backend.service.UserService;
 import org.forwater.backend.utils.AmazonUtils;
 import org.forwater.backend.utils.Constants;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.json.JSONObject;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
@@ -1594,39 +1595,141 @@ public class UserServiceImpl implements UserService {
     @Override
     public LoginAndRegisterResponseMap favourites(RequestDTO requestDTO) throws IOException {
         retrofit2.Response registryUserCreationResponse = null;
+        Map<String, Object> response = new HashMap<>();
+
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         FavouritesDTO favouritesDTO =mapper.convertValue(requestDTO.getRequest().get("favourites"), FavouritesDTO.class);
         Map<String,Object> map =new HashMap<>();
         map.put("favourites", favouritesDTO);
-        String stringRequest = objectMapper.writeValueAsString(map);
-        RegistryRequest registryRequest = new RegistryRequest(null, map, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+
+        existanceOfFavourite(favouritesDTO,adminToken, requestDTO);
+        response.put("responseCode", 200);
+        response.put("responseStatus", "successfull");
+        response.put("responseObject", favouritesDTO);
+        BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+        loginAndRegisterResponseMap.setResponse(response);
+        return loginAndRegisterResponseMap;
+    }
+
+    private void existanceOfFavourite(FavouritesDTO favouritesDTO, String adminToken, RequestDTO requestDTO) throws IOException {
+
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        Map<String, String> favouritesMap = new HashMap<>();
+        FavouritesOsidDTO favouritesData = new FavouritesOsidDTO();
+        List<FavouritesOsidDTO> springDetailsDTOList = new ArrayList<>();
+//        List<FavouritesDTO> requestData = new ArrayList<>();
+//        requestData.add(favouritesDTO);
+        String osid=null;
+
+        if (requestDTO.getRequest().keySet().contains("favourites")) {
+            favouritesMap.put("@type", "favourites");
+        }
+        Map<String, Object> entityMap = new HashMap<>();
+        entityMap.put("favourites", favouritesMap);
+        String stringRequest = objectMapper.writeValueAsString(entityMap);
+        RegistryRequest registryRequest = new RegistryRequest(null, entityMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
         try {
-
-            Call<RegistryResponse> loginResponseDTOCall = registryDAO.createUser(adminToken, registryRequest);
-            registryUserCreationResponse = loginResponseDTOCall.execute();
-
+            Call<RegistryResponse> createRegistryEntryCall = registryDAO.searchUser(adminToken, registryRequest);
+            retrofit2.Response<RegistryResponse> registryUserCreationResponse = createRegistryEntryCall.execute();
             if (!registryUserCreationResponse.isSuccessful()) {
-                log.info("response is un successfull due to :" + registryUserCreationResponse.errorBody().toString());
+                log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
             } else {
-                // successfull case
-                log.info("response is successfull " + registryUserCreationResponse);
+                RegistryResponse registryResponse;
+                registryResponse = registryUserCreationResponse.body();
+                BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+
+                List<LinkedHashMap> springsDTOList = (List<LinkedHashMap>) registryResponse.getResult();
+                springsDTOList.stream().forEach(favourites -> {
+
+                    log.info("        ***********            "+ favourites.get("springCode"));
+
+                    favouritesData.setSpringCode((String) favourites.get("springCode"));
+                    favouritesData.setUserId((String) favourites.get("userId"));
+                    favouritesData.setOsid((String)favourites.get("osid"));
+                    springDetailsDTOList.add(favouritesData);
+                });
+                for (int i = 0; i <= springDetailsDTOList.size() ; i++) {
+                        log.info("**********8");
+                        if (springDetailsDTOList.size()>0 && springDetailsDTOList.get(i).getSpringCode().equals(favouritesDTO.getSpringCode()) && springDetailsDTOList.get(i).getUserId().equalsIgnoreCase(favouritesDTO.getUserId())){
+                                log.info("^^^^^^^^^^^^^^^^^^^^");
+                            JSONObject object = new JSONObject(springDetailsDTOList.get(i));
+                               osid = (String) object.get("osid");
+                            deleteExistingRecord(osid, adminToken,requestDTO);
+                            break;
+                        }
+
+                        else if((springDetailsDTOList.size()==0) || (!springDetailsDTOList.get(i).getSpringCode().equals(favouritesDTO)) ){
+                            createFavouriteRecord(adminToken, requestDTO);
+                            break;
+                        }
+
+                }
 
             }
 
+
+    }catch (Exception e) {
+            log.error("Error creating registry entry : {} ", e.getMessage());
+            throw new InternalServerException("Internal server error");
+
+        }
+
+    }
+
+    private void createFavouriteRecord(String adminToken, RequestDTO requestDTO) throws IOException {
+        FavouritesDTO favouritesDTO = mapper.convertValue(requestDTO.getRequest().get("favourites"), FavouritesDTO.class);
+        Map<String, Object> createFavouriteRecord = new HashMap<>();
+        createFavouriteRecord.put("favourites", favouritesDTO);
+
+        String stringRequest = objectMapper.writeValueAsString(createFavouriteRecord);
+        RegistryRequest registryRequest = new RegistryRequest(null, createFavouriteRecord, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        try {
+            Call<RegistryResponse> createRegistryEntryCall = registryDao.createUser(adminToken, registryRequest);
+            retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
+            if (!registryUserCreationResponse.isSuccessful()) {
+                log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+            } else {
+
+            }
+
+        } catch (IOException e) {
+            log.error("Error creating registry entry : {} ", e.getMessage());
+            throw new InternalServerException("Internal server error");
+
+        }
+    }
+
+
+    private void deleteExistingRecord(String osid, String adminToken, RequestDTO requestDTO) throws IOException{
+        FavouritesOsidDTO deleteFavourites = new FavouritesOsidDTO();
+        FavouritesDTO favouritesDTO = mapper.convertValue(requestDTO.getRequest().get("favourites"), FavouritesDTO.class);
+        deleteFavourites.setOsid(osid.substring(2));
+        deleteFavourites.setSpringCode(favouritesDTO.getSpringCode());
+        deleteFavourites.setUserId(favouritesDTO.getUserId());
+
+
+        Map<String ,Object> osidForDelition = new HashMap<>();
+        osidForDelition.put("osid",deleteFavourites.getOsid());
+
+         String stringRequest = objectMapper.writeValueAsString(osidForDelition);
+        RegistryRequest registryRequest = new RegistryRequest(null, osidForDelition, RegistryResponse.API_ID.DELETE.getId(), stringRequest);
+
+        try {
+            Call<RegistryResponse> createRegistryEntryCall = registryDAO.deleteUser(adminToken, registryRequest);
+            Response<RegistryResponse> registryUserCreationResponse = createRegistryEntryCall.execute();;
+            if (!registryUserCreationResponse.isSuccessful()) {
+                log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+
+            }
         } catch (Exception e) {
             log.error("Error creating registry entry : {} ", e.getMessage());
             throw new InternalServerException("Internal server error");
 
         }
-        BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
-        Map<String, Object> response = new HashMap<>();
-        response.put("responseCode", 200);
-        response.put("responseStatus", "added to favourites successfully");
-        response.put("responseObject", favouritesDTO);
-        loginAndRegisterResponseMap.setResponse(response);
-        return loginAndRegisterResponseMap;
     }
+
 
     @Override
     public LoginAndRegisterResponseMap getFavourites(RequestDTO requestDTO) throws IOException {
@@ -1702,20 +1805,6 @@ public class UserServiceImpl implements UserService {
                 BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
                 List<LinkedHashMap> springsDTOList = (List<LinkedHashMap>) registryResponse.getResult();
 
-//                springsDTOList = (List<Springs>) registryResponse.getResult();
-
-//                for (int i = 0; i < springsDTOList.size() ; i++) {
-//                    FavouriteSpringsDTO favouritesData = new FavouriteSpringsDTO();
-//                    log.info((String) springsDTOList.get(i).get("address"));
-//                    favouritesData.setAddress((String) springsDTOList.get(i).get("address"));
-//                    favouritesData.setImages((String) springsDTOList.get(i).get("images"));
-//                    favouritesData.setOwnershipType((String) springsDTOList.get(i).get("ownershipType"));
-//                    favouritesData.setSpringCode((String) springsDTOList.get(i).get("springCode"));
-//                    favouritesData.setSpringName((String) springsDTOList.get(i).get("springName"));
-//                    favouritesData.setUserId((String) springsDTOList.get(i).get("userId"));
-//                    springDetailsDTOList.add(favouritesData);
-//
-//                }
                 springsDTOList.stream().forEach(springs -> {
                     FavouriteSpringsDTO favouritesData = new FavouriteSpringsDTO();
 
@@ -1728,7 +1817,6 @@ public class UserServiceImpl implements UserService {
                     favouritesData.setUserId((String) springs.get("userId"));
                     springDetailsDTOList.add(favouritesData);
                 });
-//                springDetailsDTOList.add(favouritesData);
 
                 for (int i = 0; i < springDetailsDTOList.size() ; i++) {
                     for (int j = 0; j < springCodeList.size(); j++) {
