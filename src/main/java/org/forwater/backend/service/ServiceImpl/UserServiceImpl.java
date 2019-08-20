@@ -1807,10 +1807,16 @@ public class UserServiceImpl implements UserService {
 
                 springsDTOList.stream().forEach(springs -> {
                     FavouriteSpringsDTO favouritesData = new FavouriteSpringsDTO();
-
-                    log.info("        ***********            "+ springs.get("springCode"));
                     favouritesData.setAddress((String) springs.get("address"));
-                    favouritesData.setImages((String) springs.get("images"));
+
+                    if (springs.get("images").getClass().toString().equals("class java.lang.String")) {
+                        String result = (String) springs.get("images");
+                        result = new StringBuilder(result).deleteCharAt(0).toString();
+                        result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
+                        List<String> images = asList(result);
+                        favouritesData.setImages(images);
+                    }
+
                     favouritesData.setOwnershipType((String) springs.get("ownershipType"));
                     favouritesData.setSpringCode((String) springs.get("springCode"));
                     favouritesData.setSpringName((String) springs.get("springName"));
