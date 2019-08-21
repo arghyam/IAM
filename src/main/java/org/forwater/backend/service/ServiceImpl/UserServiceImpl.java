@@ -1633,6 +1633,7 @@ public class UserServiceImpl implements UserService {
         retrofit2.Response registryUserCreationResponse = null;
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        Map<String, Object> favouritesList = new HashMap<>();
         Map<String, Object> response = new HashMap<>();
         if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("favourites")) {
             RetrieveFavouritesDTO getfavouritesData =new RetrieveFavouritesDTO();
@@ -1660,11 +1661,12 @@ public class UserServiceImpl implements UserService {
                     });
 
                     favouriteSpringsList = getAllSpringsForFavourites(adminToken, requestDTO, springCodeList);
+                    favouritesList.put("FavouriteSpring",favouriteSpringsList);
                  log.info("######################","");
 
                     response.put("responseCode", 200);
                     response.put("responseStatus", "successfull");
-                    response.put("responseObject", favouriteSpringsList);
+                    response.put("responseObject", favouritesList);
                     BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
                     loginAndRegisterResponseMap.setResponse(response);
                 }
