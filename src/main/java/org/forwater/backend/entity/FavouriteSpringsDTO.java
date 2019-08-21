@@ -1,5 +1,7 @@
 package org.forwater.backend.entity;
 
+import java.util.List;
+
 public class FavouriteSpringsDTO {
 
     private String springCode;
@@ -10,7 +12,7 @@ public class FavouriteSpringsDTO {
 
     private String ownershipType;
 
-    private String images;
+    private List<String> images;
 
     private String address;
 
@@ -46,11 +48,11 @@ public class FavouriteSpringsDTO {
         this.ownershipType = ownershipType;
     }
 
-    public String getImages() {
+    public List<String> getImages() {
         return images;
     }
 
-    public void setImages(String images) {
+    public void setImages(List<String> images) {
         this.images = images;
     }
 

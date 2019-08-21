@@ -25,8 +25,12 @@ public interface RegistryDAO {
     @POST(Constants.REGISTRY_UPDATE_USER)
     Call<RegistryResponse> updateUser(@Header("x-authenticated-user-token") String adminAccessToken,
                                       @Body RegistryRequest registryRequest) throws IOException;
-
-    @DELETE(Constants.REGISRY_DELETE_ENTRY)
-    Call<RegistryResponse> deleteEntity(@Header("x-authenticated-user-token") String adminAccessToken,@Path("osid") String id) throws IOException;
+//
+//    @DELETE(Constants.REGISRY_DELETE_ENTRY)
+//    Call<RegistryResponse> deleteEntity(@Header("x-authenticated-user-token") String adminAccessToken,@Path("osid") String id) throws IOException;
+//
+    @POST(Constants.REGISRY_DELETE_ENTRY)
+    Call<RegistryResponse> deleteUser(@Header("x-authenticated-user-token") String adminAccessToken,
+                                      @Body RegistryRequest registryRequest) throws IOException;
 
 }
