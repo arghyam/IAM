@@ -66,7 +66,7 @@ public class SearchServiceImpl implements SearchService {
         States states = new States();
         if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("states")) {
             states = mapper.convertValue(requestDTO.getRequest().get("states"), States.class);
-            states.setCount(0);
+
         }
         HashMap<String, Object> map = new HashMap<>();
         map.put("states", states);
@@ -1040,7 +1040,6 @@ public class SearchServiceImpl implements SearchService {
                 log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
             }
 
-
             RegistryResponse registryResponse;
             registryResponse = registryUserCreationResponse.body();
             BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
@@ -1057,7 +1056,8 @@ public class SearchServiceImpl implements SearchService {
                 Springs springResponse = new Springs();
                 springCode = (String) springList.get(i).get("springCode");
                 springName = (String) springList.get(i).get("springName");
-                if(addressFromDB.get(i).toLowerCase().contains(searchString.toLowerCase())||springCode.equalsIgnoreCase(searchString)||springName.toLowerCase().contains(searchString.toLowerCase())){
+                if(addressFromDB.get(i).toLowerCase().contains(searchString.toLowerCase())||springCode.equalsIgnoreCase(searchString)
+                        ||springName.toLowerCase().contains(searchString.toLowerCase())){
                     convertRegistryResponseToSpring(springResponse, springList.get(i));
                     springData.add(springResponse);
                 }

@@ -1104,7 +1104,6 @@ public class UserServiceImpl implements UserService {
         //list contains location and address details
         List<MapMyIndiaLocationInfoDTO> addressDetails = mapMyIndiaService.
                 getAddressDetails(springs.getLatitude(), springs.getLongitude());
-
         // save district
         List<String> stateData = searchService.getStateOsidByName(requestDTO, addressDetails.get(0).getState());
         String stateOsid = stateData.get(0);
@@ -1616,10 +1615,8 @@ public class UserServiceImpl implements UserService {
 
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         Map<String, String> favouritesMap = new HashMap<>();
-        FavouritesOsidDTO favouritesData = new FavouritesOsidDTO();
         List<FavouritesOsidDTO> springDetailsDTOList = new ArrayList<>();
-//        List<FavouritesDTO> requestData = new ArrayList<>();
-//        requestData.add(favouritesDTO);
+
         String osid=null;
 
         if (requestDTO.getRequest().keySet().contains("favourites")) {
@@ -1641,20 +1638,17 @@ public class UserServiceImpl implements UserService {
 
                 List<LinkedHashMap> springsDTOList = (List<LinkedHashMap>) registryResponse.getResult();
                 springsDTOList.stream().forEach(favourites -> {
-
-                    log.info("        ***********            "+ favourites.get("springCode"));
-
+                    FavouritesOsidDTO favouritesData = new FavouritesOsidDTO();
                     favouritesData.setSpringCode((String) favourites.get("springCode"));
                     favouritesData.setUserId((String) favourites.get("userId"));
                     favouritesData.setOsid((String)favourites.get("osid"));
                     springDetailsDTOList.add(favouritesData);
                 });
+
                 for (int i = 0; i <= springDetailsDTOList.size() ; i++) {
-                        log.info("**********8");
-                        if (springDetailsDTOList.size()>0 && springDetailsDTOList.get(i).getSpringCode().equals(favouritesDTO.getSpringCode()) && springDetailsDTOList.get(i).getUserId().equalsIgnoreCase(favouritesDTO.getUserId())){
-                                log.info("^^^^^^^^^^^^^^^^^^^^");
+                        if (springDetailsDTOList.size()>0 && springDetailsDTOList.get(i).getSpringCode().equalsIgnoreCase(favouritesDTO.getSpringCode()) && springDetailsDTOList.get(i).getUserId().equalsIgnoreCase(favouritesDTO.getUserId())){
                             JSONObject object = new JSONObject(springDetailsDTOList.get(i));
-                               osid = (String) object.get("osid");
+                            osid = (String) object.get("osid");
                             deleteExistingRecord(osid, adminToken,requestDTO);
                             break;
                         }
@@ -1736,6 +1730,8 @@ public class UserServiceImpl implements UserService {
         retrofit2.Response registryUserCreationResponse = null;
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        List<String> recentSearchList = new ArrayList<>();
+
         Map<String, Object> response = new HashMap<>();
         if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("favourites")) {
             RetrieveFavouritesDTO getfavouritesData =new RetrieveFavouritesDTO();
@@ -1883,10 +1879,6 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> activitiesMap = new HashMap<>();
         Map<String, Object> responseObjectMap = new HashMap<>();
         LoginAndRegisterResponseMap activitiesResponse = new LoginAndRegisterResponseMap();
-        activitiesResponse.setId(requestDTO.getId());
-        activitiesResponse.setEts(requestDTO.getEts());
-        activitiesResponse.setVer(requestDTO.getVer());
-        activitiesResponse.setParams(requestDTO.getParams());
         RegistryResponse registryResponse = new RegistryResponse();
         registryResponse = (RegistryResponse) registryUserCreationResponse.body();
         BeanUtils.copyProperties(requestDTO, activitiesResponse);
@@ -1931,14 +1923,9 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> activitiesMap = new HashMap<>();
         Map<String, Object> responseObjectMap = new HashMap<>();
         LoginAndRegisterResponseMap activitiesResponse = new LoginAndRegisterResponseMap();
-        activitiesResponse.setId(requestDTO.getId());
-        activitiesResponse.setEts(requestDTO.getEts());
-        activitiesResponse.setVer(requestDTO.getVer());
-        activitiesResponse.setParams(requestDTO.getParams());
         RegistryResponse registryResponse = new RegistryResponse();
         registryResponse = (RegistryResponse) registryUserCreationResponse.body();
         BeanUtils.copyProperties(requestDTO, activitiesResponse);
-        Map<String, Object> response = new HashMap<>();
 
         List<LinkedHashMap> activitiesList = (List<LinkedHashMap>) registryResponse.getResult();
         List<NotificationDTOEntity> activityData = new ArrayList<>();
