@@ -68,6 +68,7 @@ public class SearchServiceImpl implements SearchService {
             states = mapper.convertValue(requestDTO.getRequest().get("states"), States.class);
 
         }
+        states.setCount(0);
         HashMap<String, Object> map = new HashMap<>();
         map.put("states", states);
         String stringRequest = mapper.writeValueAsString(map);

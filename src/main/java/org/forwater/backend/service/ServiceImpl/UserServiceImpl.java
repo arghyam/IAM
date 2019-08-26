@@ -745,7 +745,7 @@ public class UserServiceImpl implements UserService {
         springResponse.setUserId((String) spring.get("userId"));
         mapExtraInformationForSpring(springResponse, spring);
         springResponse.setCreatedTimeStamp((String) spring.get("createdTimeStamp"));
-        springResponse.setAddress((String)spring.get("address"));
+        springResponse.setAddress((String) spring.get("address"));
         springResponse.setSpringCode((String) spring.get("springCode"));
         springResponse.setTenantId((String) spring.get("tenantId"));
         springResponse.setAccuracy((Double) spring.get("accuracy"));
@@ -1107,21 +1107,21 @@ public class UserServiceImpl implements UserService {
         // save district
         List<String> stateData = searchService.getStateOsidByName(requestDTO, addressDetails.get(0).getState());
         String stateOsid = stateData.get(0);
-                Integer count = Integer.valueOf(stateData.get(1));
-        count+=1;
-        searchService.postDistricts(requestDTO,addressDetails.get(0).getDistrict(),stateOsid);
-        String districtOsid = searchService.getDistrictOsidByDistrictName(requestDTO,addressDetails.get(0).getDistrict(),stateOsid);
-        searchService.postSubDistricts(requestDTO,addressDetails.get(0).getSubDistrict(),districtOsid);
+        Integer count = Integer.valueOf(stateData.get(1));
+        count += 1;
+        searchService.postDistricts(requestDTO, addressDetails.get(0).getDistrict(), stateOsid);
+        String districtOsid = searchService.getDistrictOsidByDistrictName(requestDTO, addressDetails.get(0).getDistrict(), stateOsid);
+        searchService.postSubDistricts(requestDTO, addressDetails.get(0).getSubDistrict(), districtOsid);
 
-        if (!addressDetails.get(0).getVillage().isEmpty()){
-            address = addressDetails.get(0).getState() +" | "+addressDetails.get(0).getDistrict()+" | "+ addressDetails.get(0).getSubDistrict() +" | "+addressDetails.get(0).getVillage();
-            String subDistrictOsid = searchService.getSubDistrictOsidBySubDistrictName(requestDTO,addressDetails.get(0).getSubDistrict(),districtOsid);
-            searchService.postVillage(requestDTO,addressDetails.get(0).getVillage(),subDistrictOsid);
+        if (!addressDetails.get(0).getVillage().isEmpty()) {
+            address = addressDetails.get(0).getState() + " | " + addressDetails.get(0).getDistrict() + " | " + addressDetails.get(0).getSubDistrict() + " | " + addressDetails.get(0).getVillage();
+            String subDistrictOsid = searchService.getSubDistrictOsidBySubDistrictName(requestDTO, addressDetails.get(0).getSubDistrict(), districtOsid);
+            searchService.postVillage(requestDTO, addressDetails.get(0).getVillage(), subDistrictOsid);
         }
-        if(!addressDetails.get(0).getCity().isEmpty()){
-            address = addressDetails.get(0).getState() +" | "+addressDetails.get(0).getDistrict()+" | "+ addressDetails.get(0).getSubDistrict() +" | "+ addressDetails.get(0).getCity();
-            String subDistrictOsid = searchService.getsubDistrictOsid(requestDTO,addressDetails.get(0).getSubDistrict(),districtOsid);
-            searchService.postCities(requestDTO,addressDetails.get(0).getCity(),subDistrictOsid);
+        if (!addressDetails.get(0).getCity().isEmpty()) {
+            address = addressDetails.get(0).getState() + " | " + addressDetails.get(0).getDistrict() + " | " + addressDetails.get(0).getSubDistrict() + " | " + addressDetails.get(0).getCity();
+            String subDistrictOsid = searchService.getsubDistrictOsid(requestDTO, addressDetails.get(0).getSubDistrict(), districtOsid);
+            searchService.postCities(requestDTO, addressDetails.get(0).getCity(), subDistrictOsid);
         }
 
         springs.setAddress(address);
@@ -1142,8 +1142,7 @@ public class UserServiceImpl implements UserService {
 
             if (!registryUserCreationResponse.isSuccessful()) {
                 log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
-            }
-            else {
+            } else {
                 updateSpringCount(adminAccessToken, requestDTO, stateOsid, count);
             }
 
@@ -1170,8 +1169,8 @@ public class UserServiceImpl implements UserService {
         States states = new States();
         updatepointsDTO.setOsid(stateOsid);
         updatepointsDTO.setCount(count);
-        Map<String, Object>map =new HashMap<>();
-        map.put("states",updatepointsDTO);
+        Map<String, Object> map = new HashMap<>();
+        map.put("states", updatepointsDTO);
         try {
             String stringRequest = mapper.writeValueAsString(map);
             RegistryRequest registryRequest = new RegistryRequest(null, map, RegistryResponse.API_ID.UPDATE.getId(), stringRequest);
@@ -1404,7 +1403,7 @@ public class UserServiceImpl implements UserService {
                     response.put("responseCode", 451);
                     response.put("responseStatus", "Discharge data Rejected");
                     loginAndRegisterResponseMap.setResponse(response);
-                    updateNotificationsData(adminAccessToken,dischargeData);
+                    updateNotificationsData(adminAccessToken, dischargeData);
                     generateReviwerNotification(Constants.NOTIFICATION_REJECTED, adminAccessToken, dischargeData);
                 } else {
                     Map<String, Object> response = new HashMap<>();
@@ -1562,7 +1561,7 @@ public class UserServiceImpl implements UserService {
         DeduplicationDTO deduplicationDTO = mapper.convertValue(requestDTO.getRequest().get("location"), DeduplicationDTO.class);
         Double point = 0.0;
         Map<String, Object> response = new HashMap<>();
-        List<String> finalPoint= new ArrayList<>();
+        List<String> finalPoint = new ArrayList<>();
 
         if (deduplicationDTO.getAccuracy() > 50f) {
             point = deduplicationDTO.getAccuracy();
@@ -1598,11 +1597,11 @@ public class UserServiceImpl implements UserService {
 
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
-        FavouritesDTO favouritesDTO =mapper.convertValue(requestDTO.getRequest().get("favourites"), FavouritesDTO.class);
-        Map<String,Object> map =new HashMap<>();
+        FavouritesDTO favouritesDTO = mapper.convertValue(requestDTO.getRequest().get("favourites"), FavouritesDTO.class);
+        Map<String, Object> map = new HashMap<>();
         map.put("favourites", favouritesDTO);
 
-        existanceOfFavourite(favouritesDTO,adminToken, requestDTO);
+        existanceOfFavourite(favouritesDTO, adminToken, requestDTO);
         response.put("responseCode", 200);
         response.put("responseStatus", "successfull");
         response.put("responseObject", favouritesDTO);
@@ -1617,7 +1616,7 @@ public class UserServiceImpl implements UserService {
         Map<String, String> favouritesMap = new HashMap<>();
         List<FavouritesOsidDTO> springDetailsDTOList = new ArrayList<>();
 
-        String osid=null;
+        String osid = null;
 
         if (requestDTO.getRequest().keySet().contains("favourites")) {
             favouritesMap.put("@type", "favourites");
@@ -1641,29 +1640,34 @@ public class UserServiceImpl implements UserService {
                     FavouritesOsidDTO favouritesData = new FavouritesOsidDTO();
                     favouritesData.setSpringCode((String) favourites.get("springCode"));
                     favouritesData.setUserId((String) favourites.get("userId"));
-                    favouritesData.setOsid((String)favourites.get("osid"));
+                    favouritesData.setOsid((String) favourites.get("osid"));
                     springDetailsDTOList.add(favouritesData);
                 });
+                Boolean flag = true;
+                for (int i = 0; i < springDetailsDTOList.size(); i++) {
+                    if ((!springDetailsDTOList.isEmpty()) && (springDetailsDTOList.get(i).getSpringCode().equals(favouritesDTO.getSpringCode()))) {
+                        flag = false;
+                        break;
+                    }
+                }
 
-                for (int i = 0; i <= springDetailsDTOList.size() ; i++) {
-                        if (springDetailsDTOList.size()>0 && springDetailsDTOList.get(i).getSpringCode().equalsIgnoreCase(favouritesDTO.getSpringCode()) && springDetailsDTOList.get(i).getUserId().equalsIgnoreCase(favouritesDTO.getUserId())){
-                            JSONObject object = new JSONObject(springDetailsDTOList.get(i));
-                            osid = (String) object.get("osid");
-                            deleteExistingRecord(osid, adminToken,requestDTO);
-                            break;
-                        }
+                if (flag){
+                    createFavouriteRecord(adminToken, requestDTO);
+                }
 
-                        else if((springDetailsDTOList.size()==0) || (!springDetailsDTOList.get(i).getSpringCode().equals(favouritesDTO)) ){
-                            createFavouriteRecord(adminToken, requestDTO);
-                            break;
-                        }
-
+                for (int i = 0; i < springDetailsDTOList.size(); i++) {
+                    if (springDetailsDTOList.size() > 0 && springDetailsDTOList.get(i).getSpringCode().equalsIgnoreCase(favouritesDTO.getSpringCode()) && springDetailsDTOList.get(i).getUserId().equalsIgnoreCase(favouritesDTO.getUserId()) && !flag) {
+                        JSONObject object = new JSONObject(springDetailsDTOList.get(i));
+                        osid = (String) object.get("osid");
+                        deleteExistingRecord(osid, adminToken, requestDTO);
+                        break;
+                    }
                 }
 
             }
 
 
-    }catch (Exception e) {
+        } catch (Exception e) {
             log.error("Error creating registry entry : {} ", e.getMessage());
             throw new InternalServerException("Internal server error");
 
@@ -1696,7 +1700,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private void deleteExistingRecord(String osid, String adminToken, RequestDTO requestDTO) throws IOException{
+    private void deleteExistingRecord(String osid, String adminToken, RequestDTO requestDTO) throws IOException {
         FavouritesOsidDTO deleteFavourites = new FavouritesOsidDTO();
         FavouritesDTO favouritesDTO = mapper.convertValue(requestDTO.getRequest().get("favourites"), FavouritesDTO.class);
         deleteFavourites.setOsid(osid.substring(2));
@@ -1704,15 +1708,16 @@ public class UserServiceImpl implements UserService {
         deleteFavourites.setUserId(favouritesDTO.getUserId());
 
 
-        Map<String ,Object> osidForDelition = new HashMap<>();
-        osidForDelition.put("osid",deleteFavourites.getOsid());
+        Map<String, Object> osidForDelition = new HashMap<>();
+        osidForDelition.put("osid", deleteFavourites.getOsid());
 
-         String stringRequest = objectMapper.writeValueAsString(osidForDelition);
+        String stringRequest = objectMapper.writeValueAsString(osidForDelition);
         RegistryRequest registryRequest = new RegistryRequest(null, osidForDelition, RegistryResponse.API_ID.DELETE.getId(), stringRequest);
 
         try {
             Call<RegistryResponse> createRegistryEntryCall = registryDAO.deleteUser(adminToken, registryRequest);
-            Response<RegistryResponse> registryUserCreationResponse = createRegistryEntryCall.execute();;
+            Response<RegistryResponse> registryUserCreationResponse = createRegistryEntryCall.execute();
+            ;
             if (!registryUserCreationResponse.isSuccessful()) {
                 log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
 
@@ -1734,7 +1739,7 @@ public class UserServiceImpl implements UserService {
 
         Map<String, Object> response = new HashMap<>();
         if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("favourites")) {
-            RetrieveFavouritesDTO getfavouritesData =new RetrieveFavouritesDTO();
+            RetrieveFavouritesDTO getfavouritesData = new RetrieveFavouritesDTO();
             getfavouritesData = mapper.convertValue(requestDTO.getRequest().get("favourites"), RetrieveFavouritesDTO.class);
             Map<String, Object> FavouritesData = new HashMap<>();
             List<FavouriteSpringsDTO> favouriteSpringsList = new ArrayList<>();
@@ -1744,7 +1749,7 @@ public class UserServiceImpl implements UserService {
 
             try {
 
-                List<String> springCodeList= new ArrayList<>();
+                List<String> springCodeList = new ArrayList<>();
                 Call<RegistryResponse> createRegistryEntryCall = registryDao.findEntitybyId(adminToken, registryRequest);
                 registryUserCreationResponse = createRegistryEntryCall.execute();
                 if (!registryUserCreationResponse.isSuccessful()) {
@@ -1755,11 +1760,11 @@ public class UserServiceImpl implements UserService {
                     BeanUtils.copyProperties(registryUserCreationResponse.body(), registryResponse);
                     List<LinkedHashMap> springsList = (List<LinkedHashMap>) registryResponse.getResult();
                     springsList.stream().forEach(springs -> {
-                        springCodeList.add((String) springs.get("springCode")) ;
+                        springCodeList.add((String) springs.get("springCode"));
                     });
 
                     favouriteSpringsList = getAllSpringsForFavourites(adminToken, requestDTO, springCodeList);
-                 log.info("######################","");
+                    log.info("######################", "");
 
                     response.put("responseCode", 200);
                     response.put("responseStatus", "successfull");
@@ -1820,10 +1825,10 @@ public class UserServiceImpl implements UserService {
                     springDetailsDTOList.add(favouritesData);
                 });
 
-                for (int i = 0; i < springDetailsDTOList.size() ; i++) {
+                for (int i = 0; i < springDetailsDTOList.size(); i++) {
                     for (int j = 0; j < springCodeList.size(); j++) {
                         log.info("**********8");
-                        if (springDetailsDTOList.get(i).getSpringCode().equals(springCodeList.get(j))){
+                        if (springDetailsDTOList.get(i).getSpringCode().equals(springCodeList.get(j))) {
                             favouritesDTOList.add(springDetailsDTOList.get(i));
                         }
                     }
@@ -1872,7 +1877,6 @@ public class UserServiceImpl implements UserService {
         }
         return pointsDTOList;
     }
-
 
 
     private LoginAndRegisterResponseMap getNotificationCountResponse(Response registryUserCreationResponse, RequestDTO requestDTO, String userId) {
