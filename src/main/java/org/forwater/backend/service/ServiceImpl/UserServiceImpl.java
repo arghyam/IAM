@@ -1765,8 +1765,8 @@ public class UserServiceImpl implements UserService {
                     });
 
                     favouriteSpringsList = getAllSpringsForFavourites(adminToken, requestDTO, springCodeList);
-                    if (favouriteSpringsList.size()>3){
-                        for (int i = favouriteSpringsList.size()-1; i > favouriteSpringsList.size()-4; i--) {
+                    if (favouriteSpringsList.size()>20){
+                        for (int i = favouriteSpringsList.size()-1; i > favouriteSpringsList.size()-21; i--) {
                             Map<String,Object> favSpring = new HashMap<>();
                             favSpring.put("springName",favouriteSpringsList.get(i).getSpringName());
                             favSpring.put("address",favouriteSpringsList.get(i).getAddress());
