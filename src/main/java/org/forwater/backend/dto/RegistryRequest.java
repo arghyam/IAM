@@ -17,10 +17,6 @@ public class RegistryRequest {
     @JsonIgnore
     private JsonNode requestMapNode;
 
-    public RegistryRequest() {
-        this.ver = "1.0";
-        this.ets = System.currentTimeMillis();
-    }
 
     public RegistryRequest(RequestParams params, Map<String, Object> request, String id, String requestMapString) {
         this.ver = "1.0";
