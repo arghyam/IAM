@@ -1742,6 +1742,7 @@ public class UserServiceImpl implements UserService {
             RetrieveFavouritesDTO getfavouritesData = new RetrieveFavouritesDTO();
             getfavouritesData = mapper.convertValue(requestDTO.getRequest().get("favourites"), RetrieveFavouritesDTO.class);
             Map<String, Object> FavouritesData = new HashMap<>();
+            List<Map<String, Object>> finalResponse = new ArrayList<>();
             List<FavouriteSpringsDTO> favouriteSpringsList = new ArrayList<>();
             FavouritesData.put("favourites", getfavouritesData);
             String stringRequest = objectMapper.writeValueAsString(FavouritesData);
@@ -1764,11 +1765,40 @@ public class UserServiceImpl implements UserService {
                     });
 
                     favouriteSpringsList = getAllSpringsForFavourites(adminToken, requestDTO, springCodeList);
+                    if (favouriteSpringsList.size()>3){
+                        for (int i = favouriteSpringsList.size()-1; i > favouriteSpringsList.size()-4; i--) {
+                            Map<String,Object> favSpring = new HashMap<>();
+                            favSpring.put("springName",favouriteSpringsList.get(i).getSpringName());
+                            favSpring.put("address",favouriteSpringsList.get(i).getAddress());
+                            favSpring.put("images",favouriteSpringsList.get(i).getImages());
+                            favSpring.put("springCode",favouriteSpringsList.get(i).getSpringCode());
+                            favSpring.put("ownershipType",favouriteSpringsList.get(i).getOwnershipType());
+                            favSpring.put("userId",favouriteSpringsList.get(i).getUserId());
+
+                            finalResponse.add(favSpring);
+                            log.info("**************************");
+
+                        }
+                    }
+                    else{
+                        for (int i = favouriteSpringsList.size()-1; i >=0; i--) {
+                            Map<String,Object> favSpring = new HashMap<>();
+                            favSpring.put("springName",favouriteSpringsList.get(i).getSpringName());
+                            favSpring.put("address",favouriteSpringsList.get(i).getAddress());
+                            favSpring.put("images",favouriteSpringsList.get(i).getImages());
+                            favSpring.put("springCode",favouriteSpringsList.get(i).getSpringCode());
+                            favSpring.put("ownershipType",favouriteSpringsList.get(i).getOwnershipType());
+                            favSpring.put("userId",favouriteSpringsList.get(i).getUserId());
+                            finalResponse.add(favSpring);
+
+                        }
+                    }
+
                     log.info("######################", "");
 
                     response.put("responseCode", 200);
                     response.put("responseStatus", "successfull");
-                    response.put("responseObject", favouriteSpringsList);
+                    response.put("responseObject", finalResponse);
                     BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
                     loginAndRegisterResponseMap.setResponse(response);
                 }
@@ -1825,11 +1855,11 @@ public class UserServiceImpl implements UserService {
                     springDetailsDTOList.add(favouritesData);
                 });
 
-                for (int i = 0; i < springDetailsDTOList.size(); i++) {
-                    for (int j = 0; j < springCodeList.size(); j++) {
+                for (int i = 0; i < springCodeList.size(); i++) {
+                    for (int j = 0; j < springDetailsDTOList.size(); j++) {
                         log.info("**********8");
-                        if (springDetailsDTOList.get(i).getSpringCode().equals(springCodeList.get(j))) {
-                            favouritesDTOList.add(springDetailsDTOList.get(i));
+                        if (springDetailsDTOList.get(j).getSpringCode().equals(springCodeList.get(i))) {
+                            favouritesDTOList.add(springDetailsDTOList.get(j));
                         }
                     }
                 }
