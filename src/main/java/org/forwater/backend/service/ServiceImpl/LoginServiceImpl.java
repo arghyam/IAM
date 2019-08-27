@@ -277,6 +277,7 @@ public class LoginServiceImpl implements LoginService {
     private LoginAndRegisterResponseMap getActivitiesResponse(Response registryUserCreationResponse, RequestDTO requestDTO) {
         Map<String,Object> activitiesMap=new HashMap<>();
         Map<String,Object> responseObjectMap=new HashMap<>();
+        List<Map<String, Object>> finalResponse = new ArrayList<>();
         LoginAndRegisterResponseMap activitiesResponse=new LoginAndRegisterResponseMap();
         activitiesResponse.setId(requestDTO.getId());
         activitiesResponse.setEts(requestDTO.getEts());
@@ -295,8 +296,41 @@ public class LoginServiceImpl implements LoginService {
             activityData.add(activityResponse);
         });
 
+        if (activityData.size()>20){
+            for (int i = activityData.size()-1; i > activityData.size()-21; i--) {
+                Map<String,Object> myActivitesMap = new HashMap<>();
+                myActivitesMap.put("springName",activityData.get(i).getSpringName());
+                myActivitesMap.put("address",activityData.get(i).getCreatedAt());
+                myActivitesMap.put("images",activityData.get(i).getAction());
+                myActivitesMap.put("springCode",activityData.get(i).getSpringCode());
+                myActivitesMap.put("ownershipType",activityData.get(i).getLatitude());
+                myActivitesMap.put("userId",activityData.get(i).getUserId());
+                myActivitesMap.put("ownershipType",activityData.get(i).getLongitude());
+
+
+                finalResponse.add(myActivitesMap);
+                log.info("**************************");
+
+            }
+        }
+        else{
+            for (int i = activityData.size()-1; i >=0; i--) {
+                Map<String,Object> myActivitesMap = new HashMap<>();
+                myActivitesMap.put("springName",activityData.get(i).getSpringName());
+                myActivitesMap.put("address",activityData.get(i).getCreatedAt());
+                myActivitesMap.put("images",activityData.get(i).getAction());
+                myActivitesMap.put("springCode",activityData.get(i).getSpringCode());
+                myActivitesMap.put("ownershipType",activityData.get(i).getLatitude());
+                myActivitesMap.put("userId",activityData.get(i).getUserId());
+                myActivitesMap.put("ownershipType",activityData.get(i).getLongitude());
+
+
+                finalResponse.add(myActivitesMap);
+
+            }
+        }
         activitiesMap.put("activities",activityData);
-        responseObjectMap.put("responseObject",activitiesMap);
+        responseObjectMap.put("responseObject",finalResponse);
         responseObjectMap.put("responseCode",200);
         responseObjectMap.put("responseStatus","successfull");
         activitiesResponse.setResponse(responseObjectMap);
