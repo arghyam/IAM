@@ -1857,10 +1857,11 @@ public class UserServiceImpl implements UserService {
                     }
 
                     log.info("######################", "");
-
+Map<String,Object> favResponse = new HashMap<>();
+favResponse.put("favSpring", finalResponse);
                     response.put("responseCode", 200);
                     response.put("responseStatus", "successfull");
-                    response.put("responseObject", finalResponse);
+                    response.put("responseObject", favResponse);
                     BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
                     loginAndRegisterResponseMap.setResponse(response);
                 }
