@@ -330,7 +330,7 @@ public class LoginServiceImpl implements LoginService {
             }
         }
         activitiesMap.put("activities",activityData);
-        responseObjectMap.put("responseObject",finalResponse);
+        responseObjectMap.put("responseObject",activitiesMap);
         responseObjectMap.put("responseCode",200);
         responseObjectMap.put("responseStatus","successfull");
         activitiesResponse.setResponse(responseObjectMap);
