@@ -1576,7 +1576,6 @@ public class UserServiceImpl implements UserService {
         shapeFactory.setHeight(point / (40075000 * Math.cos(Math.toRadians(deduplicationDTO.getLatitude())) / 360));
         Polygon circle = shapeFactory.createEllipse();
         List<PointsDTO> geograhicalPointsList = getAllPoints(requestDTO, adminToken);
-        List<PointsDTO> deduplicationPointsList = new ArrayList<>();
 
         for (PointsDTO pointsDTO : geograhicalPointsList) {
             Double distance = distance(deduplicationDTO.getLatitude(), deduplicationDTO.getLongitude(),
@@ -1587,23 +1586,18 @@ public class UserServiceImpl implements UserService {
         geograhicalPointsList.sort(new SortByDistance());
         for (PointsDTO pointsDTO : geograhicalPointsList) {
             if (circle.contains(pointsDTO.getPoint())) {
-                finalPoint.add(pointsDTO.getSpringCode());
                 System.out.println(pointsDTO.getDistance());
-        for (int i = 0; i < geograhicalPointsList.size(); i++) {
+                Map<String, Object> finalPoint = new HashMap<>();
 
-            if (circle.contains(geograhicalPointsList.get(i).getPoint())) {
-                Map<String,Object> finalPoint = new HashMap<>();
-
-                finalPoint.put("springCode",geograhicalPointsList.get(i).getSpringCode());
-                finalPoint.put("ownershipType",geograhicalPointsList.get(i).getOwnershipType());
-                finalPoint.put("springName",geograhicalPointsList.get(i).getSpringName());
-                finalPoint.put("address",geograhicalPointsList.get(i).getAddress());
-                finalPoint.put("images",geograhicalPointsList.get(i).getImages());
+                finalPoint.put("springCode", pointsDTO.getSpringCode());
+                finalPoint.put("ownershipType", pointsDTO.getOwnershipType());
+                finalPoint.put("springName", pointsDTO.getSpringName());
+                finalPoint.put("address", pointsDTO.getAddress());
+                finalPoint.put("images", pointsDTO.getImages());
                 finalResponse.add(finalPoint);
             }
         }
-
-        Map<String, Object>responseMap = new HashMap<>();
+        Map<String, Object> responseMap = new HashMap<>();
         responseMap.put("springs", finalResponse);
         response.put("responseCode", 200);
         response.put("responseStatus", "successful");
@@ -1613,17 +1607,16 @@ public class UserServiceImpl implements UserService {
         return loginAndRegisterResponseMap;
     }
 
-    static class SortByDistance implements Comparator<PointsDTO>
-    {
+    class SortByDistance implements Comparator<PointsDTO> {
         public int compare(PointsDTO a, PointsDTO b) {
             return a.getDistance().compareTo(b.getDistance());
         }
     }
+
     private static double distance(double lat1, double lon1, double lat2, double lon2) {
         if ((lat1 == lat2) && (lon1 == lon2)) {
             return 0;
-        }
-        else {
+        } else {
             double theta = lon1 - lon2;
             double dist = Math.sin(Math.toRadians(lat1)) * Math.sin(Math.toRadians(lat2)) + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.cos(Math.toRadians(theta));
             dist = Math.acos(dist);
@@ -1694,7 +1687,7 @@ public class UserServiceImpl implements UserService {
                     }
                 }
 
-                if (flag){
+                if (flag) {
                     createFavouriteRecord(adminToken, requestDTO);
                 }
 
@@ -1808,30 +1801,29 @@ public class UserServiceImpl implements UserService {
                     });
 
                     favouriteSpringsList = getAllSpringsForFavourites(adminToken, requestDTO, springCodeList);
-                    if (favouriteSpringsList.size()>20){
-                        for (int i = favouriteSpringsList.size()-1; i > favouriteSpringsList.size()-21; i--) {
-                            Map<String,Object> favSpring = new HashMap<>();
-                            favSpring.put("springName",favouriteSpringsList.get(i).getSpringName());
-                            favSpring.put("address",favouriteSpringsList.get(i).getAddress());
-                            favSpring.put("images",favouriteSpringsList.get(i).getImages());
-                            favSpring.put("springCode",favouriteSpringsList.get(i).getSpringCode());
-                            favSpring.put("ownershipType",favouriteSpringsList.get(i).getOwnershipType());
-                            favSpring.put("userId",favouriteSpringsList.get(i).getUserId());
+                    if (favouriteSpringsList.size() > 20) {
+                        for (int i = favouriteSpringsList.size() - 1; i > favouriteSpringsList.size() - 21; i--) {
+                            Map<String, Object> favSpring = new HashMap<>();
+                            favSpring.put("springName", favouriteSpringsList.get(i).getSpringName());
+                            favSpring.put("address", favouriteSpringsList.get(i).getAddress());
+                            favSpring.put("images", favouriteSpringsList.get(i).getImages());
+                            favSpring.put("springCode", favouriteSpringsList.get(i).getSpringCode());
+                            favSpring.put("ownershipType", favouriteSpringsList.get(i).getOwnershipType());
+                            favSpring.put("userId", favouriteSpringsList.get(i).getUserId());
 
                             finalResponse.add(favSpring);
                             log.info("**************************");
 
                         }
-                    }
-                    else{
-                        for (int i = favouriteSpringsList.size()-1; i >=0; i--) {
-                            Map<String,Object> favSpring = new HashMap<>();
-                            favSpring.put("springName",favouriteSpringsList.get(i).getSpringName());
-                            favSpring.put("address",favouriteSpringsList.get(i).getAddress());
-                            favSpring.put("images",favouriteSpringsList.get(i).getImages());
-                            favSpring.put("springCode",favouriteSpringsList.get(i).getSpringCode());
-                            favSpring.put("ownershipType",favouriteSpringsList.get(i).getOwnershipType());
-                            favSpring.put("userId",favouriteSpringsList.get(i).getUserId());
+                    } else {
+                        for (int i = favouriteSpringsList.size() - 1; i >= 0; i--) {
+                            Map<String, Object> favSpring = new HashMap<>();
+                            favSpring.put("springName", favouriteSpringsList.get(i).getSpringName());
+                            favSpring.put("address", favouriteSpringsList.get(i).getAddress());
+                            favSpring.put("images", favouriteSpringsList.get(i).getImages());
+                            favSpring.put("springCode", favouriteSpringsList.get(i).getSpringCode());
+                            favSpring.put("ownershipType", favouriteSpringsList.get(i).getOwnershipType());
+                            favSpring.put("userId", favouriteSpringsList.get(i).getUserId());
                             finalResponse.add(favSpring);
 
                         }
@@ -1960,7 +1952,6 @@ public class UserServiceImpl implements UserService {
         }
         return pointsDTOList;
     }
-
 
 
     private LoginAndRegisterResponseMap getNotificationCountResponse(Response registryUserCreationResponse, RequestDTO requestDTO, String userId) {
