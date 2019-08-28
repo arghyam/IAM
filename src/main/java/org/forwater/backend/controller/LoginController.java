@@ -22,7 +22,6 @@ import org.springframework.http.MediaType;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import retrofit2.http.Query;
 
 import java.io.IOException;
 
@@ -106,10 +105,12 @@ public class LoginController {
         return responseDTO;
     }
 
-    @RequestMapping(value = "/user/myActivities", method = RequestMethod.POST)
-    LoginAndRegisterResponseMap myActivities(@ApiParam(value = "generate accessToken body", required = true, name="generate accessToken body")@RequestBody  RequestDTO requestDTO) throws IOException {
+    @RequestMapping(value = "/user/{userId}/activities", method = RequestMethod.POST)
+    LoginAndRegisterResponseMap myActivities(@ApiParam(value = "userId", example = "012345", required = true)
+                                             @PathVariable(value = "userId") String userId,@Validated @RequestBody RequestDTO requestDTO,
+                                             BindingResult bindingResult) throws IOException {
 
-        return loginService.myactivities(requestDTO);
+        return loginService.myactivities(userId,requestDTO);
     }
 
 }

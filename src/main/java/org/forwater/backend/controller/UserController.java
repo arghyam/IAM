@@ -106,10 +106,12 @@ public class UserController {
     }
 
 
-    @PostMapping(value = "/getAdditionalDetailsForSpring")
-    public LoginAndRegisterResponseMap getAdditionalDetailsForSpring(@ApiParam(value = "spring", required = true, name="spring") @Validated @RequestBody RequestDTO requestDTO,
-                                                     BindingResult bindingResult) throws IOException {
-        return userService.getAdditionalDetailsForSpring(requestDTO, bindingResult);
+    @PostMapping(value = "/springs/{springCode}/additionaldetails")
+    public LoginAndRegisterResponseMap getAdditionalDetailsForSpring(@ApiParam(value = "springCode", example = "012345", required = true)
+                                                                         @PathVariable(value = "springCode") String springCode,
+                                                                     @ApiParam(value = "addtitionalData", required = true, name="addtitionalData") @Validated @RequestBody RequestDTO requestDTO,
+                                                                     BindingResult bindingResult) throws IOException {
+        return userService.getAdditionalDetailsForSpring(springCode,requestDTO, bindingResult);
     }
 
 
@@ -119,19 +121,18 @@ public class UserController {
     }
 
 
-    @RequestMapping(value = "/notifications/{userId}", method = RequestMethod.POST)
-    LoginAndRegisterResponseMap myActivities(@ApiParam(value = "generate accessToken body", required = true,
-            name="generate accessToken body")@RequestBody  RequestDTO requestDTO,
-                                             @PathVariable(value = "userId") String userId) throws IOException {
-
+    @RequestMapping(value = "/users/{userId}/notifications", method = RequestMethod.POST)
+    LoginAndRegisterResponseMap notifications(@ApiParam(value = "userId", example = "012345", required = true)
+                                             @PathVariable(value = "userId") String userId,@Validated @RequestBody RequestDTO requestDTO,
+                                             BindingResult bindingResult) throws IOException {
         return userService.getAllNotifications(requestDTO,userId);
     }
 
 
-    @RequestMapping(value = "/notificationCount/{userId}", method = RequestMethod.POST)
-    LoginAndRegisterResponseMap getNotificationCount(@ApiParam(value = "generate accessToken body", required = true,
-            name="generate accessToken body")@RequestBody  RequestDTO requestDTO,
-                                             @PathVariable(value = "userId") String userId) throws IOException {
+    @RequestMapping(value = "/users/{userId}/notificationCount", method = RequestMethod.POST)
+    LoginAndRegisterResponseMap getNotificationCount(@ApiParam(value = "userId", example = "012345", required = true)
+                                                     @PathVariable(value = "userId") String userId,@Validated @RequestBody RequestDTO requestDTO,
+                                                     BindingResult bindingResult) throws IOException {
 
         return userService.getNotificationCount(requestDTO,userId);
     }
@@ -143,13 +144,13 @@ public class UserController {
         return userService.deduplication(requestDTO);
     }
 
-    @RequestMapping(value = "/favourites", method = RequestMethod.POST)
+    @RequestMapping(value = "/users/favourites", method = RequestMethod.POST)
     LoginAndRegisterResponseMap favourites(@ApiParam(value = "generate accessToken body", required = true,
             name="generate accessToken body")@RequestBody  RequestDTO requestDTO) throws IOException {
         return userService.favourites(requestDTO);
     }
 
-    @RequestMapping(value = "/getFavourites", method = RequestMethod.POST)
+    @RequestMapping(value = "/users/getFavourites", method = RequestMethod.POST)
     LoginAndRegisterResponseMap getFavourites(@ApiParam(value = "generate accessToken body", required = true,
             name="generate accessToken body")@RequestBody  RequestDTO requestDTO) throws IOException {
         return userService.getFavourites(requestDTO);

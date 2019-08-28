@@ -1247,7 +1247,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public LoginAndRegisterResponseMap getAdditionalDetailsForSpring(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+    public LoginAndRegisterResponseMap getAdditionalDetailsForSpring(String springCode, RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
         retrofit2.Response registryUserCreationResponse = null;
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());

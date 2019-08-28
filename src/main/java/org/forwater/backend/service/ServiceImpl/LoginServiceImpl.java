@@ -237,7 +237,7 @@ public class LoginServiceImpl implements LoginService {
     }
 
     @Override
-    public LoginAndRegisterResponseMap myactivities(RequestDTO requestDTO) throws IOException {
+    public LoginAndRegisterResponseMap myactivities(String userId, RequestDTO requestDTO) throws IOException {
         retrofit2.Response registryUserCreationResponse = null;
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
