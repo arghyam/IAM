@@ -138,10 +138,10 @@ public class UserController {
     }
 
 
-    @RequestMapping(value = "/deduplication", method = RequestMethod.POST)
+    @RequestMapping(value = "/searchByLocation", method = RequestMethod.POST)
     LoginAndRegisterResponseMap deduplication(@ApiParam(value = "generate accessToken body", required = true,
             name="generate accessToken body")@RequestBody  RequestDTO requestDTO) throws IOException {
-        return userService.deduplication(requestDTO);
+        return userService.searchByLocation(requestDTO);
     }
 
     @RequestMapping(value = "/users/favourites", method = RequestMethod.POST)
