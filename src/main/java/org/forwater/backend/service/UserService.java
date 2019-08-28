@@ -41,7 +41,7 @@ public interface UserService {
 
     public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult, Integer pageNumber) throws IOException;
 
-    public LoginAndRegisterResponseMap getAdditionalDetailsForSpring(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
+    public LoginAndRegisterResponseMap getAdditionalDetailsForSpring(String springCode,RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
     public LoginAndRegisterResponseMap reviewerData(RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
@@ -49,7 +49,7 @@ public interface UserService {
 
     LoginAndRegisterResponseMap getNotificationCount(RequestDTO requestDTO, String userId) throws IOException;
 
-    LoginAndRegisterResponseMap deduplication(RequestDTO requestDTO) throws IOException;
+    LoginAndRegisterResponseMap searchByLocation(RequestDTO requestDTO) throws IOException;
 
     LoginAndRegisterResponseMap favourites(RequestDTO requestDTO) throws IOException;
 

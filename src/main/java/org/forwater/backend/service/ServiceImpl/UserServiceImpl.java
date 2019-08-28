@@ -1247,7 +1247,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public LoginAndRegisterResponseMap getAdditionalDetailsForSpring(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+    public LoginAndRegisterResponseMap getAdditionalDetailsForSpring(String springCode, RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
         retrofit2.Response registryUserCreationResponse = null;
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
@@ -1554,15 +1554,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginAndRegisterResponseMap deduplication(RequestDTO requestDTO) throws IOException {
+    public LoginAndRegisterResponseMap searchByLocation(RequestDTO requestDTO) throws IOException {
 
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         DeduplicationDTO deduplicationDTO = mapper.convertValue(requestDTO.getRequest().get("location"), DeduplicationDTO.class);
         Double point = 0.0;
-        Map<String, Object> response = new HashMap<>();
-        List<String> finalPoint = new ArrayList<>();
+        List<Map<String, Object>> finalResponse = new ArrayList<>();
 
+        Map<String, Object> response = new HashMap<>();
         if (deduplicationDTO.getAccuracy() > 50f) {
             point = deduplicationDTO.getAccuracy();
         } else if (deduplicationDTO.getAccuracy() <= 50f) {
@@ -1589,12 +1589,25 @@ public class UserServiceImpl implements UserService {
             if (circle.contains(pointsDTO.getPoint())) {
                 finalPoint.add(pointsDTO.getSpringCode());
                 System.out.println(pointsDTO.getDistance());
+        for (int i = 0; i < geograhicalPointsList.size(); i++) {
+
+            if (circle.contains(geograhicalPointsList.get(i).getPoint())) {
+                Map<String,Object> finalPoint = new HashMap<>();
+
+                finalPoint.put("springCode",geograhicalPointsList.get(i).getSpringCode());
+                finalPoint.put("ownershipType",geograhicalPointsList.get(i).getOwnershipType());
+                finalPoint.put("springName",geograhicalPointsList.get(i).getSpringName());
+                finalPoint.put("address",geograhicalPointsList.get(i).getAddress());
+                finalPoint.put("images",geograhicalPointsList.get(i).getImages());
+                finalResponse.add(finalPoint);
             }
         }
 
+        Map<String, Object>responseMap = new HashMap<>();
+        responseMap.put("springs", finalResponse);
         response.put("responseCode", 200);
-        response.put("responseStatus", "successfull");
-        response.put("responseObject", finalPoint);
+        response.put("responseStatus", "successful");
+        response.put("responseObject", responseMap);
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         loginAndRegisterResponseMap.setResponse(response);
         return loginAndRegisterResponseMap;
@@ -1693,6 +1706,7 @@ public class UserServiceImpl implements UserService {
                         break;
                     }
                 }
+
             }
 
 
@@ -1766,7 +1780,6 @@ public class UserServiceImpl implements UserService {
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         List<String> recentSearchList = new ArrayList<>();
 
-        Map<String, Object> favouritesList = new HashMap<>();
         Map<String, Object> response = new HashMap<>();
         if (null != requestDTO.getRequest() && requestDTO.getRequest().keySet().contains("favourites")) {
             RetrieveFavouritesDTO getfavouritesData = new RetrieveFavouritesDTO();
@@ -1795,8 +1808,6 @@ public class UserServiceImpl implements UserService {
                     });
 
                     favouriteSpringsList = getAllSpringsForFavourites(adminToken, requestDTO, springCodeList);
-                    favouritesList.put("FavouriteSpring",favouriteSpringsList);
-                 log.info("######################","");
                     if (favouriteSpringsList.size()>20){
                         for (int i = favouriteSpringsList.size()-1; i > favouriteSpringsList.size()-21; i--) {
                             Map<String,Object> favSpring = new HashMap<>();
@@ -1828,11 +1839,9 @@ public class UserServiceImpl implements UserService {
 
                     log.info("######################", "");
 
-                    Map<String,Object> favResponse = new HashMap<>();
-                    favResponse.put("FavouriteSpring",finalResponse);
                     response.put("responseCode", 200);
                     response.put("responseStatus", "successfull");
-                    response.put("responseObject", favResponse);
+                    response.put("responseObject", finalResponse);
                     BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
                     loginAndRegisterResponseMap.setResponse(response);
                 }
@@ -1933,6 +1942,16 @@ public class UserServiceImpl implements UserService {
                     PointsDTO pointResponse = new PointsDTO();
                     pointResponse.setPoint(point);
                     pointResponse.setSpringCode((String) points.get("springCode"));
+                    pointResponse.setAddress((String) points.get("address"));
+                    pointResponse.setOwnershipType((String) points.get("ownershipType"));
+                    pointResponse.setSpringName((String) points.get("springName"));
+                    if (points.get("images").getClass().toString().equals("class java.lang.String")) {
+                        String result = (String) points.get("images");
+                        result = new StringBuilder(result).deleteCharAt(0).toString();
+                        result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
+                        List<String> images = asList(result);
+                        pointResponse.setImages(images);
+                    }
                     pointsDTOList.add(pointResponse);
                 });
             }
@@ -1996,14 +2015,9 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> activitiesMap = new HashMap<>();
         Map<String, Object> responseObjectMap = new HashMap<>();
         LoginAndRegisterResponseMap activitiesResponse = new LoginAndRegisterResponseMap();
-        activitiesResponse.setId(requestDTO.getId());
-        activitiesResponse.setEts(requestDTO.getEts());
-        activitiesResponse.setVer(requestDTO.getVer());
-        activitiesResponse.setParams(requestDTO.getParams());
         RegistryResponse registryResponse = new RegistryResponse();
         registryResponse = (RegistryResponse) registryUserCreationResponse.body();
         BeanUtils.copyProperties(requestDTO, activitiesResponse);
-        Map<String, Object> response = new HashMap<>();
 
         List<LinkedHashMap> activitiesList = (List<LinkedHashMap>) registryResponse.getResult();
         List<NotificationDTOEntity> activityData = new ArrayList<>();
