@@ -1559,32 +1559,44 @@ public class UserServiceImpl implements UserService {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         DeduplicationDTO deduplicationDTO = mapper.convertValue(requestDTO.getRequest().get("location"), DeduplicationDTO.class);
-        Double point = 0.0;
-        List<Map<String, Object>> finalResponse = new ArrayList<>();
+        Double point = 0.0; //Diameter of the circle in meters
 
         Map<String, Object> response = new HashMap<>();
-        if (deduplicationDTO.getAccuracy() > 50f) {
+        if (deduplicationDTO.getAccuracy() == 0f) {
+            point = 1000.0;
+        } else if (deduplicationDTO.getAccuracy() > 50f) {
             point = deduplicationDTO.getAccuracy();
-        } else if (deduplicationDTO.getAccuracy() <= 50f) {
+        } else if (deduplicationDTO.getAccuracy() <= 50f && deduplicationDTO.getAccuracy() != 0f) {
             point = 50.0;
         }
 
-        GeometricShapeFactory shapeFactory = new GeometricShapeFactory();
-        shapeFactory.setNumPoints(64);
-        shapeFactory.setCentre(new Coordinate(deduplicationDTO.getLatitude(), deduplicationDTO.getLongitude()));
-        shapeFactory.setWidth(point / 111320d);
-        shapeFactory.setHeight(point / (40075000 * Math.cos(Math.toRadians(deduplicationDTO.getLatitude())) / 360));
-        Polygon circle = shapeFactory.createEllipse();
-        List<PointsDTO> geograhicalPointsList = getAllPoints(requestDTO, adminToken);
 
-        for (PointsDTO pointsDTO : geograhicalPointsList) {
+        Map<String, Object> responseMap = new HashMap<>();
+        List<Map<String, Object>> finalResponse = new ArrayList<>();
+        Polygon circle = bounds(deduplicationDTO, point);
+        finalResponse = deduplication(requestDTO,adminToken,deduplicationDTO,circle,point);
+        responseMap.put("springs", finalResponse);
+        response.put("responseCode", 200);
+        response.put("responseStatus", "successful");
+        response.put("responseObject", responseMap);
+        BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+        loginAndRegisterResponseMap.setResponse(response);
+        return loginAndRegisterResponseMap;
+    }
+
+    public List<Map<String, Object>> deduplication(RequestDTO requestDTO, String adminToken, DeduplicationDTO deduplicationDTO, Polygon circle, Double point ) throws IOException {
+
+        List<PointsDTO> geographicalPointsList = getAllPoints(requestDTO, adminToken);
+        List<Map<String, Object>> finalResponse = new ArrayList<>();
+
+        for (PointsDTO pointsDTO : geographicalPointsList) {
             Double distance = distance(deduplicationDTO.getLatitude(), deduplicationDTO.getLongitude(),
                     pointsDTO.getPoint().getX(),
                     pointsDTO.getPoint().getY());
             pointsDTO.setDistance(distance);
         }
-        geograhicalPointsList.sort(new SortByDistance());
-        for (PointsDTO pointsDTO : geograhicalPointsList) {
+        geographicalPointsList.sort(new SortByDistance());
+        for (PointsDTO pointsDTO : geographicalPointsList) {
             if (circle.contains(pointsDTO.getPoint())) {
                 System.out.println(pointsDTO.getDistance());
                 Map<String, Object> finalPoint = new HashMap<>();
@@ -1594,17 +1606,32 @@ public class UserServiceImpl implements UserService {
                 finalPoint.put("springName", pointsDTO.getSpringName());
                 finalPoint.put("address", pointsDTO.getAddress());
                 finalPoint.put("images", pointsDTO.getImages());
+
                 finalResponse.add(finalPoint);
+
             }
         }
-        Map<String, Object> responseMap = new HashMap<>();
-        responseMap.put("springs", finalResponse);
-        response.put("responseCode", 200);
-        response.put("responseStatus", "successful");
-        response.put("responseObject", responseMap);
-        BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
-        loginAndRegisterResponseMap.setResponse(response);
-        return loginAndRegisterResponseMap;
+        while (finalResponse.size() < 5) {
+            if (point == 1000.0)
+                point = 10000.0;
+            else if (point == 10000.0)
+                point = 50000.0;
+            else if (point == 50000.0)
+                point = 500000.0;
+            else if (point == 500000.0)
+                break;
+            circle = bounds(deduplicationDTO, point);
+            finalResponse = deduplication(requestDTO,adminToken,deduplicationDTO,circle,point);
+        }
+        return finalResponse;
+    }
+    public Polygon bounds(DeduplicationDTO deduplicationDTO, Double point) {
+        GeometricShapeFactory shapeFactory = new GeometricShapeFactory();
+        shapeFactory.setNumPoints(64);
+        shapeFactory.setCentre(new Coordinate(deduplicationDTO.getLatitude(), deduplicationDTO.getLongitude()));
+        shapeFactory.setWidth(point / 111320d);
+        shapeFactory.setHeight(point / (40075000 * Math.cos(Math.toRadians(deduplicationDTO.getLatitude())) / 360));
+        return shapeFactory.createEllipse();
     }
 
     class SortByDistance implements Comparator<PointsDTO> {
