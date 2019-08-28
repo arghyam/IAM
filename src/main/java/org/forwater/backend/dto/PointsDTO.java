@@ -8,6 +8,8 @@ public class PointsDTO {
 
     private String springCode;
 
+    private Double distance;
+
     public Point getPoint() {
         return point;
     }
@@ -22,5 +24,13 @@ public class PointsDTO {
 
     public void setSpringCode(String springCode) {
         this.springCode = springCode;
+    }
+
+    public Double getDistance() {
+        return distance;
+    }
+
+    public void setDistance(Double distance) {
+        this.distance = distance;
     }
 }

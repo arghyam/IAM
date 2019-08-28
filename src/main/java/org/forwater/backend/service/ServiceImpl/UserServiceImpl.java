@@ -1576,18 +1576,48 @@ public class UserServiceImpl implements UserService {
         shapeFactory.setHeight(point / (40075000 * Math.cos(Math.toRadians(deduplicationDTO.getLatitude())) / 360));
         Polygon circle = shapeFactory.createEllipse();
         List<PointsDTO> geograhicalPointsList = getAllPoints(requestDTO, adminToken);
+        List<PointsDTO> deduplicationPointsList = new ArrayList<>();
 
-        for (int i = 0; i < geograhicalPointsList.size(); i++) {
-            if (circle.contains(geograhicalPointsList.get(i).getPoint())) {
-                finalPoint.add(geograhicalPointsList.get(i).getSpringCode());
+        for (PointsDTO pointsDTO : geograhicalPointsList) {
+            Double distance = distance(deduplicationDTO.getLatitude(), deduplicationDTO.getLongitude(),
+                    pointsDTO.getPoint().getX(),
+                    pointsDTO.getPoint().getY());
+            pointsDTO.setDistance(distance);
+        }
+        geograhicalPointsList.sort(new SortByDistance());
+        for (PointsDTO pointsDTO : geograhicalPointsList) {
+            if (circle.contains(pointsDTO.getPoint())) {
+                finalPoint.add(pointsDTO.getSpringCode());
+                System.out.println(pointsDTO.getDistance());
             }
         }
+
         response.put("responseCode", 200);
         response.put("responseStatus", "successfull");
         response.put("responseObject", finalPoint);
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         loginAndRegisterResponseMap.setResponse(response);
         return loginAndRegisterResponseMap;
+    }
+
+    static class SortByDistance implements Comparator<PointsDTO>
+    {
+        public int compare(PointsDTO a, PointsDTO b) {
+            return a.getDistance().compareTo(b.getDistance());
+        }
+    }
+    private static double distance(double lat1, double lon1, double lat2, double lon2) {
+        if ((lat1 == lat2) && (lon1 == lon2)) {
+            return 0;
+        }
+        else {
+            double theta = lon1 - lon2;
+            double dist = Math.sin(Math.toRadians(lat1)) * Math.sin(Math.toRadians(lat2)) + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.cos(Math.toRadians(theta));
+            dist = Math.acos(dist);
+            dist = Math.toDegrees(dist);
+            dist = dist * 60 * 1.1515;
+            return (dist);
+        }
     }
 
     @Override
@@ -1663,7 +1693,6 @@ public class UserServiceImpl implements UserService {
                         break;
                     }
                 }
-
             }
 
 
@@ -1799,9 +1828,11 @@ public class UserServiceImpl implements UserService {
 
                     log.info("######################", "");
 
+                    Map<String,Object> favResponse = new HashMap<>();
+                    favResponse.put("FavouriteSpring",finalResponse);
                     response.put("responseCode", 200);
                     response.put("responseStatus", "successfull");
-                    response.put("responseObject", finalResponse);
+                    response.put("responseObject", favResponse);
                     BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
                     loginAndRegisterResponseMap.setResponse(response);
                 }
