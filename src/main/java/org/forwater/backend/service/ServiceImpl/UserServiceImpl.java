@@ -1620,6 +1620,8 @@ public class UserServiceImpl implements UserService {
                 point = 500000.0;
             else if (point == 500000.0)
                 break;
+            else if (point<1000.0)
+                break;
             circle = bounds(deduplicationDTO, point);
             finalResponse = deduplication(requestDTO,adminToken,deduplicationDTO,circle,point);
         }
