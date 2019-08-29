@@ -1860,7 +1860,7 @@ public class UserServiceImpl implements UserService {
 
                     log.info("######################", "");
 Map<String,Object> favResponse = new HashMap<>();
-favResponse.put("favSpring", finalResponse);
+favResponse.put("FavouriteSpring", finalResponse);
                     response.put("responseCode", 200);
                     response.put("responseStatus", "successfull");
                     response.put("responseObject", favResponse);
