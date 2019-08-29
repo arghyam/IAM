@@ -1951,6 +1951,12 @@ favResponse.put("favSpring", finalResponse);
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         Map<String, String> retrievePointsData = new HashMap<>();
         List<PointsDTO> pointsDTOList = new ArrayList<>();
+
+        java.util.Date expiration = new java.util.Date();
+        long expTimeMillis = expiration.getTime();
+        expTimeMillis += 1000 * 60 * 60;
+        expiration.setTime(expTimeMillis);
+
         GeometryFactory geometryFactory = new GeometryFactory();
         if (requestDTO.getRequest().keySet().contains("location")) {
             retrievePointsData.put("@type", "springs");
@@ -1979,12 +1985,22 @@ favResponse.put("favSpring", finalResponse);
                     pointResponse.setAddress((String) points.get("address"));
                     pointResponse.setOwnershipType((String) points.get("ownershipType"));
                     pointResponse.setSpringName((String) points.get("springName"));
-                    if (points.get("images").getClass().toString().equals("class java.lang.String")) {
+                    if (points.get("images").getClass().toString().equals("class java.util.ArrayList")) {
+                        List<URL> imageList = new ArrayList<>();
+                        List<String> imageNewList = new ArrayList<>();
+                        imageList = (List<URL>) points.get("images");
+                        for (int i = 0; i < imageList.size(); i++) {
+                            URL url = amazonS3.generatePresignedUrl(appContext.getBucketName(), "arghyam/" + imageList.get(i), expiration);
+                            imageNewList.add(String.valueOf(url));
+                        }
+                        pointResponse.setImages(imageNewList);
+                    } else if (points.get("images").getClass().toString().equals("class java.lang.String")) {
                         String result = (String) points.get("images");
                         result = new StringBuilder(result).deleteCharAt(0).toString();
                         result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
-                        List<String> images = asList(result);
-                        pointResponse.setImages(images);
+                        List<String> images = Arrays.asList(result);
+                        URL url = amazonS3.generatePresignedUrl(appContext.getBucketName(), "arghyam/" + result, expiration);
+                        pointResponse.setImages(Arrays.asList(String.valueOf(url)));
                     }
                     pointsDTOList.add(pointResponse);
                 });
