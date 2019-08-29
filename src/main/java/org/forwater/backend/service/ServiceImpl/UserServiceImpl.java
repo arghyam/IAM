@@ -1881,6 +1881,11 @@ favResponse.put("favSpring", finalResponse);
         List<FavouriteSpringsDTO> springDetailsDTOList = new ArrayList<>();
         List<FavouriteSpringsDTO> favouritesDTOList = new ArrayList<>();
 
+        java.util.Date expiration = new java.util.Date();
+        long expTimeMillis = expiration.getTime();
+        expTimeMillis += 1000 * 60 * 60;
+        expiration.setTime(expTimeMillis);
+
         if (requestDTO.getRequest().keySet().contains("favourites")) {
             favouritesMap.put("@type", "springs");
         }
@@ -1903,14 +1908,23 @@ favResponse.put("favSpring", finalResponse);
                     FavouriteSpringsDTO favouritesData = new FavouriteSpringsDTO();
                     favouritesData.setAddress((String) springs.get("address"));
 
-                    if (springs.get("images").getClass().toString().equals("class java.lang.String")) {
+                    if (springs.get("images").getClass().toString().equals("class java.util.ArrayList")) {
+                        List<URL> imageList = new ArrayList<>();
+                        List<String> imageNewList = new ArrayList<>();
+                        imageList = (List<URL>) springs.get("images");
+                        for (int i = 0; i < imageList.size(); i++) {
+                            URL url = amazonS3.generatePresignedUrl(appContext.getBucketName(), "arghyam/" + imageList.get(i), expiration);
+                            imageNewList.add(String.valueOf(url));
+                        }
+                        favouritesData.setImages(imageNewList);
+                    } else if (springs.get("images").getClass().toString().equals("class java.lang.String")) {
                         String result = (String) springs.get("images");
                         result = new StringBuilder(result).deleteCharAt(0).toString();
                         result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
-                        List<String> images = asList(result);
-                        favouritesData.setImages(images);
+                        List<String> images = Arrays.asList(result);
+                        URL url = amazonS3.generatePresignedUrl(appContext.getBucketName(), "arghyam/" + result, expiration);
+                        favouritesData.setImages(Arrays.asList(String.valueOf(url)));
                     }
-
                     favouritesData.setOwnershipType((String) springs.get("ownershipType"));
                     favouritesData.setSpringCode((String) springs.get("springCode"));
                     favouritesData.setSpringName((String) springs.get("springName"));
