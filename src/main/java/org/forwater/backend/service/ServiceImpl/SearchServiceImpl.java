@@ -46,6 +46,7 @@ public class SearchServiceImpl implements SearchService {
     @Autowired
     ObjectMapper objectMapper;
 
+
     ObjectMapper mapper = new ObjectMapper();
 
     private static Logger log = LoggerFactory.getLogger(SearchServiceImpl.class);
@@ -1033,6 +1034,7 @@ public class SearchServiceImpl implements SearchService {
         RegistryRequest registryRequest = new RegistryRequest(null, entityMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
         SearchEntity searchEntity = mapper.convertValue(requestDTO.getRequest().get("springs"), SearchEntity.class);
         String searchString =searchEntity.getSearchString();
+        String userId =searchEntity.getUserId();
 
         try {
             Call<RegistryResponse> createRegistryEntryCall = registryDAO.searchUser(adminToken, registryRequest);
@@ -1062,7 +1064,9 @@ public class SearchServiceImpl implements SearchService {
                     convertRegistryResponseToSpring(springResponse, springList.get(i));
                     springData.add(springResponse);
                 }
+
             }
+
             if (!searchEntity.getUserId().isEmpty())
                 recentSearches(adminToken,searchEntity);
             else

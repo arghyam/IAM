@@ -6,13 +6,8 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import org.forwater.backend.dao.Impl.MapMyIndiaServiceImpl;
 import org.forwater.backend.dao.KeycloakDAO;
-import org.forwater.backend.dao.MapMyIndiaDAO;
-import org.forwater.backend.dao.MapMyIndiaService;
 import org.forwater.backend.dao.RegistryDAO;
-import org.forwater.backend.dto.MapMyIndiaDTO;
-import org.forwater.backend.utils.Constants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.OAuth2Constants;
@@ -21,7 +16,10 @@ import org.keycloak.admin.client.KeycloakBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import retrofit2.Call;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import springfox.documentation.builders.ApiInfoBuilder;
@@ -31,6 +29,10 @@ import springfox.documentation.service.ApiInfo;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Optional;
 
 @Configuration
 @EnableSwagger2

@@ -10,6 +10,7 @@ import org.springframework.cache.annotation.EnableCaching;
 @SpringBootApplication
 @EnableAutoConfiguration
 @EnableCaching
+
 public class SpringUserApplication {
 
     @Autowired
