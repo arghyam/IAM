@@ -2055,7 +2055,7 @@ favResponse.put("FavouriteSpring", finalResponse);
         List<UserRepresentation> a = null;
         try {
             String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
-            a = keycloakService.getUsersBasedonRoleName("arghyam-reviewer", adminToken);
+            a = keycloakService.getUsersBasedonRoleName("Arghyam-reviewer", adminToken);
         } catch (Exception e) {
             e.printStackTrace();
         }
