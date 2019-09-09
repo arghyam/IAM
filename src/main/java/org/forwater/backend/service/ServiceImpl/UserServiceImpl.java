@@ -1668,7 +1668,7 @@ public class UserServiceImpl implements UserService {
 
         existanceOfFavourite(favouritesDTO, adminToken, requestDTO);
         response.put("responseCode", 200);
-        response.put("responseStatus", "successfull");
+        response.put("responseStatus", "successful");
         response.put("responseObject", favouritesDTO);
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         loginAndRegisterResponseMap.setResponse(response);
@@ -1710,7 +1710,8 @@ public class UserServiceImpl implements UserService {
                 });
                 Boolean flag = true;
                 for (int i = 0; i < springDetailsDTOList.size(); i++) {
-                    if ((!springDetailsDTOList.isEmpty()) && (springDetailsDTOList.get(i).getSpringCode().equals(favouritesDTO.getSpringCode()))) {
+                    if ((!springDetailsDTOList.isEmpty()) && (springDetailsDTOList.get(i).getSpringCode().equals(favouritesDTO.getSpringCode()))
+                            && (springDetailsDTOList.get(i).getUserId().equals(favouritesDTO.getUserId()))) {
                         flag = false;
                         break;
                     }
@@ -1721,7 +1722,8 @@ public class UserServiceImpl implements UserService {
                 }
 
                 for (int i = 0; i < springDetailsDTOList.size(); i++) {
-                    if (springDetailsDTOList.size() > 0 && springDetailsDTOList.get(i).getSpringCode().equalsIgnoreCase(favouritesDTO.getSpringCode()) && springDetailsDTOList.get(i).getUserId().equalsIgnoreCase(favouritesDTO.getUserId()) && !flag) {
+                    if (springDetailsDTOList.size() > 0 && springDetailsDTOList.get(i).getSpringCode().equalsIgnoreCase(favouritesDTO.getSpringCode())
+                            && springDetailsDTOList.get(i).getUserId().equalsIgnoreCase(favouritesDTO.getUserId()) && !flag) {
                         JSONObject object = new JSONObject(springDetailsDTOList.get(i));
                         osid = (String) object.get("osid");
                         deleteExistingRecord(osid, adminToken, requestDTO);
@@ -1829,7 +1831,7 @@ public class UserServiceImpl implements UserService {
                         springCodeList.add((String) springs.get("springCode"));
                     });
 
-                    favouriteSpringsList = getAllSpringsForFavourites(adminToken, requestDTO, springCodeList);
+                    favouriteSpringsList = getAllSpringsForFavourites(adminToken, requestDTO, springCodeList, getfavouritesData);
                     if (favouriteSpringsList.size() > 20) {
                         for (int i = favouriteSpringsList.size() - 1; i > favouriteSpringsList.size() - 21; i--) {
                             Map<String, Object> favSpring = new HashMap<>();
@@ -1839,7 +1841,6 @@ public class UserServiceImpl implements UserService {
                             favSpring.put("springCode", favouriteSpringsList.get(i).getSpringCode());
                             favSpring.put("ownershipType", favouriteSpringsList.get(i).getOwnershipType());
                             favSpring.put("userId", favouriteSpringsList.get(i).getUserId());
-
                             finalResponse.add(favSpring);
                             log.info("**************************");
 
@@ -1858,9 +1859,8 @@ public class UserServiceImpl implements UserService {
                         }
                     }
 
-                    log.info("######################", "");
-Map<String,Object> favResponse = new HashMap<>();
-favResponse.put("FavouriteSpring", finalResponse);
+                    Map<String,Object> favResponse = new HashMap<>();
+                    favResponse.put("FavouriteSpring", finalResponse);
                     response.put("responseCode", 200);
                     response.put("responseStatus", "successfull");
                     response.put("responseObject", favResponse);
@@ -1877,7 +1877,7 @@ favResponse.put("FavouriteSpring", finalResponse);
 
     }
 
-    private List<FavouriteSpringsDTO> getAllSpringsForFavourites(String adminToken, RequestDTO requestDTO, List<String> springCodeList) throws IOException {
+    private List<FavouriteSpringsDTO> getAllSpringsForFavourites(String adminToken, RequestDTO requestDTO, List<String> springCodeList, RetrieveFavouritesDTO getfavouritesData) throws IOException {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         Map<String, String> favouritesMap = new HashMap<>();
         List<FavouriteSpringsDTO> springDetailsDTOList = new ArrayList<>();
