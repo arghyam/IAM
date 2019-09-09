@@ -20,9 +20,12 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import retrofit2.Call;
 import retrofit2.Response;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
@@ -1134,6 +1137,7 @@ public class SearchServiceImpl implements SearchService {
         return loginAndRegisterResponseMap;
     }
 
+
     private void recentSearches(String adminToken,SearchEntity searchEntity) {
         Map<String, Object> entityMap = new HashMap<>();
         Map<String, Object> searchEntityMap = new HashMap<>();
@@ -1236,4 +1240,54 @@ public class SearchServiceImpl implements SearchService {
     }
 
 
+    @Override
+    public LoginAndRegisterResponseMap postAllStates(MultipartFile file) {
+        String csvFile = "/home/anirudh/IdeaProjects/Arghyam-IAM/src/main/resources/states_list.csv";
+        BufferedReader br = null;
+        String line = "";
+        String cvsSplitBy = ",";
+        try {
+            br = new BufferedReader(new FileReader(csvFile));
+            while ((line = br.readLine()) != null) {
+                // use comma as separator
+                String[] state = line.split(cvsSplitBy);
+                HashMap<String, Object> states = new HashMap<>();
+                HashMap<String, Object> springsRequest = new HashMap<>();
+                HashMap<String, Object> paramValues = new HashMap<>();
+                states.put("states", state[0]);
+                springsRequest.put("states", states);
+                RequestDTO requestDTO1 = new RequestDTO();
+                requestDTO1.setRequest(springsRequest);
+                requestDTO1.setEts("11234");
+                requestDTO1.setId("org.forwater.create");
+                requestDTO1.setVer("1.0");
+                requestDTO1.setParams(paramValues);
+                postStates(requestDTO1);
+//                System.out.println(jsonObject);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        HashMap response = new HashMap();
+        HashMap params = new HashMap();
+        response.put("response", "States Created Successfully");
+        LoginAndRegisterResponseMap responseMap = new LoginAndRegisterResponseMap();
+        responseMap.setId("org.forwater.create");
+        responseMap.setVer("1.0");
+        responseMap.setEts("11234");
+        responseMap.setResponse(response);
+        params.put("did","");
+        params.put("key","");
+        params.put("msgid","");
+        responseMap.setParams(params);
+        return responseMap;
+    }
 }

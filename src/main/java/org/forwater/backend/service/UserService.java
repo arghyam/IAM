@@ -54,4 +54,6 @@ public interface UserService {
     LoginAndRegisterResponseMap favourites(RequestDTO requestDTO) throws IOException;
 
     LoginAndRegisterResponseMap getFavourites(RequestDTO requestDTO) throws IOException;
+
+    LoginAndRegisterResponseMap postSprings(MultipartFile file) throws IOException;
 }

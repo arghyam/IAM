@@ -35,18 +35,21 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.PropertyEditorRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.multipart.MultipartFile;
 import retrofit2.Call;
 import retrofit2.Response;
 
-import java.io.File;
-import java.io.IOException;
+import java.beans.PropertyEditor;
+import java.io.*;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.text.ParseException;
@@ -1574,7 +1577,7 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> responseMap = new HashMap<>();
         List<Map<String, Object>> finalResponse = new ArrayList<>();
         Polygon circle = bounds(deduplicationDTO, point);
-        finalResponse = deduplication(requestDTO,adminToken,deduplicationDTO,circle,point);
+        finalResponse = deduplication(requestDTO, adminToken, deduplicationDTO, circle, point);
         responseMap.put("springs", finalResponse);
         response.put("responseCode", 200);
         response.put("responseStatus", "successful");
@@ -1584,7 +1587,7 @@ public class UserServiceImpl implements UserService {
         return loginAndRegisterResponseMap;
     }
 
-    public List<Map<String, Object>> deduplication(RequestDTO requestDTO, String adminToken, DeduplicationDTO deduplicationDTO, Polygon circle, Double point ) throws IOException {
+    public List<Map<String, Object>> deduplication(RequestDTO requestDTO, String adminToken, DeduplicationDTO deduplicationDTO, Polygon circle, Double point) throws IOException {
 
         List<PointsDTO> geographicalPointsList = getAllPoints(requestDTO, adminToken);
         List<Map<String, Object>> finalResponse = new ArrayList<>();
@@ -1620,13 +1623,14 @@ public class UserServiceImpl implements UserService {
                 point = 500000.0;
             else if (point == 500000.0)
                 break;
-            else if (point<1000.0)
+            else if (point < 1000.0)
                 break;
             circle = bounds(deduplicationDTO, point);
-            finalResponse = deduplication(requestDTO,adminToken,deduplicationDTO,circle,point);
+            finalResponse = deduplication(requestDTO, adminToken, deduplicationDTO, circle, point);
         }
         return finalResponse;
     }
+
     public Polygon bounds(DeduplicationDTO deduplicationDTO, Double point) {
         GeometricShapeFactory shapeFactory = new GeometricShapeFactory();
         shapeFactory.setNumPoints(64);
@@ -1830,37 +1834,24 @@ public class UserServiceImpl implements UserService {
                     });
 
                     favouriteSpringsList = getAllSpringsForFavourites(adminToken, requestDTO, springCodeList);
-                    if (favouriteSpringsList.size() > 20) {
-                        for (int i = favouriteSpringsList.size() - 1; i > favouriteSpringsList.size() - 21; i--) {
+                    for (int i = 20; i >= 0; i--) {
+                        for (int j = favouriteSpringsList.size(); j >= 0; j--) {
                             Map<String, Object> favSpring = new HashMap<>();
-                            favSpring.put("springName", favouriteSpringsList.get(i).getSpringName());
-                            favSpring.put("address", favouriteSpringsList.get(i).getAddress());
-                            favSpring.put("images", favouriteSpringsList.get(i).getImages());
-                            favSpring.put("springCode", favouriteSpringsList.get(i).getSpringCode());
-                            favSpring.put("ownershipType", favouriteSpringsList.get(i).getOwnershipType());
-                            favSpring.put("userId", favouriteSpringsList.get(i).getUserId());
+                            favSpring.put("springName", favouriteSpringsList.get(j).getSpringName());
+                            favSpring.put("address", favouriteSpringsList.get(j).getAddress());
+                            favSpring.put("images", favouriteSpringsList.get(j).getImages());
+                            favSpring.put("springCode", favouriteSpringsList.get(j).getSpringCode());
+                            favSpring.put("ownershipType", favouriteSpringsList.get(j).getOwnershipType());
+                            favSpring.put("userId", favouriteSpringsList.get(j).getUserId());
 
                             finalResponse.add(favSpring);
                             log.info("**************************");
 
                         }
-                    } else {
-                        for (int i = favouriteSpringsList.size() - 1; i >= 0; i--) {
-                            Map<String, Object> favSpring = new HashMap<>();
-                            favSpring.put("springName", favouriteSpringsList.get(i).getSpringName());
-                            favSpring.put("address", favouriteSpringsList.get(i).getAddress());
-                            favSpring.put("images", favouriteSpringsList.get(i).getImages());
-                            favSpring.put("springCode", favouriteSpringsList.get(i).getSpringCode());
-                            favSpring.put("ownershipType", favouriteSpringsList.get(i).getOwnershipType());
-                            favSpring.put("userId", favouriteSpringsList.get(i).getUserId());
-                            finalResponse.add(favSpring);
-
-                        }
                     }
-
                     log.info("######################", "");
-Map<String,Object> favResponse = new HashMap<>();
-favResponse.put("FavouriteSpring", finalResponse);
+                    Map<String, Object> favResponse = new HashMap<>();
+                    favResponse.put("FavouriteSpring", finalResponse);
                     response.put("responseCode", 200);
                     response.put("responseStatus", "successfull");
                     response.put("responseObject", favResponse);
@@ -1876,6 +1867,7 @@ favResponse.put("FavouriteSpring", finalResponse);
         return loginAndRegisterResponseMap;
 
     }
+
 
     private List<FavouriteSpringsDTO> getAllSpringsForFavourites(String adminToken, RequestDTO requestDTO, List<String> springCodeList) throws IOException {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
@@ -2129,5 +2121,261 @@ favResponse.put("FavouriteSpring", finalResponse);
 
     }
 
+    @Override
+    public LoginAndRegisterResponseMap postSprings(MultipartFile file) throws IOException {
 
+        File imageFile = AmazonUtils.convertMultiPartToFile(file);
+//        String fileName = AmazonUtils.generateFileName(file);
+
+//        String csvFile = "/home/anirudh/IdeaProjects/Arghyam-IAM/src/main/resources/springs_list.csv";
+        BufferedReader br = null;
+        String line = "";
+        String cvsSplitBy = ",";
+        try {
+            br = new BufferedReader(new FileReader(imageFile));
+            while ((line = br.readLine()) != null) {
+                // use comma as separator
+                String[] spring = line.split(cvsSplitBy);
+                HashMap<String, Object> springs = new HashMap<>();
+                HashMap<String, Object> springsRequest = new HashMap<>();
+                HashMap<String, Object> paramValues = new HashMap<>();
+                HashMap<String, Object> params = new HashMap<>();
+                HashMap<String, Object> newSpring = new HashMap<>();
+                ArrayList<String> images = new ArrayList<>();
+                images.add(spring[7]);
+                springs.put("tenantId", "");
+                springs.put("orgId", "");
+                springs.put("latitude", spring[0]);
+                springs.put("longitude", spring[1]);
+                springs.put("elevation", spring[2]);
+                springs.put("accuracy", spring[3]);
+                springs.put("village", "");
+                springs.put("submittedBy", "");
+                springs.put("springName", spring[4]);
+                springs.put("userId", spring[5]);
+                springs.put("ownershipType", spring[6]);
+                springs.put("images", images);
+                springsRequest.put("springs", springs);
+                JSONObject jsonObject = new JSONObject(newSpring);
+                RequestDTO requestDTO1 = new RequestDTO();
+                requestDTO1.setRequest(springsRequest);
+                requestDTO1.setEts("11234");
+                requestDTO1.setId("forWater.user.createSpring");
+                requestDTO1.setVer("1.0");
+                requestDTO1.setParams(paramValues);
+                BindingResult bindingResult = new BindingResult() {
+                    @Override
+                    public Object getTarget() {
+                        return null;
+                    }
+
+                    @Override
+                    public Map<String, Object> getModel() {
+                        return null;
+                    }
+
+                    @Override
+                    public Object getRawFieldValue(String field) {
+                        return null;
+                    }
+
+                    @Override
+                    public PropertyEditor findEditor(String field, Class<?> valueType) {
+                        return null;
+                    }
+
+                    @Override
+                    public PropertyEditorRegistry getPropertyEditorRegistry() {
+                        return null;
+                    }
+
+                    @Override
+                    public String[] resolveMessageCodes(String errorCode) {
+                        return new String[0];
+                    }
+
+                    @Override
+                    public String[] resolveMessageCodes(String errorCode, String field) {
+                        return new String[0];
+                    }
+
+                    @Override
+                    public void addError(ObjectError error) {
+
+                    }
+
+                    @Override
+                    public String getObjectName() {
+                        return null;
+                    }
+
+                    @Override
+                    public void setNestedPath(String nestedPath) {
+
+                    }
+
+                    @Override
+                    public String getNestedPath() {
+                        return null;
+                    }
+
+                    @Override
+                    public void pushNestedPath(String subPath) {
+
+                    }
+
+                    @Override
+                    public void popNestedPath() throws IllegalStateException {
+
+                    }
+
+                    @Override
+                    public void reject(String errorCode) {
+
+                    }
+
+                    @Override
+                    public void reject(String errorCode, String defaultMessage) {
+
+                    }
+
+                    @Override
+                    public void reject(String errorCode, Object[] errorArgs, String defaultMessage) {
+
+                    }
+
+                    @Override
+                    public void rejectValue(String field, String errorCode) {
+
+                    }
+
+                    @Override
+                    public void rejectValue(String field, String errorCode, String defaultMessage) {
+
+                    }
+
+                    @Override
+                    public void rejectValue(String field, String errorCode, Object[] errorArgs, String defaultMessage) {
+
+                    }
+
+                    @Override
+                    public void addAllErrors(Errors errors) {
+
+                    }
+
+                    @Override
+                    public boolean hasErrors() {
+                        return false;
+                    }
+
+                    @Override
+                    public int getErrorCount() {
+                        return 0;
+                    }
+
+                    @Override
+                    public List<ObjectError> getAllErrors() {
+                        return null;
+                    }
+
+                    @Override
+                    public boolean hasGlobalErrors() {
+                        return false;
+                    }
+
+                    @Override
+                    public int getGlobalErrorCount() {
+                        return 0;
+                    }
+
+                    @Override
+                    public List<ObjectError> getGlobalErrors() {
+                        return null;
+                    }
+
+                    @Override
+                    public ObjectError getGlobalError() {
+                        return null;
+                    }
+
+                    @Override
+                    public boolean hasFieldErrors() {
+                        return false;
+                    }
+
+                    @Override
+                    public int getFieldErrorCount() {
+                        return 0;
+                    }
+
+                    @Override
+                    public List<FieldError> getFieldErrors() {
+                        return null;
+                    }
+
+                    @Override
+                    public FieldError getFieldError() {
+                        return null;
+                    }
+
+                    @Override
+                    public boolean hasFieldErrors(String field) {
+                        return false;
+                    }
+
+                    @Override
+                    public int getFieldErrorCount(String field) {
+                        return 0;
+                    }
+
+                    @Override
+                    public List<FieldError> getFieldErrors(String field) {
+                        return null;
+                    }
+
+                    @Override
+                    public FieldError getFieldError(String field) {
+                        return null;
+                    }
+
+                    @Override
+                    public Object getFieldValue(String field) {
+                        return null;
+                    }
+
+                    @Override
+                    public Class<?> getFieldType(String field) {
+                        return null;
+                    }
+                };
+                createSpring(requestDTO1, bindingResult);
+                System.out.println(jsonObject);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        HashMap response = new HashMap();
+        HashMap params = new HashMap();
+        response.put("response", "Springs Created Successfully");
+        LoginAndRegisterResponseMap responseMap = new LoginAndRegisterResponseMap();
+        responseMap.setResponse(response);
+        responseMap.setId("org.forwater.create");
+        responseMap.setVer("1.0");
+        responseMap.setEts("11234");
+        params.put("did", "");
+        params.put("key", "");
+        params.put("msgid", "");
+        responseMap.setParams(params);
+        return responseMap;
+    }
 }
