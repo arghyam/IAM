@@ -1577,7 +1577,7 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> responseMap = new HashMap<>();
         List<Map<String, Object>> finalResponse = new ArrayList<>();
         Polygon circle = bounds(deduplicationDTO, point);
-        finalResponse = deduplication(requestDTO, adminToken, deduplicationDTO, circle, point);
+        finalResponse = deduplication(requestDTO,adminToken,deduplicationDTO,circle,point);
         responseMap.put("springs", finalResponse);
         response.put("responseCode", 200);
         response.put("responseStatus", "successful");
@@ -1587,7 +1587,7 @@ public class UserServiceImpl implements UserService {
         return loginAndRegisterResponseMap;
     }
 
-    public List<Map<String, Object>> deduplication(RequestDTO requestDTO, String adminToken, DeduplicationDTO deduplicationDTO, Polygon circle, Double point) throws IOException {
+    public List<Map<String, Object>> deduplication(RequestDTO requestDTO, String adminToken, DeduplicationDTO deduplicationDTO, Polygon circle, Double point ) throws IOException {
 
         List<PointsDTO> geographicalPointsList = getAllPoints(requestDTO, adminToken);
         List<Map<String, Object>> finalResponse = new ArrayList<>();
@@ -1623,14 +1623,13 @@ public class UserServiceImpl implements UserService {
                 point = 500000.0;
             else if (point == 500000.0)
                 break;
-            else if (point < 1000.0)
+            else if (point<1000.0)
                 break;
             circle = bounds(deduplicationDTO, point);
-            finalResponse = deduplication(requestDTO, adminToken, deduplicationDTO, circle, point);
+            finalResponse = deduplication(requestDTO,adminToken,deduplicationDTO,circle,point);
         }
         return finalResponse;
     }
-
     public Polygon bounds(DeduplicationDTO deduplicationDTO, Double point) {
         GeometricShapeFactory shapeFactory = new GeometricShapeFactory();
         shapeFactory.setNumPoints(64);
@@ -1672,7 +1671,7 @@ public class UserServiceImpl implements UserService {
 
         existanceOfFavourite(favouritesDTO, adminToken, requestDTO);
         response.put("responseCode", 200);
-        response.put("responseStatus", "successfull");
+        response.put("responseStatus", "successful");
         response.put("responseObject", favouritesDTO);
         BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
         loginAndRegisterResponseMap.setResponse(response);
@@ -1714,7 +1713,8 @@ public class UserServiceImpl implements UserService {
                 });
                 Boolean flag = true;
                 for (int i = 0; i < springDetailsDTOList.size(); i++) {
-                    if ((!springDetailsDTOList.isEmpty()) && (springDetailsDTOList.get(i).getSpringCode().equals(favouritesDTO.getSpringCode()))) {
+                    if ((!springDetailsDTOList.isEmpty()) && (springDetailsDTOList.get(i).getSpringCode().equals(favouritesDTO.getSpringCode()))
+                            && (springDetailsDTOList.get(i).getUserId().equals(favouritesDTO.getUserId()))) {
                         flag = false;
                         break;
                     }
@@ -1725,7 +1725,8 @@ public class UserServiceImpl implements UserService {
                 }
 
                 for (int i = 0; i < springDetailsDTOList.size(); i++) {
-                    if (springDetailsDTOList.size() > 0 && springDetailsDTOList.get(i).getSpringCode().equalsIgnoreCase(favouritesDTO.getSpringCode()) && springDetailsDTOList.get(i).getUserId().equalsIgnoreCase(favouritesDTO.getUserId()) && !flag) {
+                    if (springDetailsDTOList.size() > 0 && springDetailsDTOList.get(i).getSpringCode().equalsIgnoreCase(favouritesDTO.getSpringCode())
+                            && springDetailsDTOList.get(i).getUserId().equalsIgnoreCase(favouritesDTO.getUserId()) && !flag) {
                         JSONObject object = new JSONObject(springDetailsDTOList.get(i));
                         osid = (String) object.get("osid");
                         deleteExistingRecord(osid, adminToken, requestDTO);
@@ -1833,24 +1834,23 @@ public class UserServiceImpl implements UserService {
                         springCodeList.add((String) springs.get("springCode"));
                     });
 
-                    favouriteSpringsList = getAllSpringsForFavourites(adminToken, requestDTO, springCodeList);
-                    for (int i = 20; i >= 0; i--) {
-                        for (int j = favouriteSpringsList.size(); j >= 0; j--) {
+                    favouriteSpringsList = getAllSpringsForFavourites(adminToken, requestDTO, springCodeList, getfavouritesData);
+                    if (favouriteSpringsList.size() > 20) {
+                        for (int i = favouriteSpringsList.size() - 1; i > favouriteSpringsList.size() - 21; i--) {
                             Map<String, Object> favSpring = new HashMap<>();
-                            favSpring.put("springName", favouriteSpringsList.get(j).getSpringName());
-                            favSpring.put("address", favouriteSpringsList.get(j).getAddress());
-                            favSpring.put("images", favouriteSpringsList.get(j).getImages());
-                            favSpring.put("springCode", favouriteSpringsList.get(j).getSpringCode());
-                            favSpring.put("ownershipType", favouriteSpringsList.get(j).getOwnershipType());
-                            favSpring.put("userId", favouriteSpringsList.get(j).getUserId());
-
+                            favSpring.put("springName", favouriteSpringsList.get(i).getSpringName());
+                            favSpring.put("address", favouriteSpringsList.get(i).getAddress());
+                            favSpring.put("images", favouriteSpringsList.get(i).getImages());
+                            favSpring.put("springCode", favouriteSpringsList.get(i).getSpringCode());
+                            favSpring.put("ownershipType", favouriteSpringsList.get(i).getOwnershipType());
+                            favSpring.put("userId", favouriteSpringsList.get(i).getUserId());
                             finalResponse.add(favSpring);
                             log.info("**************************");
 
                         }
                     }
                     log.info("######################", "");
-                    Map<String, Object> favResponse = new HashMap<>();
+                    Map<String,Object> favResponse = new HashMap<>();
                     favResponse.put("FavouriteSpring", finalResponse);
                     response.put("responseCode", 200);
                     response.put("responseStatus", "successfull");
@@ -1868,8 +1868,7 @@ public class UserServiceImpl implements UserService {
 
     }
 
-
-    private List<FavouriteSpringsDTO> getAllSpringsForFavourites(String adminToken, RequestDTO requestDTO, List<String> springCodeList) throws IOException {
+    private List<FavouriteSpringsDTO> getAllSpringsForFavourites(String adminToken, RequestDTO requestDTO, List<String> springCodeList, RetrieveFavouritesDTO getfavouritesData) throws IOException {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         Map<String, String> favouritesMap = new HashMap<>();
         List<FavouriteSpringsDTO> springDetailsDTOList = new ArrayList<>();

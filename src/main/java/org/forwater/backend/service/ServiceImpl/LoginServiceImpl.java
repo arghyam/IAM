@@ -260,7 +260,7 @@ public class LoginServiceImpl implements LoginService {
             } else {
                 // successfull case
                 log.info("response is successfull " + registryUserCreationResponse);
-                return getActivitiesResponse(registryUserCreationResponse,requestDTO);
+               return getActivitiesResponse(registryUserCreationResponse,requestDTO);
 
             }
 
@@ -301,11 +301,10 @@ public class LoginServiceImpl implements LoginService {
                 Map<String,Object> myActivitesMap = new HashMap<>();
                 myActivitesMap.put("springName",activityData.get(i).getSpringName());
                 myActivitesMap.put("address",activityData.get(i).getCreatedAt());
-                myActivitesMap.put("images",activityData.get(i).getAction());
+                myActivitesMap.put("action",activityData.get(i).getAction());
                 myActivitesMap.put("springCode",activityData.get(i).getSpringCode());
                 myActivitesMap.put("ownershipType",activityData.get(i).getLatitude());
                 myActivitesMap.put("userId",activityData.get(i).getUserId());
-                myActivitesMap.put("ownershipType",activityData.get(i).getLongitude());
 
 
                 finalResponse.add(myActivitesMap);
@@ -318,18 +317,17 @@ public class LoginServiceImpl implements LoginService {
                 Map<String,Object> myActivitesMap = new HashMap<>();
                 myActivitesMap.put("springName",activityData.get(i).getSpringName());
                 myActivitesMap.put("address",activityData.get(i).getCreatedAt());
-                myActivitesMap.put("images",activityData.get(i).getAction());
+                myActivitesMap.put("action",activityData.get(i).getAction());
                 myActivitesMap.put("springCode",activityData.get(i).getSpringCode());
                 myActivitesMap.put("ownershipType",activityData.get(i).getLatitude());
                 myActivitesMap.put("userId",activityData.get(i).getUserId());
-                myActivitesMap.put("ownershipType",activityData.get(i).getLongitude());
 
 
                 finalResponse.add(myActivitesMap);
 
             }
         }
-        activitiesMap.put("activities",activityData);
+        activitiesMap.put("activities",finalResponse);
         responseObjectMap.put("responseObject",activitiesMap);
         responseObjectMap.put("responseCode",200);
         responseObjectMap.put("responseStatus","successfull");
