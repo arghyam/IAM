@@ -11,6 +11,7 @@ import org.forwater.backend.entity.SearchEntity;
 import org.forwater.backend.entity.Springs;
 import org.forwater.backend.exceptions.InternalServerException;
 import org.forwater.backend.service.SearchService;
+import org.forwater.backend.utils.AmazonUtils;
 import org.forwater.backend.utils.Constants;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -25,6 +26,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
@@ -1241,13 +1243,13 @@ public class SearchServiceImpl implements SearchService {
 
 
     @Override
-    public LoginAndRegisterResponseMap postAllStates(MultipartFile file) {
-        String csvFile = "/home/anirudh/IdeaProjects/Arghyam-IAM/src/main/resources/states_list.csv";
+    public LoginAndRegisterResponseMap postAllStates(MultipartFile file) throws IOException {
+        File imageFile = AmazonUtils.convertMultiPartToFile(file);
         BufferedReader br = null;
         String line = "";
         String cvsSplitBy = ",";
         try {
-            br = new BufferedReader(new FileReader(csvFile));
+            br = new BufferedReader(new FileReader(imageFile));
             while ((line = br.readLine()) != null) {
                 // use comma as separator
                 String[] state = line.split(cvsSplitBy);

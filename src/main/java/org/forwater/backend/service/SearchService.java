@@ -49,5 +49,5 @@ public interface SearchService {
 
     LoginAndRegisterResponseMap getRecentSearches(RequestDTO requestDTO ) throws IOException;
 
-    LoginAndRegisterResponseMap postAllStates(MultipartFile file);
+    LoginAndRegisterResponseMap postAllStates(MultipartFile file) throws IOException;
 }
