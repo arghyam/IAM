@@ -88,7 +88,6 @@ public class Constants {
 
     public static final String ID_SEARCH_STATE = "org.forwater.create";
 
-    public static final String ADD_ROLE= "{realm}/groups/{id}/role-mappings/realm";
 
 
 }

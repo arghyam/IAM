@@ -266,22 +266,4 @@ public class KeycloakServiceImpl implements KeycloakService {
 
     }
 
-    @Override
-    public  List<RoleRepresentation> addRole(String realm, String id, String role, String token) throws Exception {
-        Call<List<RoleRepresentation>> retrofitCall = keycloakDAO.addRole(appContext.getRealm(),id, role, "Bearer "+token);
-        Response<List<RoleRepresentation>> response = retrofitCall.execute();
-
-        if (!response.isSuccessful()) {
-            if (response.code() == 401) {
-                throw new UnauthorizedException("User is not Authorized");
-            } else if (response.code() == 404) {
-                return null;
-            } else if (response.code() == 403) {
-                throw new ForbiddenException("forbidden");
-            }
-        }
-
-        return response.body();
-
-    }
 }

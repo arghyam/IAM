@@ -110,10 +110,4 @@ public interface KeycloakDAO {
                                                          @Header("Authorization")String token) throws Exception;
 
 
-    @POST(Constants.ADD_ROLE)
-    Call <List<RoleRepresentation>> addRole(@Path("id") String id,
-                                     @Path("realm") String realm,
-                                     @Field("roles") String roles,
-                                     @Header("Authorization") String token) throws IOException;
-
 }
