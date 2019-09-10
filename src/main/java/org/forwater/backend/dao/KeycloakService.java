@@ -37,5 +37,6 @@ public interface KeycloakService {
 
     public List<UserRepresentation> getUsersBasedonRoleName(String role, String token) throws Exception;
 
+    public  List<RoleRepresentation> addRole(String realm, String id, String role, String token) throws Exception;
 
 }

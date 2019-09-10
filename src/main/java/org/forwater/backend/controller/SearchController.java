@@ -97,13 +97,8 @@ public class SearchController {
 
         return searchService.getRecentSearches(requestDTO);
     }
-//
-//    @RequestMapping(value = "/users/postAllStates", method = RequestMethod.POST)
-//    LoginAndRegisterResponseMap postAllStates(@ApiParam(value = "generate accessToken body", required = true,
-//            name="generate accessToken body")@RequestBody  RequestDTO requestDTO,BindingResult bindingResult) throws IOException {
-//        return searchService.postAllStates(requestDTO);
-//    }
-//
+
+
     @RequestMapping(value = "/user/postAllStates", method = RequestMethod.PUT, headers = "Content-Type= multipart/form-data")
     public LoginAndRegisterResponseMap postAllStates(
             @ApiParam(value = "file", example = "file.csv", required = true)

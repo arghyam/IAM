@@ -24,6 +24,7 @@ import org.forwater.backend.service.UserService;
 import org.forwater.backend.utils.AmazonUtils;
 import org.forwater.backend.utils.Constants;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jose4j.http.Get;
 import org.json.JSONObject;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -1258,6 +1259,7 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> addAdditionalMap = new HashMap<>();
         Map<String, Object> springAttributeMap = new HashMap<>();
         springAttributeMap.put("springCode", additionalInfo.getSpringCode());
+        springAttributeMap.put("userId", additionalInfo.getUserId());
         addAdditionalMap.put("additionalInfo", springAttributeMap);
         String stringAdditionalInfoRequest = mapper.writeValueAsString(addAdditionalMap);
         RegistryRequest registryRequest = new RegistryRequest(null, addAdditionalMap, RegistryResponse.API_ID.SEARCH.getId(), stringAdditionalInfoRequest);
@@ -1274,27 +1276,29 @@ public class UserServiceImpl implements UserService {
                 AdditionalInfo fetchedAdditionalData = new AdditionalInfo();
                 List<LinkedHashMap> additionalDataList = (List<LinkedHashMap>) registryResponse.getResult();
                 additionalDataList.stream().forEach(additionalData -> {
-                    fetchedAdditionalData.setNumberOfHousehold((Integer) additionalData.get("numberOfHousehold"));
-                    fetchedAdditionalData.setSeasonality((String) additionalData.get("seasonality"));
-                    fetchedAdditionalData.setSpringCode((String) additionalData.get("springCode"));
+                    if ((additionalData.get("userId").equals(additionalInfo.getUserId())) && (additionalData.get("springCode").equals(additionalInfo.getSpringCode()))) {
+                        fetchedAdditionalData.setNumberOfHousehold((Integer) additionalData.get("numberOfHousehold"));
+                        fetchedAdditionalData.setSeasonality((String) additionalData.get("seasonality"));
+                        fetchedAdditionalData.setSpringCode((String) additionalData.get("springCode"));
+                        fetchedAdditionalData.setUserId((String) additionalData.get("userId"));
+                        if (additionalData.get("usage").getClass().toString().equals("class java.util.ArrayList")) {
+                            fetchedAdditionalData.setUsage((List<String>) additionalData.get("usage"));
+                        } else if (additionalData.get("usage").getClass().toString().equals("class java.lang.String")) {
+                            String result = (String) additionalData.get("usage");
+                            result = new StringBuilder(result).deleteCharAt(0).toString();
+                            result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
+                            fetchedAdditionalData.setUsage(Arrays.asList(result));
+                        }
 
-                    if (additionalData.get("usage").getClass().toString().equals("class java.util.ArrayList")) {
-                        fetchedAdditionalData.setUsage((List<String>) additionalData.get("usage"));
-                    } else if (additionalData.get("usage").getClass().toString().equals("class java.lang.String")) {
-                        String result = (String) additionalData.get("usage");
-                        result = new StringBuilder(result).deleteCharAt(0).toString();
-                        result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
-                        fetchedAdditionalData.setUsage(Arrays.asList(result));
-                    }
 
-
-                    if (additionalData.get("months").getClass().toString().equals("class java.util.ArrayList")) {
-                        fetchedAdditionalData.setMonths((List<String>) additionalData.get("months"));
-                    } else if (additionalData.get("months").getClass().toString().equals("class java.lang.String")) {
-                        String result = (String) additionalData.get("months");
-                        result = new StringBuilder(result).deleteCharAt(0).toString();
-                        result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
-                        fetchedAdditionalData.setMonths(Arrays.asList(result));
+                        if (additionalData.get("months").getClass().toString().equals("class java.util.ArrayList")) {
+                            fetchedAdditionalData.setMonths((List<String>) additionalData.get("months"));
+                        } else if (additionalData.get("months").getClass().toString().equals("class java.lang.String")) {
+                            String result = (String) additionalData.get("months");
+                            result = new StringBuilder(result).deleteCharAt(0).toString();
+                            result = new StringBuilder(result).deleteCharAt(result.length() - 1).toString();
+                            fetchedAdditionalData.setMonths(Arrays.asList(result));
+                        }
                     }
                 });
 
@@ -1319,7 +1323,7 @@ public class UserServiceImpl implements UserService {
         Springs springsDetails = null;
         ActivitiesRequestDTO activitiesRequestDTO = new ActivitiesRequestDTO();
         springsDetails = getSpringDetailsBySpringCode(additionalInfo.getSpringCode());
-        activitiesRequestDTO.setUserId(springsDetails.getUserId());
+        activitiesRequestDTO.setUserId(additionalInfo.getUserId());
         activitiesRequestDTO.setAction("Additional info added");
         activitiesRequestDTO.setCreatedAt(new Date().toString());
         activitiesRequestDTO.setLongitude(springsDetails.getLongitude());
@@ -1836,7 +1840,7 @@ public class UserServiceImpl implements UserService {
                     });
 
                     favouriteSpringsList = getAllSpringsForFavourites(adminToken, requestDTO, springCodeList, getfavouritesData);
-                    for (int i = favouriteSpringsList.size() - 1; i >= favouriteSpringsList.size()-20 && i>=0; i--) {
+                    for (int i = favouriteSpringsList.size() - 1; i >= favouriteSpringsList.size() - 20 && i >= 0; i--) {
                         Map<String, Object> favSpring = new HashMap<>();
                         favSpring.put("springName", favouriteSpringsList.get(i).getSpringName());
                         favSpring.put("address", favouriteSpringsList.get(i).getAddress());
@@ -2372,5 +2376,50 @@ public class UserServiceImpl implements UserService {
         params.put("msgid", "");
         responseMap.setParams(params);
         return responseMap;
+    }
+
+    @Override
+    public List<RoleRepresentation> assignRoles(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException {
+
+        RolesDTO roles = mapper.convertValue(requestDTO.getRequest().get("roles"), RolesDTO.class);
+        List<RoleRepresentation> roleRepresentations = null;
+        RealmResource realmResource = keycloak.realm(appContext.getRealm());
+        UsersResource userResource = realmResource.users();
+        List<RoleRepresentation> userRoles = userResource.get(roles.getUserId()).roles().realmLevel().listAll();
+        RoleRepresentation arghyamUserRole = realmResource.roles()//
+                .get("Arghyam-user").toRepresentation();
+        try {
+            String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+
+            if (roles.getRole().equalsIgnoreCase("Arghyam-admin")) {
+                 arghyamUserRole = realmResource.roles()//
+                        .get("Arghyam-admin").toRepresentation();
+            }else if (roles.getRole().equalsIgnoreCase("Arghyam-reviewer")) {
+                 arghyamUserRole = realmResource.roles()//
+                        .get("Arghyam-reviewer").toRepresentation();
+            }
+            for (int i = 0; i < userRoles.size(); i++) {
+                if (userRoles.get(i).getName().equals(roles.getRole())){
+                    userResource.get(roles.getUserId()).roles().realmLevel() //
+                            .remove(Arrays.asList(arghyamUserRole));
+                    break;
+                }else if (!userRoles.get(i).getName().equals(roles.getRole())){
+                    userResource.get(roles.getUserId()).roles().realmLevel() //
+                            .add(Arrays.asList(arghyamUserRole));
+                    break;
+                }
+            }
+
+
+
+
+
+            log.info("+++++++++++++++++++++++++++++++++");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return roleRepresentations;
+
     }
 }

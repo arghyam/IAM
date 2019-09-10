@@ -156,17 +156,18 @@ public class UserController {
         return userService.getFavourites(requestDTO);
     }
 
-//    @RequestMapping(value = "/users/postAllSprings", method = RequestMethod.PUT, headers = "Content-Type= multipart/form-data")
-//    LoginAndRegisterResponseMap postSprings(@ApiParam(value = "generate accessToken body", required = true,
-//            name="generate accessToken body")@RequestBody  RequestDTO requestDTO,BindingResult bindingResult) throws IOException {
-//        return userService.postSprings(requestDTO,bindingResult);
-//    }
-
     @RequestMapping(value = "/user/postAllSprings", method = RequestMethod.PUT, headers = "Content-Type= multipart/form-data")
     public LoginAndRegisterResponseMap postSprings(
             @ApiParam(value = "file", example = "file.xlsx", required = true)
             @RequestParam("file") MultipartFile file) throws IOException {
         return userService.postSprings(file);
     }
+
+    @PostMapping(value = "/user/roles")
+    public void assignRoles(@ApiParam(value = "user", required = true, name="user") @Validated @RequestBody RequestDTO requestDTO, String userToken,
+                           BindingResult bindingResult) throws IOException {
+        userService.assignRoles(requestDTO, userToken, bindingResult);
+    }
+
 
 }

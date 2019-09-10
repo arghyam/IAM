@@ -57,6 +57,7 @@ public class Constants {
     public static final String REG_ENTRY_CREATED = "registry_entry_created";
 
     public static final String REGISTRY_UPDATE_USER = "update";
+
     public static final String REGISTRY_READ_USER = "read/{id}";
 
     public static final String PASSWORD = "password";
@@ -70,14 +71,24 @@ public class Constants {
     public static final String ARGHYAM_S3_FOLDER_LOCATION = "arghyam/";
 
     public static final String NOTIFICATION_DISCHARGE="Spring discharge data was submitted by ";
+
     public static final String NOTIFICATION_ACCEPTED="Spring discharge data was approved by ";
+
     public static final String NOTIFICATION_REJECTED="Spring discharge data was rejected by ";
 
     public static final String IMAGE_UPLOAD_SUCCESS_MESSAGE="Uploaded successfully";
+
     public static final String ARGHYAM_USERS="arghyam-user";
 
     public static final String MAP_MY_INDIA_LICENCE="286bdsg9s3n89e7fqgfb9m1grv4bqpar";
+
     public static final String MAP_MY_INDIA_CODE="rev_geocode";
+
     public static final String REVERSE_GEO_CODING_API="https://apis.mapmyindia.com/advancedmaps/v1/";
+
     public static final String ID_SEARCH_STATE = "org.forwater.create";
+
+    public static final String ADD_ROLE= "{realm}/groups/{id}/role-mappings/realm";
+
+
 }
