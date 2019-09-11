@@ -164,9 +164,17 @@ public class UserController {
     }
 
     @PostMapping(value = "/user/roles")
-    public void assignRoles(@ApiParam(value = "user", required = true, name="user") @Validated @RequestBody RequestDTO requestDTO, String userToken,
+    public LoginAndRegisterResponseMap assignRoles(@ApiParam(value = "user", required = true, name="user") @Validated @RequestBody RequestDTO requestDTO, String userToken,
                            BindingResult bindingResult) throws IOException {
-        userService.assignRoles(requestDTO, userToken, bindingResult);
+       return userService.assignRoles(requestDTO, userToken, bindingResult);
+
+    }
+
+
+    @PostMapping(value = "/user/generateNotifications")
+    public void generateNotifications(@ApiParam(value = "user", required = true, name="user") @Validated @RequestBody RequestDTO requestDTO, String userToken,
+                            BindingResult bindingResult) throws IOException {
+        userService.generateNotifications(requestDTO, userToken, bindingResult);
     }
 
 

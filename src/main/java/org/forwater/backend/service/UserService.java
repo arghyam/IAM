@@ -59,5 +59,7 @@ public interface UserService {
 
     LoginAndRegisterResponseMap postSprings(MultipartFile file) throws IOException;
 
-    List<RoleRepresentation> assignRoles(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException;
+    LoginAndRegisterResponseMap assignRoles(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException;
+
+    void generateNotifications(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException;
 }
