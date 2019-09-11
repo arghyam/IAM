@@ -62,4 +62,6 @@ public interface UserService {
     LoginAndRegisterResponseMap assignRoles(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException;
 
     void generateNotifications(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException;
+
+    LoginAndRegisterResponseMap reviewNotifications(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException;
 }

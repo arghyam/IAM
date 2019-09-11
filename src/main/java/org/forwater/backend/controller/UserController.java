@@ -178,4 +178,10 @@ public class UserController {
     }
 
 
+    @PostMapping(value = "/user/reviewNotifications")
+    public LoginAndRegisterResponseMap reviewNotifications(@ApiParam(value = "user", required = true, name="user") @Validated @RequestBody RequestDTO requestDTO, String userToken,
+                                      BindingResult bindingResult) throws IOException {
+       return userService.reviewNotifications(requestDTO, userToken, bindingResult);
+    }
+
 }

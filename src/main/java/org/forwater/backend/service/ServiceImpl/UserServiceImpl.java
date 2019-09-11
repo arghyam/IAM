@@ -1255,11 +1255,10 @@ public class UserServiceImpl implements UserService {
         retrofit2.Response registryUserCreationResponse = null;
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
-        AdditionalInfo additionalInfo = mapper.convertValue(requestDTO.getRequest().get("additionalInfo"), AdditionalInfo.class);
+        GetAdditionalInfo additionalInfo = mapper.convertValue(requestDTO.getRequest().get("additionalInfo"), GetAdditionalInfo.class);
         Map<String, Object> addAdditionalMap = new HashMap<>();
         Map<String, Object> springAttributeMap = new HashMap<>();
         springAttributeMap.put("springCode", additionalInfo.getSpringCode());
-        springAttributeMap.put("userId", additionalInfo.getUserId());
         addAdditionalMap.put("additionalInfo", springAttributeMap);
         String stringAdditionalInfoRequest = mapper.writeValueAsString(addAdditionalMap);
         RegistryRequest registryRequest = new RegistryRequest(null, addAdditionalMap, RegistryResponse.API_ID.SEARCH.getId(), stringAdditionalInfoRequest);
@@ -1273,14 +1272,13 @@ public class UserServiceImpl implements UserService {
             } else {
                 RegistryResponse registryResponse = new RegistryResponse();
                 BeanUtils.copyProperties(registryUserCreationResponse.body(), registryResponse);
-                AdditionalInfo fetchedAdditionalData = new AdditionalInfo();
+                GetAdditionalInfo fetchedAdditionalData = new GetAdditionalInfo();
                 List<LinkedHashMap> additionalDataList = (List<LinkedHashMap>) registryResponse.getResult();
                 additionalDataList.stream().forEach(additionalData -> {
-                    if ((additionalData.get("userId").equals(additionalInfo.getUserId())) && (additionalData.get("springCode").equals(additionalInfo.getSpringCode()))) {
+                    if (additionalData.get("springCode").equals(additionalInfo.getSpringCode())) {
                         fetchedAdditionalData.setNumberOfHousehold((Integer) additionalData.get("numberOfHousehold"));
                         fetchedAdditionalData.setSeasonality((String) additionalData.get("seasonality"));
                         fetchedAdditionalData.setSpringCode((String) additionalData.get("springCode"));
-                        fetchedAdditionalData.setUserId((String) additionalData.get("userId"));
                         if (additionalData.get("usage").getClass().toString().equals("class java.util.ArrayList")) {
                             fetchedAdditionalData.setUsage((List<String>) additionalData.get("usage"));
                         } else if (additionalData.get("usage").getClass().toString().equals("class java.lang.String")) {
@@ -2122,6 +2120,7 @@ public class UserServiceImpl implements UserService {
         activityResponse.setOsid((String) notifications.get("osid"));
 
     }
+
     private void convertRegistryResponse(NotificationData activityResponse, LinkedHashMap notifications, String userId) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
                 Locale.ENGLISH);
@@ -2404,7 +2403,7 @@ public class UserServiceImpl implements UserService {
 
         RolesDTO roles = mapper.convertValue(requestDTO.getRequest().get("roles"), RolesDTO.class);
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
-        Map<String,Object> responseMap= new HashMap<>();
+        Map<String, Object> responseMap = new HashMap<>();
         List<String> assignedRoles = new ArrayList<>();
         RealmResource realmResource = keycloak.realm(appContext.getRealm());
         UsersResource userResource = realmResource.users();
@@ -2414,29 +2413,29 @@ public class UserServiceImpl implements UserService {
         try {
 
             if (roles.getRole().equalsIgnoreCase("Arghyam-admin")) {
-                 arghyamUserRole = realmResource.roles()//
+                arghyamUserRole = realmResource.roles()//
                         .get("Arghyam-admin").toRepresentation();
-            }else if (roles.getRole().equalsIgnoreCase("Arghyam-reviewer")) {
-                 arghyamUserRole = realmResource.roles()//
+            } else if (roles.getRole().equalsIgnoreCase("Arghyam-reviewer")) {
+                arghyamUserRole = realmResource.roles()//
                         .get("Arghyam-reviewer").toRepresentation();
             }
             for (int i = 0; i < userRoles.size(); i++) {
-                if (userRoles.get(i).getName().equals(roles.getRole())){
+                if (userRoles.get(i).getName().equals(roles.getRole())) {
                     userResource.get(roles.getUserId()).roles().realmLevel() //
                             .remove(Arrays.asList(arghyamUserRole));
                     break;
-                }else if (!userRoles.get(i).getName().equals(roles.getRole())){
-                   userResource.get(roles.getUserId()).roles().realmLevel() //
-                             .add(Arrays.asList(arghyamUserRole));
+                } else if (!userRoles.get(i).getName().equals(roles.getRole())) {
+                    userResource.get(roles.getUserId()).roles().realmLevel() //
+                            .add(Arrays.asList(arghyamUserRole));
                     break;
                 }
 
             }
 
             userRoles = userResource.get(roles.getUserId()).roles().realmLevel().listAll();
-            for(int j=0; j<userRoles.size(); j++){
-               assignedRoles.add(userRoles.get(j).getName());
-           }
+            for (int j = 0; j < userRoles.size(); j++) {
+                assignedRoles.add(userRoles.get(j).getName());
+            }
 
             responseMap.put("responseObject", assignedRoles);
             responseMap.put("responseCode", 200);
@@ -2456,10 +2455,10 @@ public class UserServiceImpl implements UserService {
     public void generateNotifications(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException {
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
 
-         GenerateNotifications notificationsData= mapper.convertValue(requestDTO.getRequest().get("privateSpring"), GenerateNotifications.class);
+        GenerateNotifications notificationsData = mapper.convertValue(requestDTO.getRequest().get("privateSpring"), GenerateNotifications.class);
         Springs springsDetails = new Springs();
-        Map<String, Object> map= new HashMap<>();
-        springsDetails=getSpringDetailsBySpringCode(notificationsData.getSpringCode());
+        Map<String, Object> map = new HashMap<>();
+        springsDetails = getSpringDetailsBySpringCode(notificationsData.getSpringCode());
         NotificationData notificationDTO = new NotificationData();
         notificationDTO.setCreatedAt(System.currentTimeMillis());
         notificationDTO.setSpringCode(notificationsData.getSpringCode());
@@ -2489,13 +2488,48 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public LoginAndRegisterResponseMap reviewNotifications(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException {
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        NotificationReviewDTO notificationReview = mapper.convertValue(requestDTO.getRequest().get("Reviewer"), NotificationReviewDTO.class);
+        if (notificationReview.getStatus().equalsIgnoreCase("Accepted")) {
+            Map<String, Object> reviewMap = new HashMap<>();
+            reviewMap.put("dischargeData", notificationReview);
+
+            String objectMapper = new ObjectMapper().writeValueAsString(reviewMap);
+            RegistryRequest registryRequest = new RegistryRequest(null, reviewMap, RegistryResponse.API_ID.UPDATE.getId(), objectMapper);
+
+            try {
+                Call<RegistryResponse> createRegistryEntryCall = registryDao.updateUser(adminAccessToken, registryRequest);
+                retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
+                if (registryUserCreationResponse.isSuccessful() && registryUserCreationResponse.code() == 200) {
+                    BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("responseCode", 200);
+                    Object obj = registryUserCreationResponse.code();
+                    response.put("responseStatus", "Discharge data accepted");
+                    loginAndRegisterResponseMap.setResponse(response);
+                    System.out.println(registryUserCreationResponse.code());
+//                    updateNotificationsData(adminAccessToken, notificationReview);
+//                    generateReviwerNotification(Constants.NOTIFICATION_ACCEPTED, adminAccessToken, notificationReview);
 
 
+                } else {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("responseCode", registryUserCreationResponse.code());
+                    response.put("responseStatus", registryUserCreationResponse.message());
+                    loginAndRegisterResponseMap.setResponse(response);
+                }
 
+            } catch (IOException e) {
+                log.error("Error creating registry entry : {} ", e.getMessage());
+            }
 
+        }
 
-
-
+        return loginAndRegisterResponseMap;
 
     }
 
+}
