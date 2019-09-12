@@ -50,7 +50,6 @@ import retrofit2.Response;
 
 import java.beans.PropertyEditor;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.text.ParseException;
@@ -892,20 +891,52 @@ public class UserServiceImpl implements UserService {
     public LoginAndRegisterResponseMap getRegistereUsers() throws IOException {
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         List<UserRepresentation> getRegisteredUsers = keycloakService.getRegisteredUsers(adminAccessToken, appContext.getRealm());
+
+        RealmResource realmResource = keycloak.realm(appContext.getRealm());
+        List<RoleRepresentation> userRoles = new ArrayList<>();
+        HashMap<Integer, List<String>> allUserRoles = new HashMap<>();
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         Map<String, Object> response = new HashMap<>();
+        List<UserRoles> listResultRoles = new ArrayList<>();
+        HashMap<String, Object> paramValues = new HashMap<>();
+        paramValues.put("did","");
+        paramValues.put("key","");
+        paramValues.put("msgid","");
+        UsersResource userResource = realmResource.users();
+//            getRegisteredUsers.get(i).setRealmRoles(allUserRoles.get(i));
+        for (int i = 0; i < getRegisteredUsers.size(); i++) {
+            UserRoles resultRoles = new UserRoles();
+            resultRoles.setId(getRegisteredUsers.get(i).getId());
+            resultRoles.setFirstName(getRegisteredUsers.get(i).getFirstName());
+            resultRoles.setUsername(getRegisteredUsers.get(i).getUsername());
+            userRoles = userResource.get(getRegisteredUsers.get(i).getId()).roles().realmLevel().listAll();
+            for (int j = 0; j < userRoles.size(); j++) {
+                if (userRoles.get(j).getName().equalsIgnoreCase("Arghyam-admin"))
+                    resultRoles.setAdmin(true);
+                if (userRoles.get(j).getName().equalsIgnoreCase("Arghyam-reviewer"))
+                    resultRoles.setReviewer(true);
+            }
+            if (resultRoles.getAdmin() == null)
+                resultRoles.setAdmin(false);
+            if (resultRoles.getReviewer() == null)
+                resultRoles.setReviewer(false);
+            listResultRoles.add(i, resultRoles);
+        }
         response.put("responseCode", 200);
         response.put("responseStatus", "successfully fetched registered users");
-        response.put("responseObject", getRegisteredUsers);
+        response.put("responseObject", listResultRoles);
         loginAndRegisterResponseMap.setResponse(response);
         loginAndRegisterResponseMap.setVer("1.0");
+        loginAndRegisterResponseMap.setEts("11234");
+        loginAndRegisterResponseMap.setParams(paramValues);
         loginAndRegisterResponseMap.setId("forWater.user.getRegisteredUsers");
         return loginAndRegisterResponseMap;
     }
 
 
     @Override
-    public LoginAndRegisterResponseMap createDischargeData(String springCode, RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+    public LoginAndRegisterResponseMap createDischargeData(String springCode, RequestDTO requestDTO, BindingResult
+            bindingResult) throws IOException {
         DischargeOsid dischargeOsid = null;
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         DischargeData dischargeData = mapper.convertValue(requestDTO.getRequest().get("dischargeData"), DischargeData.class);
@@ -961,7 +992,8 @@ public class UserServiceImpl implements UserService {
         return loginAndRegisterResponseMap;
     }
 
-    private void generateNotifications(String title, String adminAccessToken, Map<String, Object> dischargrMap, String osid) throws IOException {
+    private void generateNotifications(String title, String
+            adminAccessToken, Map<String, Object> dischargrMap, String osid) throws IOException {
         HashMap<String, Object> map = new HashMap<>();
         DischargeData dischargeData = (DischargeData) dischargrMap.get("dischargeData");
         NotificationDTO notificationDTO = new NotificationDTO();
@@ -998,7 +1030,8 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private void generateActivityForDischargeData(String adminToken, Map<String, Object> dischargrMap) throws IOException {
+    private void generateActivityForDischargeData(String adminToken, Map<String, Object> dischargrMap) throws
+            IOException {
         Springs springsDetails = new Springs();
         HashMap<String, Object> map = new HashMap<>();
         DischargeData dischargeData = (DischargeData) dischargrMap.get("dischargeData");
@@ -1088,7 +1121,8 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public LoginAndRegisterResponseMap createSpring(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+    public LoginAndRegisterResponseMap createSpring(RequestDTO requestDTO, BindingResult bindingResult) throws
+            IOException {
         String address = "";
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         Springs springs = mapper.convertValue(requestDTO.getRequest().get("springs"), Springs.class);
@@ -1168,7 +1202,8 @@ public class UserServiceImpl implements UserService {
         return loginAndRegisterResponseMap;
     }
 
-    private void updateSpringCount(String adminAccessToken, RequestDTO requestDTO, String stateOsid, Integer count) throws IOException {
+    private void updateSpringCount(String adminAccessToken, RequestDTO requestDTO, String stateOsid, Integer count) throws
+            IOException {
         UpdatepointsDTO updatepointsDTO = new UpdatepointsDTO();
         States states = new States();
         updatepointsDTO.setOsid(stateOsid);
@@ -1251,7 +1286,8 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public LoginAndRegisterResponseMap getAdditionalDetailsForSpring(String springCode, RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+    public LoginAndRegisterResponseMap getAdditionalDetailsForSpring(String springCode, RequestDTO
+            requestDTO, BindingResult bindingResult) throws IOException {
         retrofit2.Response registryUserCreationResponse = null;
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
@@ -1315,7 +1351,8 @@ public class UserServiceImpl implements UserService {
         return loginAndRegisterResponseMap;
     }
 
-    private void generateActivitiesForAdditionalDetails(String adminToken, AdditionalInfo additionalInfo) throws IOException {
+    private void generateActivitiesForAdditionalDetails(String adminToken, AdditionalInfo additionalInfo) throws
+            IOException {
         // make a spring profile api call using spring code and get the resp details and save it to registry
         HashMap<String, Object> map = new HashMap<>();
         Springs springsDetails = null;
@@ -1350,7 +1387,8 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public LoginAndRegisterResponseMap reviewerData(RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
+    public LoginAndRegisterResponseMap reviewerData(RequestDTO requestDTO, BindingResult bindingResult) throws
+            IOException {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         Reviewer dischargeData = mapper.convertValue(requestDTO.getRequest().get("Reviewer"), Reviewer.class);
         if (dischargeData.getStatus().equalsIgnoreCase("Accepted")) {
@@ -1429,7 +1467,8 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    private void generateReviwerNotification(String title, String adminAccessToken, Reviewer dischargeData) throws IOException {
+    private void generateReviwerNotification(String title, String adminAccessToken, Reviewer dischargeData) throws
+            IOException {
         HashMap<String, Object> map = new HashMap<>();
         NotificationDTO notificationDTO = new NotificationDTO();
         notificationDTO.setCreatedAt(System.currentTimeMillis());
@@ -1523,7 +1562,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginAndRegisterResponseMap getNotificationCount(RequestDTO requestDTO, String userId) throws IOException {
+    public LoginAndRegisterResponseMap getNotificationCount(RequestDTO requestDTO, String userId) throws
+            IOException {
         retrofit2.Response registryUserCreationResponse = null;
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
@@ -1589,7 +1629,8 @@ public class UserServiceImpl implements UserService {
         return loginAndRegisterResponseMap;
     }
 
-    public List<Map<String, Object>> deduplication(RequestDTO requestDTO, String adminToken, DeduplicationDTO deduplicationDTO, Polygon circle, Double point) throws IOException {
+    public List<Map<String, Object>> deduplication(RequestDTO requestDTO, String adminToken, DeduplicationDTO
+            deduplicationDTO, Polygon circle, Double point) throws IOException {
 
         List<PointsDTO> geographicalPointsList = getAllPoints(requestDTO, adminToken);
         List<Map<String, Object>> finalResponse = new ArrayList<>();
@@ -1681,7 +1722,8 @@ public class UserServiceImpl implements UserService {
         return loginAndRegisterResponseMap;
     }
 
-    private void existanceOfFavourite(FavouritesDTO favouritesDTO, String adminToken, RequestDTO requestDTO) throws IOException {
+    private void existanceOfFavourite(FavouritesDTO favouritesDTO, String adminToken, RequestDTO requestDTO) throws
+            IOException {
 
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         Map<String, String> favouritesMap = new HashMap<>();
@@ -1869,7 +1911,8 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    private List<FavouriteSpringsDTO> getAllSpringsForFavourites(String adminToken, RequestDTO requestDTO, List<String> springCodeList, RetrieveFavouritesDTO getfavouritesData) throws IOException {
+    private List<FavouriteSpringsDTO> getAllSpringsForFavourites(String adminToken, RequestDTO
+            requestDTO, List<String> springCodeList, RetrieveFavouritesDTO getfavouritesData) throws IOException {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         Map<String, String> favouritesMap = new HashMap<>();
         List<FavouriteSpringsDTO> springDetailsDTOList = new ArrayList<>();
@@ -2006,7 +2049,8 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private LoginAndRegisterResponseMap getNotificationCountResponse(Response registryUserCreationResponse, RequestDTO requestDTO, String userId) {
+    private LoginAndRegisterResponseMap getNotificationCountResponse(Response
+                                                                             registryUserCreationResponse, RequestDTO requestDTO, String userId) {
         Map<String, Object> activitiesMap = new HashMap<>();
         Map<String, Object> responseObjectMap = new HashMap<>();
         LoginAndRegisterResponseMap activitiesResponse = new LoginAndRegisterResponseMap();
@@ -2054,7 +2098,8 @@ public class UserServiceImpl implements UserService {
         return a;
     }
 
-    private LoginAndRegisterResponseMap getNotificationsResponse(Response registryUserCreationResponse, RequestDTO requestDTO, String userId) throws IOException {
+    private LoginAndRegisterResponseMap getNotificationsResponse(Response registryUserCreationResponse, RequestDTO
+            requestDTO, String userId) throws IOException {
         Map<String, Object> activitiesMap = new HashMap<>();
         Map<String, Object> responseObjectMap = new HashMap<>();
         LoginAndRegisterResponseMap activitiesResponse = new LoginAndRegisterResponseMap();
@@ -2098,7 +2143,8 @@ public class UserServiceImpl implements UserService {
         return false;
     }
 
-    private void convertRegistryResponseToNotifications(NotificationDTOEntity activityResponse, LinkedHashMap notifications, String userId) {
+    private void convertRegistryResponseToNotifications(NotificationDTOEntity activityResponse, LinkedHashMap
+            notifications, String userId) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
                 Locale.ENGLISH);
         String date = dateFormat.format(notifications.get("createdAt"));
@@ -2121,7 +2167,8 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    private void convertRegistryResponse(NotificationData activityResponse, LinkedHashMap notifications, String userId) {
+    private void convertRegistryResponse(NotificationData activityResponse, LinkedHashMap notifications, String
+            userId) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
                 Locale.ENGLISH);
         String date = dateFormat.format(notifications.get("createdAt"));
@@ -2398,9 +2445,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginAndRegisterResponseMap assignRoles(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException {
+    public LoginAndRegisterResponseMap assignRoles(RequestDTO requestDTO, String userToken, BindingResult
+            bindingResult) throws IOException {
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
-
+        Boolean notRemoved = true;
         RolesDTO roles = mapper.convertValue(requestDTO.getRequest().get("roles"), RolesDTO.class);
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         Map<String, Object> responseMap = new HashMap<>();
@@ -2423,14 +2471,18 @@ public class UserServiceImpl implements UserService {
                 if (userRoles.get(i).getName().equals(roles.getRole())) {
                     userResource.get(roles.getUserId()).roles().realmLevel() //
                             .remove(Arrays.asList(arghyamUserRole));
+                    notRemoved = false;
                     break;
-                } else if (!userRoles.get(i).getName().equals(roles.getRole())) {
+                }
+            }
+            for (int i = 0; i < userRoles.size(); i++) {
+                if (!userRoles.get(i).getName().equals(roles.getRole()) && notRemoved) {
                     userResource.get(roles.getUserId()).roles().realmLevel() //
                             .add(Arrays.asList(arghyamUserRole));
                     break;
                 }
-
             }
+
 
             userRoles = userResource.get(roles.getUserId()).roles().realmLevel().listAll();
             for (int j = 0; j < userRoles.size(); j++) {
@@ -2452,7 +2504,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void generateNotifications(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException {
+    public void generateNotifications(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws
+            IOException {
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
 
         GenerateNotifications notificationsData = mapper.convertValue(requestDTO.getRequest().get("privateSpring"), GenerateNotifications.class);
@@ -2489,7 +2542,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginAndRegisterResponseMap reviewNotifications(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException {
+    public LoginAndRegisterResponseMap reviewNotifications(RequestDTO requestDTO, String userToken, BindingResult
+            bindingResult) throws IOException {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         NotificationReviewDTO notificationReview = mapper.convertValue(requestDTO.getRequest().get("Reviewer"), NotificationReviewDTO.class);
