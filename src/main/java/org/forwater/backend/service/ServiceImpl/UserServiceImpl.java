@@ -2109,18 +2109,28 @@ public class UserServiceImpl implements UserService {
 
         List<LinkedHashMap> activitiesList = (List<LinkedHashMap>) registryResponse.getResult();
         List<NotificationDTOEntity> activityData = new ArrayList<>();
-        activitiesList.forEach(activities -> {
+        for (int i = 0; i < activitiesList.size(); i++) {
             NotificationDTOEntity activityResponse = new NotificationDTOEntity();
-            if (activities.get("userId").equals(userId) && !activities.get("status").equals("Created")) {
-                convertRegistryResponseToNotifications(activityResponse, activities, userId);
+            if (activitiesList.get(i).get("userId").equals(userId) && (activitiesList.get(i).get("status") == null || !activitiesList.get(i).get("status").equals("Created"))) {
+                convertRegistryResponseToNotifications(activityResponse, activitiesList.get(i), userId);
                 activityData.add(activityResponse);
-            } else if (activities.get("status").equals("Created") && checkIsReviewer(userId)) {
-                convertRegistryResponseToNotifications(activityResponse, activities, userId);
+            } else if (activitiesList.get(i).get("status").equals("Created") && checkIsReviewer(userId)) {
+                convertRegistryResponseToNotifications(activityResponse, activitiesList.get(i), userId);
                 activityData.add(activityResponse);
             }
-
-
-        });
+        }
+//        activitiesList.forEach(activities -> {
+//            NotificationDTOEntity activityResponse = new NotificationDTOEntity();
+//            if (activities.get("userId").equals(userId) && !activities.get("status").equals("Created")) {
+//                convertRegistryResponseToNotifications(activityResponse, activities, userId);
+//                activityData.add(activityResponse);
+//            } else if (activities.get("status").equals("Created") && checkIsReviewer(userId)) {
+//                convertRegistryResponseToNotifications(activityResponse, activities, userId);
+//                activityData.add(activityResponse);
+//            }
+//
+//
+//        });
 
         // sorting logic
         activityData.sort(Comparator.comparing(NotificationDTOEntity::getCreatedAt));
@@ -2158,7 +2168,10 @@ public class UserServiceImpl implements UserService {
         activityResponse.setUserId((String) notifications.get("userId"));
 
         activityResponse.setFirstName((String) notifications.get("firstName"));
-        activityResponse.setSpringCode((String) notifications.get("springCode"));
+        if (null!=notifications.get("springCode"))
+            activityResponse.setSpringCode((String) notifications.get("springCode"));
+        else
+            activityResponse.setSpringCode("");
         if (null!=notifications.get("dischargeDataOsid"))
             activityResponse.setDischargeDataOsid((String) notifications.get("dischargeDataOsid"));
         else
@@ -2167,9 +2180,13 @@ public class UserServiceImpl implements UserService {
             activityResponse.setReviewerName((String) notifications.get("reviewerName"));
         else
             activityResponse.setReviewerName("");
-        activityResponse.setStatus((String) notifications.get("status"));
+        if (null!=notifications.get("status"))
+            activityResponse.setStatus((String) notifications.get("status"));
+        else
+            activityResponse.setStatus("");
         activityResponse.setNotificationTitle((String) notifications.get("notificationTitle"));
         activityResponse.setOsid((String) notifications.get("osid"));
+        log.info("%^&*((((((((((((((((((((((((((((((((((((((((((((9");
 
     }
 
@@ -2491,7 +2508,6 @@ public class UserServiceImpl implements UserService {
                     userResource.get(roles.getUserId()).roles().realmLevel() //
                             .add(Arrays.asList(arghyamUserRole));
                     generateNotificationsForRoles(rolemap,requestDTO,adminToken,bindingResult,adminToken,roles);
-
                     break;
                 }
             }
@@ -2523,7 +2539,10 @@ public class UserServiceImpl implements UserService {
         notificationDTO.setCreatedAt(System.currentTimeMillis());
         notificationDTO.setUserId((String) map.get("userId"));
         notificationDTO.setFirstName(getFirstNameByUserId((String) map.get("admin")));
-        notificationDTO.setNotificationTitle(getFirstNameByUserId(roles.getAdmin())+ Constants.ROLES_NOTIFICATION );
+        if (roles.getRole().equals("Arghyam-reviewer"))
+            notificationDTO.setNotificationTitle(getFirstNameByUserId(roles.getAdmin())+ " gave you reviewer access");
+        else if (roles.getRole().equals("Arghyam-admin"))
+            notificationDTO.setNotificationTitle(getFirstNameByUserId(roles.getAdmin())+ " gave you admin access");
 
         rolemap.put("notifications", notificationDTO);
         try {
@@ -2681,7 +2700,7 @@ public class UserServiceImpl implements UserService {
         notificationDTO.setStatus(notificationReview.getStatus());
         notificationDTO.setUserId(notificationReview.getUserId());
         notificationDTO.setSpringCode(notificationReview.getSpringCode());
-        notificationDTO.setReviwerName("");
+        notificationDTO.setReviewerName("");
         notificationDTO.setFirstName(getFirstNameByUserId(notificationReview.getUserId()));
 
         if(notificationReview.getStatus().equalsIgnoreCase("Accepted")){
