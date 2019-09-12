@@ -6,7 +6,7 @@ public class NotificationReviewDTO {
 
     private String status;
 
-    private String notificationOsid;
+    private String osid;
 
     public String getStatus() {
         return status;
@@ -16,11 +16,11 @@ public class NotificationReviewDTO {
         this.status = status;
     }
 
-    public String getNotificationOsid() {
-        return notificationOsid;
+    public String getOsid() {
+        return osid;
     }
 
-    public void setNotificationOsid(String notificationOsid) {
-        this.notificationOsid = notificationOsid;
+    public void setOsid(String osid) {
+        this.osid = osid;
     }
 }
