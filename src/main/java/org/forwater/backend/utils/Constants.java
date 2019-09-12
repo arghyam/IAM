@@ -72,6 +72,10 @@ public class Constants {
 
     public static final String NOTIFICATION_DISCHARGE="Spring discharge data was submitted by ";
 
+    public static final String NOTIFICATION_STATUS_ACCEPTED="approve your request to view details and add discharge data ";
+
+    public static final String NOTIFICATION_STATUS_REJECTED="rejected your request to view details and add discharge data ";
+
     public static final String NOTIFICATION_ACCEPTED="Spring discharge data was approved by ";
 
     public static final String NOTIFICATION_REJECTED="Spring discharge data was rejected by ";
