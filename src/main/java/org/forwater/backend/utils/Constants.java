@@ -88,9 +88,9 @@ public class Constants {
 
     public static final String ID_SEARCH_STATE = "org.forwater.create";
 
-
     public static final String NOTIFICATION_GENERATION="Spring access is requested by ";
 
+    public static final String ROLES_NOTIFICATION=" gave you admin access";
 
 
 }

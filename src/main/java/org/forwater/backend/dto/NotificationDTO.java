@@ -13,12 +13,12 @@ public class NotificationDTO {
     private String firstName;
     private String reviewerName;
 
-    public String getReviwerName() {
+    public String getReviewerName() {
         return reviewerName;
     }
 
-    public void setReviwerName(String reviwerName) {
-        this.reviewerName = reviwerName;
+    public void setReviewerName(String reviewerName) {
+        this.reviewerName = reviewerName;
     }
 
     public String getFirstName() {
