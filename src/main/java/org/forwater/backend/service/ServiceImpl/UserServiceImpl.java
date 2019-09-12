@@ -2111,26 +2111,18 @@ public class UserServiceImpl implements UserService {
         List<NotificationDTOEntity> activityData = new ArrayList<>();
         for (int i = 0; i < activitiesList.size(); i++) {
             NotificationDTOEntity activityResponse = new NotificationDTOEntity();
-            if (activitiesList.get(i).get("userId").equals(userId) && (activitiesList.get(i).get("status") == null || !activitiesList.get(i).get("status").equals("Created"))) {
+            if (activitiesList.get(i).get("userId").equals(userId) && activitiesList.get(i).get("status") != null && !activitiesList.get(i).get("status").equals("Created")) {
                 convertRegistryResponseToNotifications(activityResponse, activitiesList.get(i), userId);
                 activityData.add(activityResponse);
-            } else if (activitiesList.get(i).get("status").equals("Created") && checkIsReviewer(userId)) {
+            } else if (activitiesList.get(i).get("userId").equals(userId) && activitiesList.get(i).get("status") == null) {
+                convertRegistryResponseToNotifications(activityResponse, activitiesList.get(i), userId);
+                activityData.add(activityResponse);
+            } else if (activitiesList.get(i).get("status") != null &&activitiesList.get(i).get("status").equals("Created") && checkIsReviewer(userId)) {
                 convertRegistryResponseToNotifications(activityResponse, activitiesList.get(i), userId);
                 activityData.add(activityResponse);
             }
+
         }
-//        activitiesList.forEach(activities -> {
-//            NotificationDTOEntity activityResponse = new NotificationDTOEntity();
-//            if (activities.get("userId").equals(userId) && !activities.get("status").equals("Created")) {
-//                convertRegistryResponseToNotifications(activityResponse, activities, userId);
-//                activityData.add(activityResponse);
-//            } else if (activities.get("status").equals("Created") && checkIsReviewer(userId)) {
-//                convertRegistryResponseToNotifications(activityResponse, activities, userId);
-//                activityData.add(activityResponse);
-//            }
-//
-//
-//        });
 
         // sorting logic
         activityData.sort(Comparator.comparing(NotificationDTOEntity::getCreatedAt));
