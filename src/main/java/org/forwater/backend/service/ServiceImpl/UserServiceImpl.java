@@ -969,7 +969,7 @@ public class UserServiceImpl implements UserService {
         notificationDTO.setSpringCode(dischargeData.getSpringCode());
         notificationDTO.setUserId(dischargeData.getUserId());
         notificationDTO.setDischargeDataOsid(osid);
-        notificationDTO.setReviwerName("");
+        notificationDTO.setReviewerName("");
         notificationDTO.setStatus(dischargeData.getStatus());
         notificationDTO.setFirstName(getFirstNameByUserId(dischargeData.getUserId()));
         notificationDTO.setNotificationTitle(title + getFirstNameByUserId(dischargeData.getUserId()));
@@ -1437,7 +1437,7 @@ public class UserServiceImpl implements UserService {
         notificationDTO.setDischargeDataOsid(dischargeData.getOsid());
         notificationDTO.setUserId(dischargeData.getSubmittedBy());
         notificationDTO.setSpringCode("");
-        notificationDTO.setReviwerName(getFirstNameByUserId(dischargeData.getReviewerId()));
+        notificationDTO.setReviewerName(getFirstNameByUserId(dischargeData.getReviewerId()));
         notificationDTO.setFirstName(getFirstNameByUserId(dischargeData.getSubmittedBy()));
         notificationDTO.setNotificationTitle(title + getFirstNameByUserId(dischargeData.getReviewerId()));
 
@@ -2113,9 +2113,15 @@ public class UserServiceImpl implements UserService {
 
         activityResponse.setFirstName((String) notifications.get("firstName"));
         activityResponse.setSpringCode((String) notifications.get("springCode"));
-        activityResponse.setDischargeDataOsid((String) notifications.get("dischargeDataOsid"));
+        if (null!=notifications.get("dischargeDataOsid"))
+            activityResponse.setDischargeDataOsid((String) notifications.get("dischargeDataOsid"));
+        else
+            activityResponse.setDischargeDataOsid("");
+        if (null!=notifications.get("reviewerName"))
+            activityResponse.setReviewerName((String) notifications.get("reviewerName"));
+        else
+            activityResponse.setReviewerName("");
         activityResponse.setStatus((String) notifications.get("status"));
-        activityResponse.setReviewerName((String) notifications.get("reviwerName"));
         activityResponse.setNotificationTitle((String) notifications.get("notificationTitle"));
         activityResponse.setOsid((String) notifications.get("osid"));
 
@@ -2137,7 +2143,7 @@ public class UserServiceImpl implements UserService {
         activityResponse.setFirstName((String) notifications.get("firstName"));
         activityResponse.setSpringCode((String) notifications.get("springCode"));
         activityResponse.setStatus((String) notifications.get("status"));
-        activityResponse.setReviewerName((String) notifications.get("reviwerName"));
+        activityResponse.setReviewerName((String) notifications.get("reviewerName"));
         activityResponse.setNotificationTitle((String) notifications.get("notificationTitle"));
 
     }
@@ -2402,6 +2408,11 @@ public class UserServiceImpl implements UserService {
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
 
         RolesDTO roles = mapper.convertValue(requestDTO.getRequest().get("roles"), RolesDTO.class);
+        Map<String, Object> rolemap= new HashMap<>();
+        rolemap.put("userId",roles.getUserId());
+        rolemap.put("admin",roles.getAdmin());
+        rolemap.put("roles",roles.getRole());
+
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         Map<String, Object> responseMap = new HashMap<>();
         List<String> assignedRoles = new ArrayList<>();
@@ -2427,6 +2438,8 @@ public class UserServiceImpl implements UserService {
                 } else if (!userRoles.get(i).getName().equals(roles.getRole())) {
                     userResource.get(roles.getUserId()).roles().realmLevel() //
                             .add(Arrays.asList(arghyamUserRole));
+                    generateNotificationsForRoles(rolemap,requestDTO,adminToken,bindingResult,adminToken,roles);
+
                     break;
                 }
 
@@ -2448,6 +2461,35 @@ public class UserServiceImpl implements UserService {
         }
 
         return loginAndRegisterResponseMap;
+
+    }
+
+    private void generateNotificationsForRoles(Map<String, Object> map, RequestDTO requestDTO, String adminToken, BindingResult bindingResult, String token, RolesDTO roles) throws IOException {
+
+        HashMap<String, Object> rolemap = new HashMap<>();
+        RolesNotificationDTO notificationDTO = new RolesNotificationDTO();
+        notificationDTO.setCreatedAt(System.currentTimeMillis());
+        notificationDTO.setUserId((String) map.get("userId"));
+        notificationDTO.setFirstName(getFirstNameByUserId((String) map.get("admin")));
+        notificationDTO.setNotificationTitle(getFirstNameByUserId(roles.getAdmin())+ Constants.ROLES_NOTIFICATION );
+
+        rolemap.put("notifications", notificationDTO);
+        try {
+            String stringRequest = mapper.writeValueAsString(rolemap);
+            RegistryRequest registryRequest = new RegistryRequest(null, rolemap, RegistryResponse.API_ID.CREATE.getId(), stringRequest);
+            Call<RegistryResponse> notificationResponse = registryDAO.createUser(adminToken, registryRequest);
+            Response response = notificationResponse.execute();
+
+            if (!response.isSuccessful()) {
+                log.info("response is un successfull due to :" + response.errorBody().toString());
+            } else {
+                log.info("response is successfull " + response);
+            }
+        } catch (JsonProcessingException e) {
+            log.error("error is :" + e);
+        }
+
+
 
     }
 
