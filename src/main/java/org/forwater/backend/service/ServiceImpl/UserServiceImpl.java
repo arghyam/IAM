@@ -57,6 +57,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static java.util.Arrays.asList;
+import static java.util.Arrays.parallelSetAll;
 
 @Component
 @Service
@@ -618,7 +619,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Cacheable("springsCache")
-    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult, Integer pageNumber) throws IOException {
+    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult, Integer pageNumber, String userId) throws IOException {
 
 
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
@@ -650,7 +651,7 @@ public class UserServiceImpl implements UserService {
             springList.stream().forEach(spring -> {
                 Springs springResponse = new Springs();
                 try {
-                    convertRegistryResponseToSpring(adminToken, springResponse, spring);
+                    convertRegistryResponseToSpring(requestDTO, adminToken, springResponse, spring, userId);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -658,17 +659,30 @@ public class UserServiceImpl implements UserService {
             });
 
 
-            List<SpringsWithFormattedTime> updatedSpringList = new ArrayList<>();
+            List<GetAllSpringsWithFormattedTime> updatedSpringList = new ArrayList<>();
             SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd HH:mm:ss z yyyy",
                     Locale.ENGLISH);
             springData.stream().forEach(spring -> {
-                SpringsWithFormattedTime newSpring = new SpringsWithFormattedTime();
+                GetAllSpringsWithFormattedTime newSpring = new GetAllSpringsWithFormattedTime();
                 try {
                     newSpring.setCreatedTimeStamp(dateFormat.parse(spring.getCreatedTimeStamp()));
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
+                try {
+                    List<PrivateSpringDTO> privateSpringsResponseList = privateSpringsResponse(requestDTO, adminToken, userId);
 
+                    for (int i = 0; i < privateSpringsResponseList.size(); i++) {
+                        if (spring.getSpringCode().equals(privateSpringsResponseList.get(i).getSpringCode())) {
+                            newSpring.setPrivateAccess(true);
+                        }
+                        else if (!spring.getSpringCode().equals(privateSpringsResponseList.get(i).getSpringCode())){
+                            newSpring.setPrivateAccess(false);
+                    }
+                }
+                }catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
 
                 newSpring.setImages(spring.getImages());
                 newSpring.setExtraInformation(spring.getExtraInformation());
@@ -688,7 +702,7 @@ public class UserServiceImpl implements UserService {
                 updatedSpringList.add(newSpring);
             });
 
-            updatedSpringList.sort(Comparator.comparing(SpringsWithFormattedTime::getCreatedTimeStamp).reversed());
+            updatedSpringList.sort(Comparator.comparing(GetAllSpringsWithFormattedTime::getCreatedTimeStamp).reversed());
 //                List<SpringstoLowerCase> updatedSprings = new ArrayList<>();
 //                updatedSpringList.stream().forEach(springsWithFormattedTime -> {
 //                    Springs spring1 = new Springs();
@@ -729,10 +743,10 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private void paginatedResponse(int startValue, int pageNumber, int endValue, List<SpringsWithFormattedTime> newSprings, PaginatedResponse paginatedResponse) {
+    private void paginatedResponse(int startValue, int pageNumber, int endValue, List<GetAllSpringsWithFormattedTime> newSprings, PaginatedResponse paginatedResponse) {
         startValue = ((pageNumber - 1) * 5);
         endValue = (newSprings.size() > 5 * pageNumber) ? (startValue + 5) : newSprings.size();
-        List<SpringsWithFormattedTime> springsList = new ArrayList<>();
+        List<GetAllSpringsWithFormattedTime> springsList = new ArrayList<>();
         for (int j = startValue; j < endValue; j++) {
             springsList.add(newSprings.get(j));
         }
@@ -741,8 +755,9 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private void convertRegistryResponseToSpring(String adminToken, Springs springResponse, LinkedHashMap spring) throws IOException {
+    private void convertRegistryResponseToSpring(RequestDTO requestDTO, String adminToken, Springs springResponse, LinkedHashMap spring, String userId) throws IOException {
 
+        List<PrivateSpringDTO> response = new ArrayList<>();
         springResponse.setUpdatedTimeStamp((String) spring.get("updatedTimeStamp"));
         springResponse.setOrgId((String) spring.get("orgId"));
         springResponse.setUserId((String) spring.get("userId"));
@@ -758,6 +773,8 @@ public class UserServiceImpl implements UserService {
         springResponse.setLongitude((Double) spring.get("longitude"));
         springResponse.setOwnershipType((String) spring.get("ownershipType"));
 
+
+        log.info("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
 
         java.util.Date expiration = new java.util.Date();
         long expTimeMillis = expiration.getTime();
@@ -794,6 +811,44 @@ public class UserServiceImpl implements UserService {
             URL url = amazonS3.generatePresignedUrl(appContext.getBucketName(), "arghyam/" + result, expiration);
             springResponse.setImages(Arrays.asList(String.valueOf(url)));
         }
+    }
+
+    private List<PrivateSpringDTO> privateSpringsResponse(RequestDTO requestDTO, String adminToken, String userId) throws JsonProcessingException {
+
+        Map<String, Object> searchMap = new HashMap<>();
+        searchMap.put("userId", userId);
+        Map<String, Object> privateSpringMap = new HashMap<>();
+        privateSpringMap.put("privateSpring", searchMap);
+        List<PrivateSpringDTO> privateSpringData = new ArrayList<>();
+
+        String stringRequest = objectMapper.writeValueAsString(privateSpringMap);
+        RegistryRequest registryRequest = new RegistryRequest(null, privateSpringMap, RegistryResponse.API_ID.SEARCH.getId(), stringRequest);
+
+        try {
+            Call<RegistryResponse> createRegistryEntryCall = registryDao.searchUser(adminToken, registryRequest);
+            retrofit2.Response<RegistryResponse> registryUserCreationResponse = createRegistryEntryCall.execute();
+            if (!registryUserCreationResponse.isSuccessful()) {
+                log.error("Error Creating registry entry {} ", registryUserCreationResponse.errorBody().string());
+            }
+
+            RegistryResponse registryResponse;
+            registryResponse = registryUserCreationResponse.body();
+            Map<String, Object> response = new HashMap<>();
+            List<LinkedHashMap> springList = (List<LinkedHashMap>) registryResponse.getResult();
+            springList.stream().forEach(spring -> {
+                PrivateSpringDTO springResponse = new PrivateSpringDTO();
+                springResponse.setSpringCode((String) spring.get("springCode"));
+                springResponse.setUserId((String) spring.get("userId"));
+                privateSpringData.add(springResponse);
+            });
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        return privateSpringData;
     }
 
     /**
@@ -899,9 +954,9 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> response = new HashMap<>();
         List<UserRoles> listResultRoles = new ArrayList<>();
         HashMap<String, Object> paramValues = new HashMap<>();
-        paramValues.put("did","");
-        paramValues.put("key","");
-        paramValues.put("msgid","");
+        paramValues.put("did", "");
+        paramValues.put("key", "");
+        paramValues.put("msgid", "");
         UsersResource userResource = realmResource.users();
 //            getRegisteredUsers.get(i).setRealmRoles(allUserRoles.get(i));
         for (int i = 0; i < getRegisteredUsers.size(); i++) {
@@ -1136,6 +1191,7 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> extraInfo = new HashMap<>();
         extraInfo.put("extraInfo", "geoLocation");
         springs.setExtraInformation(extraInfo);
+//        springs.setPrivateSpring(false);
 
         Map<String, Object> springMap = new HashMap<>();
 
@@ -2069,7 +2125,7 @@ public class UserServiceImpl implements UserService {
             } else if (activitiesList.get(i).get("userId").equals(userId) && activitiesList.get(i).get("status") == null) {
                 convertRegistryResponseToNotifications(activityResponse, activitiesList.get(i), userId);
                 activityData.add(activityResponse);
-            } else if (activitiesList.get(i).get("status") != null &&activitiesList.get(i).get("status").equals("Created") && checkIsReviewer(userId)) {
+            } else if (activitiesList.get(i).get("status") != null && activitiesList.get(i).get("status").equals("Created") && checkIsReviewer(userId)) {
                 convertRegistryResponseToNotifications(activityResponse, activitiesList.get(i), userId);
                 activityData.add(activityResponse);
             }
@@ -2129,7 +2185,7 @@ public class UserServiceImpl implements UserService {
             } else if (activitiesList.get(i).get("userId").equals(userId) && activitiesList.get(i).get("status") == null) {
                 convertRegistryResponseToNotifications(activityResponse, activitiesList.get(i), userId);
                 activityData.add(activityResponse);
-            } else if (activitiesList.get(i).get("status") != null &&activitiesList.get(i).get("status").equals("Created") && checkIsReviewer(userId)) {
+            } else if (activitiesList.get(i).get("status") != null && activitiesList.get(i).get("status").equals("Created") && checkIsReviewer(userId)) {
                 convertRegistryResponseToNotifications(activityResponse, activitiesList.get(i), userId);
                 activityData.add(activityResponse);
             }
@@ -2172,19 +2228,19 @@ public class UserServiceImpl implements UserService {
         activityResponse.setUserId((String) notifications.get("userId"));
 
         activityResponse.setFirstName((String) notifications.get("firstName"));
-        if (null!=notifications.get("springCode"))
+        if (null != notifications.get("springCode"))
             activityResponse.setSpringCode((String) notifications.get("springCode"));
         else
             activityResponse.setSpringCode("");
-        if (null!=notifications.get("dischargeDataOsid"))
+        if (null != notifications.get("dischargeDataOsid"))
             activityResponse.setDischargeDataOsid((String) notifications.get("dischargeDataOsid"));
         else
             activityResponse.setDischargeDataOsid("");
-        if (null!=notifications.get("reviewerName"))
+        if (null != notifications.get("reviewerName"))
             activityResponse.setReviewerName((String) notifications.get("reviewerName"));
         else
             activityResponse.setReviewerName("");
-        if (null!=notifications.get("status"))
+        if (null != notifications.get("status"))
             activityResponse.setStatus((String) notifications.get("status"));
         else
             activityResponse.setStatus("");
@@ -2458,10 +2514,10 @@ public class UserServiceImpl implements UserService {
         String adminToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         Boolean notRemoved = true;
         RolesDTO roles = mapper.convertValue(requestDTO.getRequest().get("roles"), RolesDTO.class);
-        Map<String, Object> rolemap= new HashMap<>();
-        rolemap.put("userId",roles.getUserId());
-        rolemap.put("admin",roles.getAdmin());
-        rolemap.put("roles",roles.getRole());
+        Map<String, Object> rolemap = new HashMap<>();
+        rolemap.put("userId", roles.getUserId());
+        rolemap.put("admin", roles.getAdmin());
+        rolemap.put("roles", roles.getRole());
 
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         Map<String, Object> responseMap = new HashMap<>();
@@ -2492,7 +2548,7 @@ public class UserServiceImpl implements UserService {
                 if (!userRoles.get(i).getName().equals(roles.getRole()) && notRemoved) {
                     userResource.get(roles.getUserId()).roles().realmLevel() //
                             .add(Arrays.asList(arghyamUserRole));
-                    generateNotificationsForRoles(rolemap,requestDTO,adminToken,bindingResult,adminToken,roles);
+                    generateNotificationsForRoles(rolemap, requestDTO, adminToken, bindingResult, adminToken, roles);
                     break;
                 }
             }
@@ -2525,9 +2581,9 @@ public class UserServiceImpl implements UserService {
         notificationDTO.setUserId((String) map.get("userId"));
         notificationDTO.setFirstName(getFirstNameByUserId((String) map.get("admin")));
         if (roles.getRole().equals("Arghyam-reviewer"))
-            notificationDTO.setNotificationTitle(getFirstNameByUserId(roles.getAdmin())+ " gave you reviewer access");
+            notificationDTO.setNotificationTitle(getFirstNameByUserId(roles.getAdmin()) + " gave you reviewer access");
         else if (roles.getRole().equals("Arghyam-admin"))
-            notificationDTO.setNotificationTitle(getFirstNameByUserId(roles.getAdmin())+ " gave you admin access");
+            notificationDTO.setNotificationTitle(getFirstNameByUserId(roles.getAdmin()) + " gave you admin access");
 
         rolemap.put("notifications", notificationDTO);
         try {
@@ -2544,7 +2600,6 @@ public class UserServiceImpl implements UserService {
         } catch (JsonProcessingException e) {
             log.error("error is :" + e);
         }
-
 
 
     }
@@ -2597,36 +2652,36 @@ public class UserServiceImpl implements UserService {
         Map<String, Object> responseMap = new HashMap<>();
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         NotificationReviewer notificationReview = mapper.convertValue(requestDTO.getRequest().get("Reviewer"), NotificationReviewer.class);
-            Map<String, Object> reviewMap = new HashMap<>();
-            reviewMap.put("status","done");
-            reviewMap.put("osid",notificationReview.getOsid());
-            Map<String, Object> map = new HashMap<>();
-            map.put("notifications",reviewMap);
-            String objectMapper = new ObjectMapper().writeValueAsString(map);
-            RegistryRequest registryRequest = new RegistryRequest(null, map, RegistryResponse.API_ID.UPDATE.getId(), objectMapper);
+        Map<String, Object> reviewMap = new HashMap<>();
+        reviewMap.put("status", "done");
+        reviewMap.put("osid", notificationReview.getOsid());
+        Map<String, Object> map = new HashMap<>();
+        map.put("notifications", reviewMap);
+        String objectMapper = new ObjectMapper().writeValueAsString(map);
+        RegistryRequest registryRequest = new RegistryRequest(null, map, RegistryResponse.API_ID.UPDATE.getId(), objectMapper);
 
-            try {
-                Call<RegistryResponse> createRegistryEntryCall = registryDao.updateUser(adminAccessToken, registryRequest);
-                retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
-                if (registryUserCreationResponse.isSuccessful() && registryUserCreationResponse.code() == 200) {
+        try {
+            Call<RegistryResponse> createRegistryEntryCall = registryDao.updateUser(adminAccessToken, registryRequest);
+            retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
+            if (registryUserCreationResponse.isSuccessful() && registryUserCreationResponse.code() == 200) {
 
-                    RegistryResponse registryResponse = new RegistryResponse();
-                    generateNotificationForReviewer(adminAccessToken, notificationReview, requestDTO, bindingResult);
+                RegistryResponse registryResponse = new RegistryResponse();
+                generateNotificationForReviewer(adminAccessToken, notificationReview, requestDTO, bindingResult);
 
-                    if(notificationReview.getStatus().equalsIgnoreCase("Accepted")){
+                if (notificationReview.getStatus().equalsIgnoreCase("Accepted")) {
                     createPrivateSpring(requestDTO, adminAccessToken, notificationReview);
-                    }
-
-                } else {
-                    Map<String, Object> response = new HashMap<>();
-                    response.put("responseCode", registryUserCreationResponse.code());
-                    response.put("responseStatus", registryUserCreationResponse.message());
-                    loginAndRegisterResponseMap.setResponse(response);
                 }
 
-            } catch (IOException e) {
-                log.error("Error creating registry entry : {} ", e.getMessage());
+            } else {
+                Map<String, Object> response = new HashMap<>();
+                response.put("responseCode", registryUserCreationResponse.code());
+                response.put("responseStatus", registryUserCreationResponse.message());
+                loginAndRegisterResponseMap.setResponse(response);
             }
+
+        } catch (IOException e) {
+            log.error("Error creating registry entry : {} ", e.getMessage());
+        }
 
         responseMap.put("responseCode", 200);
         responseMap.put("responseStatus", "successful");
@@ -2639,34 +2694,34 @@ public class UserServiceImpl implements UserService {
 
     private void createPrivateSpring(RequestDTO requestDTO, String adminAccessToken, NotificationReviewer notificationReview) throws JsonProcessingException {
 
-            Map<String, Object> privateSpringMap = new HashMap<>();
-            privateSpringMap.put("springCode",notificationReview.getSpringCode());
-            privateSpringMap.put("userId",notificationReview.getUserId());
-            Map<String, Object> privateSpring = new HashMap<>();
-            privateSpring.put("privateSpring",privateSpringMap);
+        Map<String, Object> privateSpringMap = new HashMap<>();
+        privateSpringMap.put("springCode", notificationReview.getSpringCode());
+        privateSpringMap.put("userId", notificationReview.getUserId());
+        Map<String, Object> privateSpring = new HashMap<>();
+        privateSpring.put("privateSpring", privateSpringMap);
 
-            String objectMapper = new ObjectMapper().writeValueAsString(privateSpring);
-            RegistryRequest registryRequest = new RegistryRequest(null, privateSpring, RegistryResponse.API_ID.CREATE.getId(), objectMapper);
+        String objectMapper = new ObjectMapper().writeValueAsString(privateSpring);
+        RegistryRequest registryRequest = new RegistryRequest(null, privateSpring, RegistryResponse.API_ID.CREATE.getId(), objectMapper);
 
-            try {
-                Call<RegistryResponse> createRegistryEntryCall = registryDao.createUser(adminAccessToken, registryRequest);
-                retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
-                if (!registryUserCreationResponse.isSuccessful()) {
-                    log.info("response is un successfull due to :" + registryUserCreationResponse.errorBody().toString());
-                } else {
-                    log.info("response is successfull " + registryUserCreationResponse);
-                }
-
-            } catch (IOException e) {
-                log.error("Error creating registry entry : {} ", e.getMessage());
+        try {
+            Call<RegistryResponse> createRegistryEntryCall = registryDao.createUser(adminAccessToken, registryRequest);
+            retrofit2.Response registryUserCreationResponse = createRegistryEntryCall.execute();
+            if (!registryUserCreationResponse.isSuccessful()) {
+                log.info("response is un successfull due to :" + registryUserCreationResponse.errorBody().toString());
+            } else {
+                log.info("response is successfull " + registryUserCreationResponse);
             }
+
+        } catch (IOException e) {
+            log.error("Error creating registry entry : {} ", e.getMessage());
+        }
 
     }
 
     private void generateNotificationForReviewer(String adminAccessToken, NotificationReviewer notificationReview, RequestDTO requestDTO, BindingResult bindingResult) throws IOException {
-        Springs springsDetails= new Springs();
+        Springs springsDetails = new Springs();
         HashMap<String, Object> map = new HashMap<>();
-        springsDetails= getSpringDetailsBySpringCode(notificationReview.getSpringCode());
+        springsDetails = getSpringDetailsBySpringCode(notificationReview.getSpringCode());
         NotificationDTO notificationDTO = new NotificationDTO();
         notificationDTO.setCreatedAt(System.currentTimeMillis());
         notificationDTO.setStatus(notificationReview.getStatus());
@@ -2675,11 +2730,11 @@ public class UserServiceImpl implements UserService {
         notificationDTO.setReviewerName("");
         notificationDTO.setFirstName(getFirstNameByUserId(notificationReview.getUserId()));
 
-        if(notificationReview.getStatus().equalsIgnoreCase("Accepted")){
-        notificationDTO.setNotificationTitle(getFirstNameByUserId(notificationReview.getAdminId()) + Constants.NOTIFICATION_STATUS_ACCEPTED + springsDetails.getSpringName() );
+        if (notificationReview.getStatus().equalsIgnoreCase("Accepted")) {
+            notificationDTO.setNotificationTitle(getFirstNameByUserId(notificationReview.getAdminId()) + Constants.NOTIFICATION_STATUS_ACCEPTED + springsDetails.getSpringName());
         }
-        if(notificationReview.getStatus().equalsIgnoreCase("Rejected")){
-            notificationDTO.setNotificationTitle(getFirstNameByUserId(notificationReview.getAdminId())+ Constants.NOTIFICATION_STATUS_REJECTED + springsDetails.getSpringName());
+        if (notificationReview.getStatus().equalsIgnoreCase("Rejected")) {
+            notificationDTO.setNotificationTitle(getFirstNameByUserId(notificationReview.getAdminId()) + Constants.NOTIFICATION_STATUS_REJECTED + springsDetails.getSpringName());
         }
 
         notificationDTO.setRequesterId("");
@@ -2697,9 +2752,7 @@ public class UserServiceImpl implements UserService {
             } else {
                 log.info("response is successfull " + response);
             }
-        }
-
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 

@@ -1,20 +1,18 @@
 package org.forwater.backend.dto;
 
-import org.forwater.backend.entity.Springs;
-
 import java.util.List;
 
 public class PaginatedResponse {
 
-    List<SpringsWithFormattedTime> springs;
+    List<GetAllSpringsWithFormattedTime> springs;
 
     int totalSprings;
 
-    public List<SpringsWithFormattedTime> getSprings() {
+    public List<GetAllSpringsWithFormattedTime> getSprings() {
         return springs;
     }
 
-    public void setSprings(List<SpringsWithFormattedTime> springs) {
+    public void setSprings(List<GetAllSpringsWithFormattedTime> springs) {
         this.springs = springs;
     }
 

@@ -1,14 +1,10 @@
 package org.forwater.backend.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class SpringsWithFormattedTime extends SpringLocation {
+public class GetAllSpringsWithFormattedTime extends  SpringLocation {
 
 
     private String springCode;
@@ -37,6 +33,7 @@ public class SpringsWithFormattedTime extends SpringLocation {
 
     private Date updatedTimeStamp;
 
+    private Boolean privateAccess;
 
     public String getSpringCode() {
         return springCode;
@@ -142,5 +139,11 @@ public class SpringsWithFormattedTime extends SpringLocation {
         this.updatedTimeStamp = updatedTimeStamp;
     }
 
+    public Boolean getPrivateAccess() {
+        return privateAccess;
+    }
 
+    public void setPrivateAccess(Boolean privateAccess) {
+        this.privateAccess = privateAccess;
+    }
 }
