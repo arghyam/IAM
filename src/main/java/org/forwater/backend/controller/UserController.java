@@ -97,12 +97,14 @@ public class UserController {
         return userService.getSpringById(requestDTO);
     }
 
-    @PostMapping(value = "/getSprings")
+    @PostMapping(value = "/{userId}/getSprings")
     public LoginAndRegisterResponseMap getAllSprings(@ApiParam(value = "spring", required = true, name="spring") @Validated @RequestBody RequestDTO requestDTO,
                                                      @ApiParam(value = "pageNumber", required = true, name="pageNumber")
                                                      @RequestParam(value = "pageNumber",required = false, defaultValue = "") Integer pageNumber,
+                                                     @ApiParam(value = "userId", example = "012345", required = true)
+                                                     @PathVariable(value = "userId") String userId,
                                                      BindingResult bindingResult) throws IOException {
-        return userService.getAllSprings(requestDTO, bindingResult, pageNumber);
+        return userService.getAllSprings(requestDTO, bindingResult, pageNumber,userId);
     }
 
 

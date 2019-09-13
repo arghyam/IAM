@@ -4,12 +4,10 @@ import org.forwater.backend.dto.LoginAndRegisterResponseMap;
 import org.forwater.backend.dto.RequestDTO;
 import org.forwater.backend.dto.ResponseDTO;
 import org.keycloak.admin.client.Keycloak;
-import org.keycloak.representations.idm.RoleRepresentation;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
 
 public interface UserService {
 
@@ -41,7 +39,7 @@ public interface UserService {
 
     Object getSpringById( RequestDTO springId) throws IOException;
 
-    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult, Integer pageNumber) throws IOException;
+    public LoginAndRegisterResponseMap getAllSprings(RequestDTO requestDTO, BindingResult bindingResult, Integer pageNumber, String userId) throws IOException;
 
     public LoginAndRegisterResponseMap getAdditionalDetailsForSpring(String springCode,RequestDTO requestDTO, BindingResult bindingResult) throws IOException;
 
