@@ -171,14 +171,14 @@ public class UserController {
     }
 
 
-    @PostMapping(value = "/user/generateNotifications")
+    @PostMapping(value = "/user/privateSpringAccess")
     public void generateNotifications(@ApiParam(value = "user", required = true, name="user") @Validated @RequestBody RequestDTO requestDTO, String userToken,
                             BindingResult bindingResult) throws IOException {
         userService.generateNotifications(requestDTO, userToken, bindingResult);
     }
 
 
-    @PostMapping(value = "/user/reviewNotifications")
+    @PostMapping(value = "/user/reviewPrivateAccess")
     public LoginAndRegisterResponseMap reviewNotifications(@ApiParam(value = "user", required = true, name="user") @Validated @RequestBody RequestDTO requestDTO, String userToken,
                                       BindingResult bindingResult) throws IOException {
        return userService.reviewNotifications(requestDTO, userToken, bindingResult);

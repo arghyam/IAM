@@ -2554,7 +2554,7 @@ public class UserServiceImpl implements UserService {
         Springs springsDetails = new Springs();
         Map<String, Object> map = new HashMap<>();
         springsDetails = getSpringDetailsBySpringCode(notificationsData.getSpringCode());
-        NotificationData notificationDTO = new NotificationData();
+        NotificationDTO notificationDTO = new NotificationDTO();
         notificationDTO.setCreatedAt(System.currentTimeMillis());
         notificationDTO.setSpringCode(notificationsData.getSpringCode());
         notificationDTO.setUserId(springsDetails.getUserId());
@@ -2562,6 +2562,8 @@ public class UserServiceImpl implements UserService {
         notificationDTO.setStatus("created");
         notificationDTO.setFirstName(getFirstNameByUserId(notificationsData.getUserId()));
         notificationDTO.setNotificationTitle(Constants.NOTIFICATION_GENERATION + getFirstNameByUserId(notificationsData.getUserId()));
+        notificationDTO.setDischargeDataOsid("");
+
         map.put("notifications", notificationDTO);
 
         map.put("notifications", notificationDTO);
