@@ -10,6 +10,15 @@ public class NotificationDTOEntity {
     private String osid;
     private String firstName;
     private String reviewerName;
+    private String requesterId;
+
+    public String getRequesterId() {
+        return requesterId;
+    }
+
+    public void setRequesterId(String requesterId) {
+        this.requesterId = requesterId;
+    }
 
     public String getReviewerName() {
         return reviewerName;

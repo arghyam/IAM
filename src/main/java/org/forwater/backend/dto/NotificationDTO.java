@@ -12,6 +12,15 @@ public class NotificationDTO {
     private long createdAt;
     private String firstName;
     private String reviewerName;
+    private  String requesterId;
+
+    public String getRequesterId() {
+        return requesterId;
+    }
+
+    public void setRequesterId(String requesterId) {
+        this.requesterId = requesterId;
+    }
 
     public String getReviewerName() {
         return reviewerName;

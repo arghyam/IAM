@@ -2190,6 +2190,10 @@ public class UserServiceImpl implements UserService {
             activityResponse.setStatus("");
         activityResponse.setNotificationTitle((String) notifications.get("notificationTitle"));
         activityResponse.setOsid((String) notifications.get("osid"));
+        if (null!=notifications.get("requesterId"))
+            activityResponse.setRequesterId((String) notifications.get("requesterId"));
+        else
+            activityResponse.setRequesterId("");
 
     }
 
@@ -2561,8 +2565,9 @@ public class UserServiceImpl implements UserService {
         notificationDTO.setReviewerName("");
         notificationDTO.setStatus("created");
         notificationDTO.setFirstName(getFirstNameByUserId(notificationsData.getUserId()));
-        notificationDTO.setNotificationTitle(Constants.NOTIFICATION_GENERATION + getFirstNameByUserId(notificationsData.getUserId()));
+        notificationDTO.setNotificationTitle(getFirstNameByUserId(notificationsData.getUserId())+ Constants.NOTIFICATION_GENERATION + springsDetails.getSpringName());
         notificationDTO.setDischargeDataOsid("");
+        notificationDTO.setRequesterId(notificationsData.getUserId());
 
         map.put("notifications", notificationDTO);
 
@@ -2676,6 +2681,8 @@ public class UserServiceImpl implements UserService {
         if(notificationReview.getStatus().equalsIgnoreCase("Rejected")){
             notificationDTO.setNotificationTitle(getFirstNameByUserId(notificationReview.getAdminId())+ Constants.NOTIFICATION_STATUS_REJECTED + springsDetails.getSpringName());
         }
+
+        notificationDTO.setRequesterId("");
         notificationDTO.setDischargeDataOsid(notificationReview.getOsid());
 
         map.put("notifications", notificationDTO);
