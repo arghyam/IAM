@@ -2,6 +2,7 @@ package org.forwater.backend.service.ServiceImpl;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.util.IOUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -9,6 +10,10 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.util.GeometricShapeFactory;
+import net.bytebuddy.utility.RandomString;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItem;
+import org.apache.commons.io.FileUtils;
 import org.forwater.backend.config.AppContext;
 import org.forwater.backend.dao.KeycloakDAO;
 import org.forwater.backend.dao.KeycloakService;
@@ -38,6 +43,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.PropertyEditorRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
@@ -45,13 +51,17 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import retrofit2.Call;
 import retrofit2.Response;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.beans.PropertyEditor;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -673,17 +683,16 @@ public class UserServiceImpl implements UserService {
                     List<PrivateSpringDTO> privateSpringsResponseList = privateSpringsResponse(requestDTO, adminToken, userId);
 
                     for (int i = 0; i < privateSpringsResponseList.size(); i++) {
-                        if (spring.getSpringCode().equals(privateSpringsResponseList.get(i).getSpringCode())) {
+                        if (spring.getSpringCode().equals(privateSpringsResponseList.get(i).getSpringCode()) || spring.getUserId().equalsIgnoreCase(privateSpringsResponseList.get(i).getUserId())) {
                             newSpring.setPrivateAccess(true);
                         }
-                        else if (!spring.getSpringCode().equals(privateSpringsResponseList.get(i).getSpringCode())){
-                            newSpring.setPrivateAccess(false);
                     }
-                }
-                }catch (JsonProcessingException e) {
+                } catch (JsonProcessingException e) {
                     e.printStackTrace();
                 }
-
+                if (null==newSpring.getPrivateAccess()){
+                    newSpring.setPrivateAccess(false);
+                }
                 newSpring.setImages(spring.getImages());
                 newSpring.setExtraInformation(spring.getExtraInformation());
                 newSpring.setNumberOfHouseholds(spring.getNumberOfHouseholds());
@@ -1184,7 +1193,7 @@ public class UserServiceImpl implements UserService {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         springs.setSpringCode(getAlphaNumericString(6));
         springs.setUserId(springs.getUserId());
-        springs.setCreatedTimeStamp(new Date().toString());
+        springs.setCreatedTimeStamp(springs.getCreatedTimeStamp() == null ? new Date().toString() : springs.getCreatedTimeStamp());
         springs.setUpdatedTimeStamp("");
         springs.setUsage(springs.getUsage() == null ? Arrays.asList("") : springs.getUsage());
         springs.setNumberOfHouseholds(springs.getNumberOfHouseholds() == null ? 0 : springs.getNumberOfHouseholds());
@@ -2246,11 +2255,25 @@ public class UserServiceImpl implements UserService {
             activityResponse.setStatus("");
         activityResponse.setNotificationTitle((String) notifications.get("notificationTitle"));
         activityResponse.setOsid((String) notifications.get("osid"));
-        if (null!=notifications.get("requesterId"))
+        if (null != notifications.get("requesterId"))
             activityResponse.setRequesterId((String) notifications.get("requesterId"));
         else
             activityResponse.setRequesterId("");
 
+    }
+
+    public LoginAndRegisterResponseMap batch() throws IOException {
+        URL url = new URL("http://forms.arghyam.org:8080/view/binaryData?blobKey=odisha_spring%5B%40version%3Dnull+and+%40uiVersion%3Dnull%5D%2Fodisha_spring%5B%40key%3Duuid%3A9f1b5322-5a54-4d3a-942d-6161cdbc6bd3%5D%2Fbegin_group_spring%3Aspring_photo");
+        BufferedImage image = ImageIO.read(url);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ImageIO.write(image, "jpg", byteArrayOutputStream);
+        byteArrayOutputStream.flush();
+        String fileName = RandomString.make() + new Date().getTime() + ".jpg";
+        MultipartFile multipartFile = new MockMultipartFile(fileName, fileName, "image/jpg", byteArrayOutputStream.toByteArray());
+        byteArrayOutputStream.close();
+        ResponseDTO a = updateProfilePicture(multipartFile);
+        log.info("Working ", "multipart");
+        return null;
     }
 
     @Override
@@ -2620,7 +2643,7 @@ public class UserServiceImpl implements UserService {
         notificationDTO.setReviewerName("");
         notificationDTO.setStatus("created");
         notificationDTO.setFirstName(getFirstNameByUserId(notificationsData.getUserId()));
-        notificationDTO.setNotificationTitle(getFirstNameByUserId(notificationsData.getUserId())+ Constants.NOTIFICATION_GENERATION + springsDetails.getSpringName());
+        notificationDTO.setNotificationTitle(getFirstNameByUserId(notificationsData.getUserId()) + Constants.NOTIFICATION_GENERATION + springsDetails.getSpringName());
         notificationDTO.setDischargeDataOsid("");
         notificationDTO.setRequesterId(notificationsData.getUserId());
 

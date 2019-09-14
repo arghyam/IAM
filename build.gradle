@@ -87,7 +87,7 @@ dependencies {
 
     compile group: 'org.bitbucket.b_c', name: 'jose4j', version: '0.6.5'
 
-
+    compile group: 'commons-fileupload', name: 'commons-fileupload', version: '1.4'
 
     // https://mvnrepository.com/artifact/org.keycloak/keycloak-core
     compile group: 'org.keycloak', name: 'keycloak-core', version: '5.0.0'
