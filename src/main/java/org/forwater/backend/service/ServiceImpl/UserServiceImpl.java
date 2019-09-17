@@ -2,7 +2,6 @@ package org.forwater.backend.service.ServiceImpl;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.util.IOUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -11,9 +10,6 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.util.GeometricShapeFactory;
 import net.bytebuddy.utility.RandomString;
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.disk.DiskFileItem;
-import org.apache.commons.io.FileUtils;
 import org.forwater.backend.config.AppContext;
 import org.forwater.backend.dao.KeycloakDAO;
 import org.forwater.backend.dao.KeycloakService;
@@ -51,7 +47,6 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -61,7 +56,6 @@ import java.beans.PropertyEditor;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -2262,18 +2256,28 @@ public class UserServiceImpl implements UserService {
 
     }
 
-    public LoginAndRegisterResponseMap batch() throws IOException {
-        URL url = new URL("http://forms.arghyam.org:8080/view/binaryData?blobKey=odisha_spring%5B%40version%3Dnull+and+%40uiVersion%3Dnull%5D%2Fodisha_spring%5B%40key%3Duuid%3A9f1b5322-5a54-4d3a-942d-6161cdbc6bd3%5D%2Fbegin_group_spring%3Aspring_photo");
-        BufferedImage image = ImageIO.read(url);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        ImageIO.write(image, "jpg", byteArrayOutputStream);
-        byteArrayOutputStream.flush();
-        String fileName = RandomString.make() + new Date().getTime() + ".jpg";
-        MultipartFile multipartFile = new MockMultipartFile(fileName, fileName, "image/jpg", byteArrayOutputStream.toByteArray());
-        byteArrayOutputStream.close();
-        ResponseDTO a = updateProfilePicture(multipartFile);
-        log.info("Working ", "multipart");
-        return null;
+    public List<String> batch(ArrayList<String> images) throws IOException {
+            List<String> batchResponse= new ArrayList<>();
+        for (int i = 0; i <images.size() ; i++) {
+            URL url =new URL(images.get(i));
+            BufferedImage image = ImageIO.read(url);
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            ImageIO.write(image, "jpg", byteArrayOutputStream);
+            byteArrayOutputStream.flush();
+            String fileName = RandomString.make() + new Date().getTime() + ".jpg";
+            MultipartFile multipartFile = new MockMultipartFile(fileName, fileName, "image/jpg", byteArrayOutputStream.toByteArray());
+            byteArrayOutputStream.close();
+           ResponseDTO a= updateProfilePicture(multipartFile);
+           log.info(a.getResponse().toString());
+            JSONObject object = new JSONObject(a);
+            JSONObject subObject = object.getJSONObject("response");
+            String imageUrl = (String) subObject.get("imageUrl");
+
+           batchResponse.add(imageUrl);
+           log.info("************************");
+        }
+
+        return batchResponse;
     }
 
     @Override
@@ -2283,6 +2287,8 @@ public class UserServiceImpl implements UserService {
         BufferedReader br = null;
         String line = "";
         String cvsSplitBy = ",";
+        HashMap map= new HashMap();
+
         try {
             br = new BufferedReader(new FileReader(csvFile));
             while ((line = br.readLine()) != null) {
@@ -2294,21 +2300,30 @@ public class UserServiceImpl implements UserService {
                 HashMap<String, Object> params = new HashMap<>();
                 HashMap<String, Object> newSpring = new HashMap<>();
                 ArrayList<String> images = new ArrayList<>();
+                List<String> batchUploadResponse= new ArrayList<>();
                 images.add(spring[7]);
                 springs.put("tenantId", "");
                 springs.put("orgId", "");
-                springs.put("latitude", spring[0]);
-                springs.put("longitude", spring[1]);
-                springs.put("elevation", spring[2]);
-                springs.put("accuracy", spring[3]);
+                springs.put("latitude", spring[3]);
+                springs.put("longitude", spring[4]);
+                springs.put("elevation", spring[5]);
+                springs.put("accuracy", spring[6]);
                 springs.put("village", "");
                 springs.put("submittedBy", "");
-                springs.put("springName", spring[4]);
-                springs.put("userId", spring[5]);
-                springs.put("ownershipType", spring[6]);
-                springs.put("images", images);
+                springs.put("springName", spring[2]);
+                springs.put("userId", spring[0]);
+                Date date=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(spring[1]);
+
+                SimpleDateFormat formatter = new SimpleDateFormat("E MMM dd HH:mm:ss z yyyy");
+                String strDate = formatter.format(date);
+                springs.put("createdTimeStamp", strDate);
+
+                batchUploadResponse =batch(images);
+
+                springs.put("images", batchUploadResponse);
+                springs.put("ownershipType","");
+
                 springsRequest.put("springs", springs);
-                JSONObject jsonObject = new JSONObject(newSpring);
                 RequestDTO requestDTO1 = new RequestDTO();
                 requestDTO1.setRequest(springsRequest);
                 requestDTO1.setEts("11234");
@@ -2501,10 +2516,60 @@ public class UserServiceImpl implements UserService {
                         return null;
                     }
                 };
-                createSpring(requestDTO1, bindingResult);
-                System.out.println(jsonObject);
+                JSONObject object = new JSONObject(createSpring(requestDTO1,bindingResult));
+                JSONObject subObject = object.getJSONObject("response");
+                JSONObject object1 = subObject.getJSONObject("responseObject");
+                String springCode = (String) object1.get("springCode");
+
+                springs.clear();
+                springsRequest.clear();
+                springs.put("springCode", springCode);
+                springs.put("seasonality", spring[8]);
+                ArrayList<String> usages = new ArrayList<>();
+                usages.add(spring[10]);
+                springs.put("usage", usages);
+                springs.put("numberOfHousehold", spring[14]);
+                List<Integer> months = new ArrayList<>();
+                months.add(Integer.valueOf(spring[15]));
+                months.add(Integer.valueOf(spring[16]));
+                springs.put("userId", spring[0]);
+
+                springs.put("months", months);
+                springsRequest.put("additionalInfo", springs);
+                requestDTO1.setRequest(springsRequest);
+                createAdditionalInfo(springCode,requestDTO1,bindingResult);
+
+                springs.clear();
+                springsRequest.clear();
+
+                springs.put("userId", spring[0]);
+                springs.put("volumeOfContainer",spring[14]);
+                springs.put("status","created");
+                springs.put("springCode", springCode);
+                springs.put("images", batchUploadResponse);
+
+                List<Double> dischargeTime = new ArrayList<>();
+                dischargeTime.add(Double.valueOf(spring[11]));
+                dischargeTime.add(Double.valueOf(spring[12]));
+                dischargeTime.add(Double.valueOf(spring[13]));
+
+                Double total=0d;
+                for (int i = 0; i < dischargeTime.size(); i++) {
+                    total = total+ dischargeTime.get(i);
+                }
+                Double avg = total/dischargeTime.size();
+                ArrayList<Double> lps = new ArrayList<>();
+                lps.add(Double.parseDouble(spring[14])/avg);
+
+                springs.put("dischargeTime",dischargeTime);
+                springs.put("litresPerSecond",lps);
+                springsRequest.put("dischargeData", springs);
+                requestDTO1.setRequest(springsRequest);
+
+                createDischargeData(springCode,requestDTO1,bindingResult);
+
             }
-        } catch (IOException e) {
+        } catch (IOException | ParseException e) {
             e.printStackTrace();
         } finally {
             if (br != null) {

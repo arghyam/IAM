@@ -59,10 +59,10 @@ public class UserController {
     public LoginAndRegisterResponseMap getRegistereUsers() throws IOException {
         return userService.getRegistereUsers();
     }
-    @GetMapping(value = "/batch")
-    public LoginAndRegisterResponseMap batch() throws IOException {
-        return userService.batch();
-    }
+//    @GetMapping(value = "/batch")
+//    public LoginAndRegisterResponseMap batch() throws IOException {
+//        return userService.batch(spring[8]);
+//    }
 
 
     @PostMapping(value = "/springs/{springCode}/discharge")

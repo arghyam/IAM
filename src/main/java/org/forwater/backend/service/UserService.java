@@ -8,6 +8,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public interface UserService {
 
@@ -63,5 +65,5 @@ public interface UserService {
 
     LoginAndRegisterResponseMap reviewNotifications(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException;
 
-    LoginAndRegisterResponseMap batch() throws IOException;
+    List<String> batch(ArrayList<String> s) throws IOException;
 }
