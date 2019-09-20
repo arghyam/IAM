@@ -19,7 +19,12 @@ public interface KeycloakDAO {
     @GET(Constants.SEARCH_USERS)
     Call<List<UserRepresentation>> searchUsers(@Path("realm") String realm,
                                                @Header("Authorization") String token,
-                                               @Query("username") String username ) throws IOException;
+                                               @Query("username") String username) throws IOException;
+
+    @GET(Constants.SEARCH_USERS_BY_NAME)
+    Call<List<UserRepresentation>> searchUsersByName(@Path("realm") String realm,
+                                                     @Header("Authorization") String token,
+                                                     @Query("search") String username) throws IOException;
 
 
     @POST(Constants.GENERATE_ACCESS_TOKEN)
@@ -43,8 +48,7 @@ public interface KeycloakDAO {
     @POST(Constants.KEYCLOAK_REGISTER_API)
     Call<Void> registerUser(@Path("realm") String realm,
                             @Header("Authorization") String token,
-                            @Body UserRepresentation userss ) throws IOException;
-
+                            @Body UserRepresentation users) throws IOException;
 
 
     @POST(Constants.LOGIN_API)
@@ -75,7 +79,6 @@ public interface KeycloakDAO {
                                   @Path("realm") String realm) throws IOException;
 
 
-
     @POST(Constants.LOGIN_API)
     @FormUrlEncoded
     Call<LoginResponseDTO> loginWithScope(@Path("realm") String realm, @Field("username") String username,
@@ -86,11 +89,9 @@ public interface KeycloakDAO {
                                           @Field("scope") String scope);
 
 
-
     @GET(Constants.SEARCH_USERS)
     Call<List<UserRepresentation>> getRegisteredUsers(@Path("realm") String realm,
-                                                @Header("Authorization") String token) throws IOException;
-
+                                                      @Header("Authorization") String token) throws IOException;
 
 
     @GET(Constants.SEARCH_USER_BY_ID)
@@ -101,13 +102,13 @@ public interface KeycloakDAO {
 
     @GET(Constants.GET_ROLES_FROM_USERID)
     Call<List<RoleRepresentation>> getRolesBasedOnUserId(@Path("realm") String realm,
-                                                           @Path("id") String id,
-                                                           @Header("Authorization")String token) throws Exception;
+                                                         @Path("id") String id,
+                                                         @Header("Authorization") String token) throws Exception;
 
     @GET(Constants.GET_USERS_BASED_ON_ROLE_NAME)
     Call<List<UserRepresentation>> getUsersBasedOnRoleName(@Path("realm") String realm,
-                                                         @Path("role_name") String roleName,
-                                                         @Header("Authorization")String token) throws Exception;
+                                                           @Path("role_name") String roleName,
+                                                           @Header("Authorization") String token) throws Exception;
 
 
 }

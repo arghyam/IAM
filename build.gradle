@@ -48,7 +48,7 @@ dependencies {
     compile('io.springfox:springfox-swagger2:2.7.0')
     compile('io.springfox:springfox-swagger-ui:2.7.0')
 
-   // compile group: 'org.keycloak', name: 'keycloak-spring-security-adapter', version: '4.7.0.Final'
+    // compile group: 'org.keycloak', name: 'keycloak-spring-security-adapter', version: '4.7.0.Final'
 
     // https://mvnrepository.com/artifact/joda-time/joda-time
     compile group: 'joda-time', name: 'joda-time', version: '2.3'
@@ -84,6 +84,8 @@ dependencies {
     compile('io.springfox:springfox-swagger2:2.7.0')
     compile('io.springfox:springfox-swagger-ui:2.7.0')
 
+    // https://mvnrepository.com/artifact/org.springframework/spring-mock
+    compile group: 'org.springframework', name: 'spring-mock', version: '2.0.8'
 
     compile group: 'org.bitbucket.b_c', name: 'jose4j', version: '0.6.5'
 
@@ -91,7 +93,7 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.keycloak/keycloak-core
     compile group: 'org.keycloak', name: 'keycloak-core', version: '5.0.0'
-    
+
     // https://mvnrepository.com/artifact/com.mashape.unirest/unirest-java
     compile group: 'com.mashape.unirest', name: 'unirest-java', version: '1.4.9'
 

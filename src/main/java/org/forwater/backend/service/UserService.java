@@ -66,4 +66,5 @@ public interface UserService {
     LoginAndRegisterResponseMap reviewNotifications(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws IOException;
 
     List<String> batch(ArrayList<String> s) throws IOException;
+
 }

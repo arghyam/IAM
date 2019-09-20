@@ -97,6 +97,28 @@ public class KeycloakServiceImpl implements KeycloakService {
         return response.body().get(0);
     }
 
+    @Override
+    public UserRepresentation getUserByFirstname(String token, String firstName, String realm) throws IOException {
+
+        Call<List<UserRepresentation>> userRepresentationCall = keycloakDao.searchUsersByName(realm, "Bearer " + token,firstName);
+
+        Response<List<UserRepresentation>> response = userRepresentationCall.execute();
+
+        if (!response.isSuccessful()) {
+            if (response.code() == 401) {
+                throw new UnauthorizedException("User is not Authorized");
+            } else if (response.code() == 404) {
+                return null;
+            } else if (response.code() == 403) {
+                throw new ForbiddenException("forbidden");
+            }
+        }
+        if (response.body().isEmpty() || response.body().size() == 0) {
+            return null;
+        }
+        return response.body().get(0);
+    }
+
 
     @Override
     public AccessTokenResponseDTO refreshAccessToken(LoginDTO loginDTO) {

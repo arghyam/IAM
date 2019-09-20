@@ -896,6 +896,7 @@ public class UserServiceImpl implements UserService {
         UserRepresentation userRepresentation = keycloakService.getUserByUsername(userToken, springuser.getPhonenumber(), appContext.getRealm());
         if (userRepresentation != null) {
             userRepresentation.setFirstName(springuser.getName());
+            userRepresentation.setLastName(springuser.getName());
         }
         keycloakService.updateUser(userToken, userRepresentation.getId(), userRepresentation, appContext.getRealm());
         Map<String, Object> springUser = new HashMap<>();
@@ -2278,6 +2279,12 @@ public class UserServiceImpl implements UserService {
         }
 
         return batchResponse;
+    }
+
+    public String getRegistereUserIdByName() throws IOException {
+        String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        UserRepresentation userRepresentation = keycloakService.getUserByFirstname(adminAccessToken,"anirudh", appContext.getRealm());
+        return userRepresentation.getId();
     }
 
     @Override

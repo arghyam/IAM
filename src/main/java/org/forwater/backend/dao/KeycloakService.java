@@ -19,6 +19,8 @@ public interface KeycloakService {
 
     public UserRepresentation getUserByUsername(String token, String username, String realm) throws IOException;
 
+    public UserRepresentation getUserByFirstname(String token, String firstName, String realm) throws IOException;
+
     public AccessTokenResponseDTO refreshAccessToken(LoginDTO loginDTO);
 
     public ResponseDTO logout(String id) throws IOException;
