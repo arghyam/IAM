@@ -1211,11 +1211,13 @@ public class UserServiceImpl implements UserService {
         extraInfo.put("dischargeHistory", extraInformationDTO.getDischargeHistory());
         extraInfo.put("rock_type", extraInformationDTO.getRock_type());
         extraInfo.put("explain_other", extraInformationDTO.getExplain_other());
+        extraInfo.put("photo_centre", extraInformationDTO.getPhoto_centre());
         extraInfo.put("latitude1", extraInformationDTO.getLatitude1());
         extraInfo.put("longitude1", extraInformationDTO.getLongitude1());
         extraInfo.put("altitude1", extraInformationDTO.getAltitude1());
         extraInfo.put("accuracy1", extraInformationDTO.getAccuracy1());
         extraInfo.put("latitude2", extraInformationDTO.getLatitude2());
+
         extraInfo.put("longitude2", extraInformationDTO.getLongitude2());
         extraInfo.put("altitude2", extraInformationDTO.getAltitude2());
         extraInfo.put("accuracy2", extraInformationDTO.getAccuracy2());
@@ -1235,7 +1237,9 @@ public class UserServiceImpl implements UserService {
         extraInfo.put("centre_Accuracy", extraInformationDTO.getCentre_Accuracy());
         extraInfo.put("nos_households", extraInformationDTO.getNos_households());
         extraInfo.put("nos_st_households", extraInformationDTO.getNos_st_households());
-        extraInfo.put("nos_obc_households", extraInformationDTO.getNos_obc_households());
+            extraInfo.put("nos_sc_households", extraInformationDTO.getNos_sc_households());
+
+            extraInfo.put("nos_obc_households", extraInformationDTO.getNos_obc_households());
         extraInfo.put("source_DrinkingWater", extraInformationDTO.getSource_DrinkingWater());
         extraInfo.put("location_DrinkingWater", extraInformationDTO.getLocation_DrinkingWater());
         extraInfo.put("seasonality_DrinkingWater", extraInformationDTO.getSeasonality_DrinkingWater());
@@ -2386,20 +2390,20 @@ public class UserServiceImpl implements UserService {
                         if (i!=1 && i!=3 && i!=4 && spring[i].isEmpty())
                             spring[i] = " ";
                     }
-                    images.add(spring[7]);
+                    images.add(spring[13]);
 
                     ArrayList<String> userName= new ArrayList<>();
                     userName.add(spring[0]);
                     userNameResponse= getRegistereUserIdByName(userName);
                     springs.put("tenantId", "");
                     springs.put("orgId", "");
-                    springs.put("latitude", spring[3]);
-                    springs.put("longitude", spring[4]);
-                    springs.put("elevation", spring[5]);
-                    springs.put("accuracy", spring[6]);
-                    springs.put("village", "");
-                    springs.put("submittedBy", "");
-                    springs.put("springName", spring[2]);
+                    springs.put("latitude", spring[9]);
+                    springs.put("longitude", spring[10]);
+                    springs.put("elevation", spring[11]);
+                    springs.put("accuracy", spring[12]);
+                    springs.put("village", spring[2]);
+                    springs.put("submittedBy", spring[8]);
+                    springs.put("springName", spring[6]);
                     springs.put("userId", userNameResponse);
                     Date date=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(spring[1]);
 
@@ -2410,58 +2414,61 @@ public class UserServiceImpl implements UserService {
                     batchUploadResponse =batch(images);
 
                     springs.put("images", batchUploadResponse);
-                    springs.put("ownershipType","");
+                    springs.put("ownershipType","public");
 
-                    extraInfo.put("waterCollectionBox", spring[17]);
-                    extraInfo.put("pipeline", spring[18]);
+                    extraInfo.put("waterCollectionBox", spring[18]);
+                    extraInfo.put("pipeline", spring[19]);
 
-                    extraInfo.put("springTemperature", spring[19]);
-                    extraInfo.put("springDischarge1", spring[20]);
-                    extraInfo.put("springDischarge2", spring[21]);
-                    extraInfo.put("springDischarge3", spring[22]);
-                    extraInfo.put("dischargeHistory", spring[23]);
-                    extraInfo.put("rock_type", spring[24]);
-                    extraInfo.put("explain_other", spring[25]);
-                    extraInfo.put("latitude1", spring[26]);
-                    extraInfo.put("longitude1", spring[27]);
-                    extraInfo.put("altitude1", spring[28]);
-                    extraInfo.put("accuracy1", spring[29]);
-                    extraInfo.put("latitude2", spring[30]);
-                    extraInfo.put("longitude2", spring[31]);
-                    extraInfo.put("altitude2", spring[32]);
-                    extraInfo.put("accuracy2", spring[33]);
-                    extraInfo.put("latitude3", spring[34]);
-                    extraInfo.put("longitude3", spring[35]);
-                    extraInfo.put("altitude3", spring[36]);
-                    extraInfo.put("accuracy3", spring[37]);
-                    extraInfo.put("latitude4", spring[38]);
-                    extraInfo.put("longitude4", spring[39]);
-                    extraInfo.put("altitude4", spring[40]);
-                    extraInfo.put("accuracy4", spring[41]);
-                    extraInfo.put("loose_soil", spring[42]);
-                    extraInfo.put("spring_distance", spring[43]);
-                    extraInfo.put("centre_Latitude", spring[44]);
-                    extraInfo.put("centre_Longitude", spring[45]);
-                    extraInfo.put("centre_Altitude", spring[46]);
-                    extraInfo.put("centre_Accuracy", spring[47]);
-                    extraInfo.put("nos_households", spring[48]);
-                    extraInfo.put("nos_st_households", spring[49]);
-                    extraInfo.put("nos_obc_households", spring[50]);
-                    extraInfo.put("source_DrinkingWater", spring[51]);
-                    extraInfo.put("location_DrinkingWater", spring[52]);
-                    extraInfo.put("seasonality_DrinkingWater", spring[53]);
-                    extraInfo.put("period_of_flow_DrinkingWater", spring[54]);
-                    extraInfo.put("source_DomesticWater", spring[55]);
-                    extraInfo.put("location_DomesticWater", spring[56]);
-                    extraInfo.put("seasonality_DomesticWater", spring[57]);
-                    extraInfo.put("period_of_flow_DomesticWater", spring[58]);
-                    extraInfo.put("source_IrrigationWater",spring[59]);
-                    extraInfo.put("location_IrrigationWater", spring[60]);
-                    extraInfo.put("seasonality_IrrigationWater", spring[61]);
-                    extraInfo.put("period_of_flow_IrrigationWater", spring[62]);
-                    extraInfo.put("waterSample", spring[63]);
-                    extraInfo.put("testResult", spring[64]);
-                    extraInfo.put("instanceId", spring[65]);
+                    extraInfo.put("springTemperature", spring[20]);
+                    extraInfo.put("springDischarge1", spring[21]);
+                    extraInfo.put("springDischarge2", spring[22]);
+                    extraInfo.put("springDischarge3", spring[23]);
+                    extraInfo.put("dischargeHistory", spring[24]);
+                    extraInfo.put("rock_type", spring[25]);
+                    extraInfo.put("explain_other", spring[26]);
+                    extraInfo.put("latitude1", spring[27]);
+                    extraInfo.put("longitude1", spring[28]);
+                    extraInfo.put("altitude1", spring[29]);
+                    extraInfo.put("accuracy1", spring[30]);
+                    extraInfo.put("latitude2", spring[31]);
+                    extraInfo.put("longitude2", spring[32]);
+                    extraInfo.put("altitude2", spring[33]);
+                    extraInfo.put("accuracy2", spring[34]);
+                    extraInfo.put("latitude3", spring[35]);
+                    extraInfo.put("longitude3", spring[36]);
+                    extraInfo.put("altitude3", spring[37]);
+                    extraInfo.put("accuracy3", spring[38]);
+                    extraInfo.put("latitude4", spring[39]);
+                    extraInfo.put("longitude4", spring[40]);
+                    extraInfo.put("altitude4", spring[41]);
+                    extraInfo.put("accuracy4", spring[42]);
+                    extraInfo.put("loose_soil", spring[43]);
+                    extraInfo.put("spring_distance", spring[44]);
+                    extraInfo.put("centre_Latitude", spring[45]);
+                    extraInfo.put("centre_Longitude", spring[46]);
+                    extraInfo.put("centre_Altitude", spring[47]);
+                    extraInfo.put("centre_Accuracy", spring[48]);
+                    extraInfo.put("photo_centre", spring[49]);
+                    extraInfo.put("nos_households", spring[50]);
+                    extraInfo.put("nos_st_households", spring[51]);
+                    extraInfo.put("nos_sc_households", spring[52]);
+
+                    extraInfo.put("nos_obc_households", spring[53]);
+                    extraInfo.put("source_DrinkingWater", spring[54]);
+                    extraInfo.put("location_DrinkingWater", spring[55]);
+                    extraInfo.put("seasonality_DrinkingWater", spring[56]);
+                    extraInfo.put("period_of_flow_DrinkingWater", spring[57]);
+                    extraInfo.put("source_DomesticWater", spring[58]);
+                    extraInfo.put("location_DomesticWater", spring[59]);
+                    extraInfo.put("seasonality_DomesticWater", spring[60]);
+                    extraInfo.put("period_of_flow_DomesticWater", spring[61]);
+                    extraInfo.put("source_IrrigationWater",spring[62]);
+                    extraInfo.put("location_IrrigationWater", spring[63]);
+                    extraInfo.put("seasonality_IrrigationWater", spring[64]);
+                    extraInfo.put("period_of_flow_IrrigationWater", spring[65]);
+                    extraInfo.put("waterSample", spring[66]);
+                    extraInfo.put("testResult", spring[67]);
+                    extraInfo.put("instanceId", spring[68]);
 
                     springsRequest.put("springs", springs);
                     springsRequest.put("extraInformation",extraInfo);
@@ -2665,13 +2672,12 @@ public class UserServiceImpl implements UserService {
                     springs.clear();
                     springsRequest.clear();
                     springs.put("springCode", springCode);
-                    springs.put("seasonality", spring[8]);
+                    springs.put("seasonality", spring[15]);
                     ArrayList<String> usages = new ArrayList<>();
-                    usages.add(spring[10]);
+                    usages.add(spring[17]);
                     springs.put("usage", usages);
-                    springs.put("numberOfHousehold", spring[14]);
+                    springs.put("numberOfHousehold", spring[48]);
                     List<Integer> months = new ArrayList<>();
-                    months.add(Integer.valueOf(spring[15]));
                     months.add(Integer.valueOf(spring[16]));
                     springs.put("userId", userNameResponse);
 
@@ -2684,15 +2690,15 @@ public class UserServiceImpl implements UserService {
                     springsRequest.clear();
 
                     springs.put("userId",userNameResponse);
-                    springs.put("volumeOfContainer",spring[14]);
+                    springs.put("volumeOfContainer","1000");
                     springs.put("status","created");
                     springs.put("springCode", springCode);
                     springs.put("images", batchUploadResponse);
 
                     List<Double> dischargeTime = new ArrayList<>();
-                    dischargeTime.add(Double.valueOf(spring[11]));
-                    dischargeTime.add(Double.valueOf(spring[12]));
-                    dischargeTime.add(Double.valueOf(spring[13]));
+                    dischargeTime.add(Double.valueOf(spring[21]));
+                    dischargeTime.add(Double.valueOf(spring[22]));
+                    dischargeTime.add(Double.valueOf(spring[23]));
 
                     Double total=0d;
                     for (int i = 0; i < dischargeTime.size(); i++) {
@@ -2700,7 +2706,7 @@ public class UserServiceImpl implements UserService {
                     }
                     Double avg = total/dischargeTime.size();
                     ArrayList<Double> lps = new ArrayList<>();
-                    lps.add(Double.parseDouble(spring[14])/avg);
+                    lps.add(Double.parseDouble(String.valueOf(1000/avg)));
 
                     springs.put("dischargeTime",dischargeTime);
                     springs.put("litresPerSecond",lps);

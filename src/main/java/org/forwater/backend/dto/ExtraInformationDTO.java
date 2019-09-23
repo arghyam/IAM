@@ -52,6 +52,24 @@ public class ExtraInformationDTO {
     private String waterSample;
     private String testResult;
     private String instanceId;
+    private String photo_centre;
+    private String nos_sc_households;
+
+    public String getNos_sc_households() {
+        return nos_sc_households;
+    }
+
+    public void setNos_sc_households(String nos_sc_households) {
+        this.nos_sc_households = nos_sc_households;
+    }
+
+    public String getPhoto_centre() {
+        return photo_centre;
+    }
+
+    public void setPhoto_centre(String photo_centre) {
+        this.photo_centre = photo_centre;
+    }
 
     public String getPipeline() {
         return pipeline;
