@@ -2292,289 +2292,295 @@ public class UserServiceImpl implements UserService {
 
         File csvFile = AmazonUtils.convertMultiPartToFile(file);
         BufferedReader br = null;
+        int startLine = 1;
         String line = "";
         String cvsSplitBy = ",";
         HashMap map= new HashMap();
 
         try {
             br = new BufferedReader(new FileReader(csvFile));
+            int counter=startLine;
             while ((line = br.readLine()) != null) {
-                // use comma as separator
-                String[] spring = line.split(cvsSplitBy);
-                HashMap<String, Object> springs = new HashMap<>();
-                HashMap<String, Object> springsRequest = new HashMap<>();
-                HashMap<String, Object> paramValues = new HashMap<>();
-                HashMap<String, Object> params = new HashMap<>();
-                HashMap<String, Object> newSpring = new HashMap<>();
-                ArrayList<String> images = new ArrayList<>();
-                List<String> batchUploadResponse= new ArrayList<>();
-                images.add(spring[7]);
-                springs.put("tenantId", "");
-                springs.put("orgId", "");
-                springs.put("latitude", spring[3]);
-                springs.put("longitude", spring[4]);
-                springs.put("elevation", spring[5]);
-                springs.put("accuracy", spring[6]);
-                springs.put("village", "");
-                springs.put("submittedBy", "");
-                springs.put("springName", spring[2]);
-                springs.put("userId", spring[0]);
-                Date date=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(spring[1]);
+                if(counter>startLine){
+                    // use comma as separator
+                    String[] spring = line.split(cvsSplitBy);
+                    HashMap<String, Object> springs = new HashMap<>();
+                    HashMap<String, Object> springsRequest = new HashMap<>();
+                    HashMap<String, Object> paramValues = new HashMap<>();
+                    HashMap<String, Object> params = new HashMap<>();
+                    HashMap<String, Object> newSpring = new HashMap<>();
+                    ArrayList<String> images = new ArrayList<>();
+                    List<String> batchUploadResponse= new ArrayList<>();
+                    images.add(spring[7]);
+                    springs.put("tenantId", "");
+                    springs.put("orgId", "");
+                    springs.put("latitude", spring[3]);
+                    springs.put("longitude", spring[4]);
+                    springs.put("elevation", spring[5]);
+                    springs.put("accuracy", spring[6]);
+                    springs.put("village", "");
+                    springs.put("submittedBy", "");
+                    springs.put("springName", spring[2]);
+                    springs.put("userId", spring[0]);
+                    Date date=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(spring[1]);
 
-                SimpleDateFormat formatter = new SimpleDateFormat("E MMM dd HH:mm:ss z yyyy");
-                String strDate = formatter.format(date);
-                springs.put("createdTimeStamp", strDate);
+                    SimpleDateFormat formatter = new SimpleDateFormat("E MMM dd HH:mm:ss z yyyy");
+                    String strDate = formatter.format(date);
+                    springs.put("createdTimeStamp", strDate);
 
-                batchUploadResponse =batch(images);
+                    batchUploadResponse =batch(images);
 
-                springs.put("images", batchUploadResponse);
-                springs.put("ownershipType","");
+                    springs.put("images", batchUploadResponse);
+                    springs.put("ownershipType","");
 
-                springsRequest.put("springs", springs);
-                RequestDTO requestDTO1 = new RequestDTO();
-                requestDTO1.setRequest(springsRequest);
-                requestDTO1.setEts("11234");
-                requestDTO1.setId("forWater.user.createSpring");
-                requestDTO1.setVer("1.0");
-                requestDTO1.setParams(paramValues);
-                BindingResult bindingResult = new BindingResult() {
-                    @Override
-                    public Object getTarget() {
-                        return null;
+                    springsRequest.put("springs", springs);
+                    RequestDTO requestDTO1 = new RequestDTO();
+                    requestDTO1.setRequest(springsRequest);
+                    requestDTO1.setEts("11234");
+                    requestDTO1.setId("forWater.user.createSpring");
+                    requestDTO1.setVer("1.0");
+                    requestDTO1.setParams(paramValues);
+                    BindingResult bindingResult = new BindingResult() {
+                        @Override
+                        public Object getTarget() {
+                            return null;
+                        }
+
+                        @Override
+                        public Map<String, Object> getModel() {
+                            return null;
+                        }
+
+                        @Override
+                        public Object getRawFieldValue(String field) {
+                            return null;
+                        }
+
+                        @Override
+                        public PropertyEditor findEditor(String field, Class<?> valueType) {
+                            return null;
+                        }
+
+                        @Override
+                        public PropertyEditorRegistry getPropertyEditorRegistry() {
+                            return null;
+                        }
+
+                        @Override
+                        public String[] resolveMessageCodes(String errorCode) {
+                            return new String[0];
+                        }
+
+                        @Override
+                        public String[] resolveMessageCodes(String errorCode, String field) {
+                            return new String[0];
+                        }
+
+                        @Override
+                        public void addError(ObjectError error) {
+
+                        }
+
+                        @Override
+                        public String getObjectName() {
+                            return null;
+                        }
+
+                        @Override
+                        public void setNestedPath(String nestedPath) {
+
+                        }
+
+                        @Override
+                        public String getNestedPath() {
+                            return null;
+                        }
+
+                        @Override
+                        public void pushNestedPath(String subPath) {
+
+                        }
+
+                        @Override
+                        public void popNestedPath() throws IllegalStateException {
+
+                        }
+
+                        @Override
+                        public void reject(String errorCode) {
+
+                        }
+
+                        @Override
+                        public void reject(String errorCode, String defaultMessage) {
+
+                        }
+
+                        @Override
+                        public void reject(String errorCode, Object[] errorArgs, String defaultMessage) {
+
+                        }
+
+                        @Override
+                        public void rejectValue(String field, String errorCode) {
+
+                        }
+
+                        @Override
+                        public void rejectValue(String field, String errorCode, String defaultMessage) {
+
+                        }
+
+                        @Override
+                        public void rejectValue(String field, String errorCode, Object[] errorArgs, String defaultMessage) {
+
+                        }
+
+                        @Override
+                        public void addAllErrors(Errors errors) {
+
+                        }
+
+                        @Override
+                        public boolean hasErrors() {
+                            return false;
+                        }
+
+                        @Override
+                        public int getErrorCount() {
+                            return 0;
+                        }
+
+                        @Override
+                        public List<ObjectError> getAllErrors() {
+                            return null;
+                        }
+
+                        @Override
+                        public boolean hasGlobalErrors() {
+                            return false;
+                        }
+
+                        @Override
+                        public int getGlobalErrorCount() {
+                            return 0;
+                        }
+
+                        @Override
+                        public List<ObjectError> getGlobalErrors() {
+                            return null;
+                        }
+
+                        @Override
+                        public ObjectError getGlobalError() {
+                            return null;
+                        }
+
+                        @Override
+                        public boolean hasFieldErrors() {
+                            return false;
+                        }
+
+                        @Override
+                        public int getFieldErrorCount() {
+                            return 0;
+                        }
+
+                        @Override
+                        public List<FieldError> getFieldErrors() {
+                            return null;
+                        }
+
+                        @Override
+                        public FieldError getFieldError() {
+                            return null;
+                        }
+
+                        @Override
+                        public boolean hasFieldErrors(String field) {
+                            return false;
+                        }
+
+                        @Override
+                        public int getFieldErrorCount(String field) {
+                            return 0;
+                        }
+
+                        @Override
+                        public List<FieldError> getFieldErrors(String field) {
+                            return null;
+                        }
+
+                        @Override
+                        public FieldError getFieldError(String field) {
+                            return null;
+                        }
+
+                        @Override
+                        public Object getFieldValue(String field) {
+                            return null;
+                        }
+
+                        @Override
+                        public Class<?> getFieldType(String field) {
+                            return null;
+                        }
+                    };
+                    JSONObject object = new JSONObject(createSpring(requestDTO1,bindingResult));
+                    JSONObject subObject = object.getJSONObject("response");
+                    JSONObject object1 = subObject.getJSONObject("responseObject");
+                    String springCode = (String) object1.get("springCode");
+
+                    springs.clear();
+                    springsRequest.clear();
+                    springs.put("springCode", springCode);
+                    springs.put("seasonality", spring[8]);
+                    ArrayList<String> usages = new ArrayList<>();
+                    usages.add(spring[10]);
+                    springs.put("usage", usages);
+                    springs.put("numberOfHousehold", spring[14]);
+                    List<Integer> months = new ArrayList<>();
+                    months.add(Integer.valueOf(spring[15]));
+                    months.add(Integer.valueOf(spring[16]));
+                    springs.put("userId", spring[0]);
+
+                    springs.put("months", months);
+                    springsRequest.put("additionalInfo", springs);
+                    requestDTO1.setRequest(springsRequest);
+                    createAdditionalInfo(springCode,requestDTO1,bindingResult);
+
+                    springs.clear();
+                    springsRequest.clear();
+
+                    springs.put("userId", spring[0]);
+                    springs.put("volumeOfContainer",spring[14]);
+                    springs.put("status","created");
+                    springs.put("springCode", springCode);
+                    springs.put("images", batchUploadResponse);
+
+                    List<Double> dischargeTime = new ArrayList<>();
+                    dischargeTime.add(Double.valueOf(spring[11]));
+                    dischargeTime.add(Double.valueOf(spring[12]));
+                    dischargeTime.add(Double.valueOf(spring[13]));
+
+                    Double total=0d;
+                    for (int i = 0; i < dischargeTime.size(); i++) {
+                        total = total+ dischargeTime.get(i);
                     }
+                    Double avg = total/dischargeTime.size();
+                    ArrayList<Double> lps = new ArrayList<>();
+                    lps.add(Double.parseDouble(spring[14])/avg);
 
-                    @Override
-                    public Map<String, Object> getModel() {
-                        return null;
-                    }
+                    springs.put("dischargeTime",dischargeTime);
+                    springs.put("litresPerSecond",lps);
+                    springsRequest.put("dischargeData", springs);
+                    requestDTO1.setRequest(springsRequest);
 
-                    @Override
-                    public Object getRawFieldValue(String field) {
-                        return null;
-                    }
-
-                    @Override
-                    public PropertyEditor findEditor(String field, Class<?> valueType) {
-                        return null;
-                    }
-
-                    @Override
-                    public PropertyEditorRegistry getPropertyEditorRegistry() {
-                        return null;
-                    }
-
-                    @Override
-                    public String[] resolveMessageCodes(String errorCode) {
-                        return new String[0];
-                    }
-
-                    @Override
-                    public String[] resolveMessageCodes(String errorCode, String field) {
-                        return new String[0];
-                    }
-
-                    @Override
-                    public void addError(ObjectError error) {
-
-                    }
-
-                    @Override
-                    public String getObjectName() {
-                        return null;
-                    }
-
-                    @Override
-                    public void setNestedPath(String nestedPath) {
-
-                    }
-
-                    @Override
-                    public String getNestedPath() {
-                        return null;
-                    }
-
-                    @Override
-                    public void pushNestedPath(String subPath) {
-
-                    }
-
-                    @Override
-                    public void popNestedPath() throws IllegalStateException {
-
-                    }
-
-                    @Override
-                    public void reject(String errorCode) {
-
-                    }
-
-                    @Override
-                    public void reject(String errorCode, String defaultMessage) {
-
-                    }
-
-                    @Override
-                    public void reject(String errorCode, Object[] errorArgs, String defaultMessage) {
-
-                    }
-
-                    @Override
-                    public void rejectValue(String field, String errorCode) {
-
-                    }
-
-                    @Override
-                    public void rejectValue(String field, String errorCode, String defaultMessage) {
-
-                    }
-
-                    @Override
-                    public void rejectValue(String field, String errorCode, Object[] errorArgs, String defaultMessage) {
-
-                    }
-
-                    @Override
-                    public void addAllErrors(Errors errors) {
-
-                    }
-
-                    @Override
-                    public boolean hasErrors() {
-                        return false;
-                    }
-
-                    @Override
-                    public int getErrorCount() {
-                        return 0;
-                    }
-
-                    @Override
-                    public List<ObjectError> getAllErrors() {
-                        return null;
-                    }
-
-                    @Override
-                    public boolean hasGlobalErrors() {
-                        return false;
-                    }
-
-                    @Override
-                    public int getGlobalErrorCount() {
-                        return 0;
-                    }
-
-                    @Override
-                    public List<ObjectError> getGlobalErrors() {
-                        return null;
-                    }
-
-                    @Override
-                    public ObjectError getGlobalError() {
-                        return null;
-                    }
-
-                    @Override
-                    public boolean hasFieldErrors() {
-                        return false;
-                    }
-
-                    @Override
-                    public int getFieldErrorCount() {
-                        return 0;
-                    }
-
-                    @Override
-                    public List<FieldError> getFieldErrors() {
-                        return null;
-                    }
-
-                    @Override
-                    public FieldError getFieldError() {
-                        return null;
-                    }
-
-                    @Override
-                    public boolean hasFieldErrors(String field) {
-                        return false;
-                    }
-
-                    @Override
-                    public int getFieldErrorCount(String field) {
-                        return 0;
-                    }
-
-                    @Override
-                    public List<FieldError> getFieldErrors(String field) {
-                        return null;
-                    }
-
-                    @Override
-                    public FieldError getFieldError(String field) {
-                        return null;
-                    }
-
-                    @Override
-                    public Object getFieldValue(String field) {
-                        return null;
-                    }
-
-                    @Override
-                    public Class<?> getFieldType(String field) {
-                        return null;
-                    }
-                };
-                JSONObject object = new JSONObject(createSpring(requestDTO1,bindingResult));
-                JSONObject subObject = object.getJSONObject("response");
-                JSONObject object1 = subObject.getJSONObject("responseObject");
-                String springCode = (String) object1.get("springCode");
-
-                springs.clear();
-                springsRequest.clear();
-                springs.put("springCode", springCode);
-                springs.put("seasonality", spring[8]);
-                ArrayList<String> usages = new ArrayList<>();
-                usages.add(spring[10]);
-                springs.put("usage", usages);
-                springs.put("numberOfHousehold", spring[14]);
-                List<Integer> months = new ArrayList<>();
-                months.add(Integer.valueOf(spring[15]));
-                months.add(Integer.valueOf(spring[16]));
-                springs.put("userId", spring[0]);
-
-                springs.put("months", months);
-                springsRequest.put("additionalInfo", springs);
-                requestDTO1.setRequest(springsRequest);
-                createAdditionalInfo(springCode,requestDTO1,bindingResult);
-
-                springs.clear();
-                springsRequest.clear();
-
-                springs.put("userId", spring[0]);
-                springs.put("volumeOfContainer",spring[14]);
-                springs.put("status","created");
-                springs.put("springCode", springCode);
-                springs.put("images", batchUploadResponse);
-
-                List<Double> dischargeTime = new ArrayList<>();
-                dischargeTime.add(Double.valueOf(spring[11]));
-                dischargeTime.add(Double.valueOf(spring[12]));
-                dischargeTime.add(Double.valueOf(spring[13]));
-
-                Double total=0d;
-                for (int i = 0; i < dischargeTime.size(); i++) {
-                    total = total+ dischargeTime.get(i);
+                    createDischargeData(springCode,requestDTO1,bindingResult);
                 }
-                Double avg = total/dischargeTime.size();
-                ArrayList<Double> lps = new ArrayList<>();
-                lps.add(Double.parseDouble(spring[14])/avg);
-
-                springs.put("dischargeTime",dischargeTime);
-                springs.put("litresPerSecond",lps);
-                springsRequest.put("dischargeData", springs);
-                requestDTO1.setRequest(springsRequest);
-
-                createDischargeData(springCode,requestDTO1,bindingResult);
-
+                else
+                    log.info("FirstLine");
+                counter++;
             }
         } catch (IOException | ParseException e) {
             e.printStackTrace();
