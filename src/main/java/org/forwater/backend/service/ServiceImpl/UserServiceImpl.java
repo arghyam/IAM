@@ -1063,7 +1063,7 @@ public class UserServiceImpl implements UserService {
         notificationDTO.setStatus(dischargeData.getStatus());
         notificationDTO.setFirstName(getFirstNameByUserId(dischargeData.getUserId()));
         notificationDTO.setNotificationTitle(title + getFirstNameByUserId(dischargeData.getUserId()));
-
+        notificationDTO.setRequesterId("");
         map.put("notifications", notificationDTO);
         try {
             String stringRequest = mapper.writeValueAsString(map);
@@ -1183,7 +1183,9 @@ public class UserServiceImpl implements UserService {
             IOException {
         String address = "";
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+
         Springs springs = mapper.convertValue(requestDTO.getRequest().get("springs"), Springs.class);
+        ExtraInformationDTO extraInformationDTO= mapper.convertValue(requestDTO.getRequest().get("extraInformation"), ExtraInformationDTO.class);
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         springs.setSpringCode(getAlphaNumericString(6));
         springs.setUserId(springs.getUserId());
@@ -1192,7 +1194,63 @@ public class UserServiceImpl implements UserService {
         springs.setUsage(springs.getUsage() == null ? Arrays.asList("") : springs.getUsage());
         springs.setNumberOfHouseholds(springs.getNumberOfHouseholds() == null ? 0 : springs.getNumberOfHouseholds());
         Map<String, Object> extraInfo = new HashMap<>();
+
         extraInfo.put("extraInfo", "geoLocation");
+        extraInfo.put("waterCollectionBox",extraInformationDTO.getWaterCollectionBox());
+        extraInfo.put("pipeline",extraInformationDTO.getPipeline());
+
+        extraInfo.put("springTemperature",extraInformationDTO.getSpringTemperature());
+        extraInfo.put("springDischarge1",extraInformationDTO.getSpringDischarge1());
+        extraInfo.put("springDischarge2",extraInformationDTO.getSpringDischarge2());
+        extraInfo.put("springDischarge3",extraInformationDTO.getSpringDischarge3());
+        extraInfo.put("dischargeHistory",extraInformationDTO.getDischargeHistory());
+        extraInfo.put("rock_type",extraInformationDTO.getRock_type());
+        extraInfo.put("explain_other",extraInformationDTO.getExplain_other());
+        extraInfo.put("latitude1",extraInformationDTO.getLatitude1());
+        extraInfo.put("longitude1",extraInformationDTO.getLongitude1());
+        extraInfo.put("altitude1",extraInformationDTO.getAltitude1());
+        extraInfo.put("accuracy1",extraInformationDTO.getAccuracy1());
+        extraInfo.put("latitude2",extraInformationDTO.getLatitude2());
+
+        extraInfo.put("longitude2",extraInformationDTO.getLongitude2());
+        extraInfo.put("altitude2",extraInformationDTO.getAltitude2());
+        extraInfo.put("accuracy2",extraInformationDTO.getAccuracy2());
+        extraInfo.put("latitude3",extraInformationDTO.getLatitude3());
+        extraInfo.put("longitude3",extraInformationDTO.getLongitude3());
+        extraInfo.put("altitude3",extraInformationDTO.getAltitude3());
+        extraInfo.put("accuracy3",extraInformationDTO.getAccuracy3());
+        extraInfo.put("latitude4",extraInformationDTO.getLatitude4());
+        extraInfo.put("longitude4",extraInformationDTO.getLongitude4());
+        extraInfo.put("altitude4",extraInformationDTO.getAltitude4());
+        extraInfo.put("accuracy4",extraInformationDTO.getAccuracy4());
+        extraInfo.put("loose_soil",extraInformationDTO.getLoose_soil());
+
+
+        extraInfo.put("spring_distance",extraInformationDTO.getSpring_distance());
+        extraInfo.put("centre_Latitude",extraInformationDTO.getCentre_Latitude());
+        extraInfo.put("centre_Longitude",extraInformationDTO.getCentre_Longitude());
+        extraInfo.put("centre_Altitude",extraInformationDTO.getCentre_Altitude());
+        extraInfo.put("centre_Accuracy",extraInformationDTO.getCentre_Accuracy());
+        extraInfo.put("nos_households",extraInformationDTO.getNos_households());
+        extraInfo.put("nos_st_households",extraInformationDTO.getNos_st_households());
+        extraInfo.put("nos_obc_households",extraInformationDTO.getNos_obc_households());
+        extraInfo.put("source_DrinkingWater",extraInformationDTO.getSource_DrinkingWater());
+        extraInfo.put("location_DrinkingWater",extraInformationDTO.getLocation_DrinkingWater());
+        extraInfo.put("seasonality_DrinkingWater",extraInformationDTO.getSeasonality_DrinkingWater());
+        extraInfo.put("period_of_flow_DrinkingWater",extraInformationDTO.getPeriod_of_flow_DrinkingWater());
+        extraInfo.put("source_DomesticWater",extraInformationDTO.getSource_DomesticWater());
+        extraInfo.put("location_DomesticWater",extraInformationDTO.getLocation_DomesticWater());
+        extraInfo.put("seasonality_DomesticWater",extraInformationDTO.getSeasonality_DomesticWater());
+        extraInfo.put("period_of_flow_DomesticWater",extraInformationDTO.getPeriod_of_flow_DomesticWater());
+        extraInfo.put("source_IrrigationWater",extraInformationDTO.getSource_IrrigationWater());
+        extraInfo.put("location_IrrigationWater",extraInformationDTO.getLocation_IrrigationWater());
+        extraInfo.put("seasonality_IrrigationWater",extraInformationDTO.getSeasonality_IrrigationWater());
+        extraInfo.put("period_of_flow_IrrigationWater",extraInformationDTO.getPeriod_of_flow_IrrigationWater());
+
+        extraInfo.put("waterSample",extraInformationDTO.getWaterSample());
+        extraInfo.put("testResult",extraInformationDTO.getTestResult());
+        extraInfo.put("instanceId",extraInformationDTO.getInstanceId());
+
         springs.setExtraInformation(extraInfo);
 //        springs.setPrivateSpring(false);
 
@@ -2304,6 +2362,8 @@ public class UserServiceImpl implements UserService {
                     // use comma as separator
                     String[] spring = line.split(cvsSplitBy);
                     HashMap<String, Object> springs = new HashMap<>();
+                    HashMap<String, Object> extraInfo = new HashMap<>();
+
                     HashMap<String, Object> springsRequest = new HashMap<>();
                     HashMap<String, Object> paramValues = new HashMap<>();
                     HashMap<String, Object> params = new HashMap<>();
@@ -2338,7 +2398,59 @@ public class UserServiceImpl implements UserService {
                     springs.put("images", batchUploadResponse);
                     springs.put("ownershipType","");
 
+                    extraInfo.put("waterCollectionBox", spring[17]);
+                    extraInfo.put("pipeline", spring[18]);
+
+                    extraInfo.put("springTemperature", spring[19]);
+                    extraInfo.put("springDischarge1", spring[20]);
+                    extraInfo.put("springDischarge2", spring[21]);
+                    extraInfo.put("springDischarge3", spring[22]);
+                    extraInfo.put("dischargeHistory", spring[23]);
+                    extraInfo.put("rock_type", spring[24]);
+                    extraInfo.put("explain_other", spring[25]);
+                    extraInfo.put("latitude1", spring[26]);
+                    extraInfo.put("longitude1", spring[27]);
+                    extraInfo.put("altitude1", spring[28]);
+                    extraInfo.put("accuracy1", spring[29]);
+                    extraInfo.put("latitude2", spring[30]);
+                    extraInfo.put("longitude2", spring[31]);
+                    extraInfo.put("altitude2", spring[32]);
+                    extraInfo.put("accuracy2", spring[33]);
+                    extraInfo.put("latitude3", spring[34]);
+                    extraInfo.put("longitude3", spring[35]);
+                    extraInfo.put("altitude3", spring[36]);
+                    extraInfo.put("accuracy3", spring[37]);
+                    extraInfo.put("latitude4", spring[38]);
+                    extraInfo.put("longitude4", spring[39]);
+                    extraInfo.put("altitude4", spring[40]);
+                    extraInfo.put("accuracy4", spring[41]);
+                    extraInfo.put("loose_soil", spring[42]);
+                    extraInfo.put("spring_distance", spring[43]);
+                    extraInfo.put("centre_Latitude", spring[44]);
+                    extraInfo.put("centre_Longitude", spring[45]);
+                    extraInfo.put("centre_Altitude", spring[46]);
+                    extraInfo.put("centre_Accuracy", spring[47]);
+                    extraInfo.put("nos_households", spring[48]);
+                    extraInfo.put("nos_st_households", spring[49]);
+                    extraInfo.put("nos_obc_households", spring[50]);
+                    extraInfo.put("source_DrinkingWater", spring[51]);
+                    extraInfo.put("location_DrinkingWater", spring[52]);
+                    extraInfo.put("seasonality_DrinkingWater", spring[53]);
+                    extraInfo.put("period_of_flow_DrinkingWater", spring[54]);
+                    extraInfo.put("source_DomesticWater", spring[55]);
+                    extraInfo.put("location_DomesticWater", spring[56]);
+                    extraInfo.put("seasonality_DomesticWater", spring[57]);
+                    extraInfo.put("period_of_flow_DomesticWater", spring[58]);
+                    extraInfo.put("source_IrrigationWater",spring[59]);
+                    extraInfo.put("location_IrrigationWater", spring[60]);
+                    extraInfo.put("seasonality_IrrigationWater", spring[61]);
+                    extraInfo.put("period_of_flow_IrrigationWater", spring[62]);
+                    extraInfo.put("waterSample", spring[63]);
+                    extraInfo.put("testResult", spring[64]);
+                    extraInfo.put("instanceId", spring[65]);
+
                     springsRequest.put("springs", springs);
+                    springsRequest.put("extraInformation",extraInfo);
                     RequestDTO requestDTO1 = new RequestDTO();
                     requestDTO1.setRequest(springsRequest);
                     requestDTO1.setEts("11234");
