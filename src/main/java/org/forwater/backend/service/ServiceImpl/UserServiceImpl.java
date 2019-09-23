@@ -4,6 +4,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
@@ -2361,7 +2362,7 @@ public class UserServiceImpl implements UserService {
 
         try {
             br = new BufferedReader(new FileReader(csvFile));
-            int counter=startLine;
+            int counter=1;
             while ((line = br.readLine()) != null) {
                 if(counter>startLine){
                     // use comma as separator
@@ -2381,13 +2382,13 @@ public class UserServiceImpl implements UserService {
                             String strDate = formatter.format(date);
                             spring[i] = strDate;
                         }
-                        if (i ==0 || i==3 || i==4 || i==7 && spring[i].isEmpty()){
+                        if ((i ==0 || i==3 || i==4 || i==7) && spring[i].isEmpty()){
                             br.skip(i);
                             line = br.readLine();
                             spring = line.split(cvsSplitBy);
                             continue;
                         }
-                        if (i!=1 && i!=3 && i!=4 && spring[i].isEmpty())
+                        if (i!=1 && i!=3 && i!=4 && i!=13 && i!=16 && i!=21 && i!=22 && i!=23 && spring[i].isEmpty())
                             spring[i] = " ";
                     }
                     images.add(spring[13]);
@@ -2411,7 +2412,10 @@ public class UserServiceImpl implements UserService {
                     String strDate = formatter.format(date);
                     springs.put("createdTimeStamp", strDate);
 
-                    batchUploadResponse =batch(images);
+                    if (!images.get(0).isEmpty())
+                        batchUploadResponse =batch(images);
+                    else
+                        batchUploadResponse = asList(" ");
 
                     springs.put("images", batchUploadResponse);
                     springs.put("ownershipType","public");
@@ -2678,9 +2682,11 @@ public class UserServiceImpl implements UserService {
                     springs.put("usage", usages);
                     springs.put("numberOfHousehold", spring[48]);
                     List<Integer> months = new ArrayList<>();
-                    months.add(Integer.valueOf(spring[16]));
+                    if (!spring[16].isEmpty())
+                        months.add(Integer.valueOf(spring[16]));
+                    else
+                        months.add(0);
                     springs.put("userId", userNameResponse);
-
                     springs.put("months", months);
                     springsRequest.put("additionalInfo", springs);
                     requestDTO1.setRequest(springsRequest);
@@ -2696,9 +2702,18 @@ public class UserServiceImpl implements UserService {
                     springs.put("images", batchUploadResponse);
 
                     List<Double> dischargeTime = new ArrayList<>();
-                    dischargeTime.add(Double.valueOf(spring[21]));
-                    dischargeTime.add(Double.valueOf(spring[22]));
-                    dischargeTime.add(Double.valueOf(spring[23]));
+                    if (!spring[21].isEmpty())
+                        dischargeTime.add(Double.valueOf(spring[21]));
+                    else
+                        dischargeTime.add(0.0);
+                    if (!spring[22].isEmpty())
+                        dischargeTime.add(Double.valueOf(spring[22]));
+                    else
+                        dischargeTime.add(0.0);
+                    if (!spring[23].isEmpty())
+                        dischargeTime.add(Double.valueOf(spring[23]));
+                    else
+                        dischargeTime.add(0.0);
 
                     Double total=0d;
                     for (int i = 0; i < dischargeTime.size(); i++) {
