@@ -61,7 +61,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static java.util.Arrays.asList;
-import static java.util.Arrays.parallelSetAll;
 
 @Component
 @Service
@@ -2281,7 +2280,7 @@ public class UserServiceImpl implements UserService {
         return batchResponse;
     }
 
-    public String getRegistereUserIdByName() throws IOException {
+    public String getRegistereUserIdByName(ArrayList<String> userName) throws IOException {
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
         UserRepresentation userRepresentation = keycloakService.getUserByFirstname(adminAccessToken,"anirudh", appContext.getRealm());
         return userRepresentation.getId();
@@ -2311,7 +2310,13 @@ public class UserServiceImpl implements UserService {
                     HashMap<String, Object> newSpring = new HashMap<>();
                     ArrayList<String> images = new ArrayList<>();
                     List<String> batchUploadResponse= new ArrayList<>();
+                    String userNameResponse= null;
+
                     images.add(spring[7]);
+
+                    ArrayList<String> userName= new ArrayList<>();
+                    userName.add(spring[0]);
+                    userNameResponse= getRegistereUserIdByName(userName);
                     springs.put("tenantId", "");
                     springs.put("orgId", "");
                     springs.put("latitude", spring[3]);
@@ -2321,7 +2326,7 @@ public class UserServiceImpl implements UserService {
                     springs.put("village", "");
                     springs.put("submittedBy", "");
                     springs.put("springName", spring[2]);
-                    springs.put("userId", spring[0]);
+                    springs.put("userId", userNameResponse);
                     Date date=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(spring[1]);
 
                     SimpleDateFormat formatter = new SimpleDateFormat("E MMM dd HH:mm:ss z yyyy");
@@ -2542,7 +2547,7 @@ public class UserServiceImpl implements UserService {
                     List<Integer> months = new ArrayList<>();
                     months.add(Integer.valueOf(spring[15]));
                     months.add(Integer.valueOf(spring[16]));
-                    springs.put("userId", spring[0]);
+                    springs.put("userId", userNameResponse);
 
                     springs.put("months", months);
                     springsRequest.put("additionalInfo", springs);
@@ -2552,7 +2557,7 @@ public class UserServiceImpl implements UserService {
                     springs.clear();
                     springsRequest.clear();
 
-                    springs.put("userId", spring[0]);
+                    springs.put("userId",userNameResponse);
                     springs.put("volumeOfContainer",spring[14]);
                     springs.put("status","created");
                     springs.put("springCode", springCode);
