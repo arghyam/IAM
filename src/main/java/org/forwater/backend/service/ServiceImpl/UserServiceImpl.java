@@ -2350,7 +2350,7 @@ public class UserServiceImpl implements UserService {
 
         File csvFile = AmazonUtils.convertMultiPartToFile(file);
         BufferedReader br = null;
-        int startLine = 1;
+        int startLine = 2;
         String line = "";
         String cvsSplitBy = ",";
         HashMap map= new HashMap();
@@ -2367,12 +2367,25 @@ public class UserServiceImpl implements UserService {
 
                     HashMap<String, Object> springsRequest = new HashMap<>();
                     HashMap<String, Object> paramValues = new HashMap<>();
-                    HashMap<String, Object> params = new HashMap<>();
-                    HashMap<String, Object> newSpring = new HashMap<>();
                     ArrayList<String> images = new ArrayList<>();
-                    List<String> batchUploadResponse= new ArrayList<>();
+                    List<String> batchUploadResponse;
                     String userNameResponse= null;
-
+                    for (int i = 0; i < spring.length; i++) {
+                        if (i==1 && spring[i].isEmpty()){
+                            Date date = new Date();
+                            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                            String strDate = formatter.format(date);
+                            spring[i] = strDate;
+                        }
+                        if (i ==0 || i==3 || i==4 || i==7 && spring[i].isEmpty()){
+                            br.skip(i);
+                            line = br.readLine();
+                            spring = line.split(cvsSplitBy);
+                            continue;
+                        }
+                        if (i!=1 && i!=3 && i!=4 && spring[i].isEmpty())
+                            spring[i] = " ";
+                    }
                     images.add(spring[7]);
 
                     ArrayList<String> userName= new ArrayList<>();
