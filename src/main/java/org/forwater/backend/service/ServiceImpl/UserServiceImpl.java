@@ -1195,62 +1195,63 @@ public class UserServiceImpl implements UserService {
         springs.setNumberOfHouseholds(springs.getNumberOfHouseholds() == null ? 0 : springs.getNumberOfHouseholds());
         Map<String, Object> extraInfo = new HashMap<>();
 
+        if (extraInformationDTO == null){
+            extraInfo.put("extraInfo", "geoLocation");
+
+        }
+        else {
+
         extraInfo.put("extraInfo", "geoLocation");
-        extraInfo.put("waterCollectionBox",extraInformationDTO.getWaterCollectionBox());
-        extraInfo.put("pipeline",extraInformationDTO.getPipeline());
-
-        extraInfo.put("springTemperature",extraInformationDTO.getSpringTemperature());
-        extraInfo.put("springDischarge1",extraInformationDTO.getSpringDischarge1());
-        extraInfo.put("springDischarge2",extraInformationDTO.getSpringDischarge2());
-        extraInfo.put("springDischarge3",extraInformationDTO.getSpringDischarge3());
-        extraInfo.put("dischargeHistory",extraInformationDTO.getDischargeHistory());
-        extraInfo.put("rock_type",extraInformationDTO.getRock_type());
-        extraInfo.put("explain_other",extraInformationDTO.getExplain_other());
-        extraInfo.put("latitude1",extraInformationDTO.getLatitude1());
-        extraInfo.put("longitude1",extraInformationDTO.getLongitude1());
-        extraInfo.put("altitude1",extraInformationDTO.getAltitude1());
-        extraInfo.put("accuracy1",extraInformationDTO.getAccuracy1());
-        extraInfo.put("latitude2",extraInformationDTO.getLatitude2());
-
-        extraInfo.put("longitude2",extraInformationDTO.getLongitude2());
-        extraInfo.put("altitude2",extraInformationDTO.getAltitude2());
-        extraInfo.put("accuracy2",extraInformationDTO.getAccuracy2());
-        extraInfo.put("latitude3",extraInformationDTO.getLatitude3());
-        extraInfo.put("longitude3",extraInformationDTO.getLongitude3());
-        extraInfo.put("altitude3",extraInformationDTO.getAltitude3());
-        extraInfo.put("accuracy3",extraInformationDTO.getAccuracy3());
-        extraInfo.put("latitude4",extraInformationDTO.getLatitude4());
-        extraInfo.put("longitude4",extraInformationDTO.getLongitude4());
-        extraInfo.put("altitude4",extraInformationDTO.getAltitude4());
-        extraInfo.put("accuracy4",extraInformationDTO.getAccuracy4());
-        extraInfo.put("loose_soil",extraInformationDTO.getLoose_soil());
-
-
-        extraInfo.put("spring_distance",extraInformationDTO.getSpring_distance());
-        extraInfo.put("centre_Latitude",extraInformationDTO.getCentre_Latitude());
-        extraInfo.put("centre_Longitude",extraInformationDTO.getCentre_Longitude());
-        extraInfo.put("centre_Altitude",extraInformationDTO.getCentre_Altitude());
-        extraInfo.put("centre_Accuracy",extraInformationDTO.getCentre_Accuracy());
-        extraInfo.put("nos_households",extraInformationDTO.getNos_households());
-        extraInfo.put("nos_st_households",extraInformationDTO.getNos_st_households());
-        extraInfo.put("nos_obc_households",extraInformationDTO.getNos_obc_households());
-        extraInfo.put("source_DrinkingWater",extraInformationDTO.getSource_DrinkingWater());
-        extraInfo.put("location_DrinkingWater",extraInformationDTO.getLocation_DrinkingWater());
-        extraInfo.put("seasonality_DrinkingWater",extraInformationDTO.getSeasonality_DrinkingWater());
-        extraInfo.put("period_of_flow_DrinkingWater",extraInformationDTO.getPeriod_of_flow_DrinkingWater());
-        extraInfo.put("source_DomesticWater",extraInformationDTO.getSource_DomesticWater());
-        extraInfo.put("location_DomesticWater",extraInformationDTO.getLocation_DomesticWater());
-        extraInfo.put("seasonality_DomesticWater",extraInformationDTO.getSeasonality_DomesticWater());
-        extraInfo.put("period_of_flow_DomesticWater",extraInformationDTO.getPeriod_of_flow_DomesticWater());
-        extraInfo.put("source_IrrigationWater",extraInformationDTO.getSource_IrrigationWater());
-        extraInfo.put("location_IrrigationWater",extraInformationDTO.getLocation_IrrigationWater());
-        extraInfo.put("seasonality_IrrigationWater",extraInformationDTO.getSeasonality_IrrigationWater());
-        extraInfo.put("period_of_flow_IrrigationWater",extraInformationDTO.getPeriod_of_flow_IrrigationWater());
-
-        extraInfo.put("waterSample",extraInformationDTO.getWaterSample());
-        extraInfo.put("testResult",extraInformationDTO.getTestResult());
-        extraInfo.put("instanceId",extraInformationDTO.getInstanceId());
-
+        extraInfo.put("waterCollectionBox", extraInformationDTO.getWaterCollectionBox());
+        extraInfo.put("pipeline", extraInformationDTO.getPipeline());
+        extraInfo.put("springTemperature", extraInformationDTO.getSpringTemperature());
+        extraInfo.put("springDischarge1", extraInformationDTO.getSpringDischarge1());
+        extraInfo.put("springDischarge2", extraInformationDTO.getSpringDischarge2());
+        extraInfo.put("springDischarge3", extraInformationDTO.getSpringDischarge3());
+        extraInfo.put("dischargeHistory", extraInformationDTO.getDischargeHistory());
+        extraInfo.put("rock_type", extraInformationDTO.getRock_type());
+        extraInfo.put("explain_other", extraInformationDTO.getExplain_other());
+        extraInfo.put("latitude1", extraInformationDTO.getLatitude1());
+        extraInfo.put("longitude1", extraInformationDTO.getLongitude1());
+        extraInfo.put("altitude1", extraInformationDTO.getAltitude1());
+        extraInfo.put("accuracy1", extraInformationDTO.getAccuracy1());
+        extraInfo.put("latitude2", extraInformationDTO.getLatitude2());
+        extraInfo.put("longitude2", extraInformationDTO.getLongitude2());
+        extraInfo.put("altitude2", extraInformationDTO.getAltitude2());
+        extraInfo.put("accuracy2", extraInformationDTO.getAccuracy2());
+        extraInfo.put("latitude3", extraInformationDTO.getLatitude3());
+        extraInfo.put("longitude3", extraInformationDTO.getLongitude3());
+        extraInfo.put("altitude3", extraInformationDTO.getAltitude3());
+        extraInfo.put("accuracy3", extraInformationDTO.getAccuracy3());
+        extraInfo.put("latitude4", extraInformationDTO.getLatitude4());
+        extraInfo.put("longitude4", extraInformationDTO.getLongitude4());
+        extraInfo.put("altitude4", extraInformationDTO.getAltitude4());
+        extraInfo.put("accuracy4", extraInformationDTO.getAccuracy4());
+        extraInfo.put("loose_soil", extraInformationDTO.getLoose_soil());
+        extraInfo.put("spring_distance", extraInformationDTO.getSpring_distance());
+        extraInfo.put("centre_Latitude", extraInformationDTO.getCentre_Latitude());
+        extraInfo.put("centre_Longitude", extraInformationDTO.getCentre_Longitude());
+        extraInfo.put("centre_Altitude", extraInformationDTO.getCentre_Altitude());
+        extraInfo.put("centre_Accuracy", extraInformationDTO.getCentre_Accuracy());
+        extraInfo.put("nos_households", extraInformationDTO.getNos_households());
+        extraInfo.put("nos_st_households", extraInformationDTO.getNos_st_households());
+        extraInfo.put("nos_obc_households", extraInformationDTO.getNos_obc_households());
+        extraInfo.put("source_DrinkingWater", extraInformationDTO.getSource_DrinkingWater());
+        extraInfo.put("location_DrinkingWater", extraInformationDTO.getLocation_DrinkingWater());
+        extraInfo.put("seasonality_DrinkingWater", extraInformationDTO.getSeasonality_DrinkingWater());
+        extraInfo.put("period_of_flow_DrinkingWater", extraInformationDTO.getPeriod_of_flow_DrinkingWater());
+        extraInfo.put("source_DomesticWater", extraInformationDTO.getSource_DomesticWater());
+        extraInfo.put("location_DomesticWater", extraInformationDTO.getLocation_DomesticWater());
+        extraInfo.put("seasonality_DomesticWater", extraInformationDTO.getSeasonality_DomesticWater());
+        extraInfo.put("period_of_flow_DomesticWater", extraInformationDTO.getPeriod_of_flow_DomesticWater());
+        extraInfo.put("source_IrrigationWater", extraInformationDTO.getSource_IrrigationWater());
+        extraInfo.put("location_IrrigationWater", extraInformationDTO.getLocation_IrrigationWater());
+        extraInfo.put("seasonality_IrrigationWater", extraInformationDTO.getSeasonality_IrrigationWater());
+        extraInfo.put("period_of_flow_IrrigationWater", extraInformationDTO.getPeriod_of_flow_IrrigationWater());
+        extraInfo.put("waterSample", extraInformationDTO.getWaterSample());
+        extraInfo.put("testResult", extraInformationDTO.getTestResult());
+        extraInfo.put("instanceId", extraInformationDTO.getInstanceId());
+}
         springs.setExtraInformation(extraInfo);
 //        springs.setPrivateSpring(false);
 
@@ -2823,9 +2824,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void generateNotifications(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws
+    public LoginAndRegisterResponseMap generateNotificationsForPrivateAccess(RequestDTO requestDTO, String userToken, BindingResult bindingResult) throws
             IOException {
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
+        LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
+        Map<String, Object> responseMap = new HashMap<>();
 
         GenerateNotifications notificationsData = mapper.convertValue(requestDTO.getRequest().get("privateSpring"), GenerateNotifications.class);
         Springs springsDetails = new Springs();
@@ -2861,10 +2864,18 @@ public class UserServiceImpl implements UserService {
         } catch (JsonProcessingException e) {
             log.error("error is :" + e);
         }
+
+        responseMap.put("responseCode", 200);
+        responseMap.put("responseStatus", "successful");
+        BeanUtils.copyProperties(requestDTO, loginAndRegisterResponseMap);
+        loginAndRegisterResponseMap.setResponse(responseMap);
+
+        return loginAndRegisterResponseMap;
+
     }
 
     @Override
-    public LoginAndRegisterResponseMap reviewNotifications(RequestDTO requestDTO, String userToken, BindingResult
+    public LoginAndRegisterResponseMap reviewPrivateNotifications(RequestDTO requestDTO, String userToken, BindingResult
             bindingResult) throws IOException {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         Map<String, Object> responseMap = new HashMap<>();

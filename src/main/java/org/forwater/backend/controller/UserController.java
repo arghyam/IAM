@@ -179,16 +179,16 @@ public class UserController {
 
 
     @PostMapping(value = "/user/privateSpringAccess")
-    public void generateNotifications(@ApiParam(value = "user", required = true, name="user") @Validated @RequestBody RequestDTO requestDTO, String userToken,
+    public LoginAndRegisterResponseMap generateNotifications(@ApiParam(value = "user", required = true, name="user") @Validated @RequestBody RequestDTO requestDTO, String userToken,
                             BindingResult bindingResult) throws IOException {
-        userService.generateNotifications(requestDTO, userToken, bindingResult);
+        return userService.generateNotificationsForPrivateAccess(requestDTO, userToken, bindingResult);
     }
 
 
     @PostMapping(value = "/user/reviewPrivateAccess")
     public LoginAndRegisterResponseMap reviewNotifications(@ApiParam(value = "user", required = true, name="user") @Validated @RequestBody RequestDTO requestDTO, String userToken,
                                       BindingResult bindingResult) throws IOException {
-       return userService.reviewNotifications(requestDTO, userToken, bindingResult);
+       return userService.reviewPrivateNotifications(requestDTO, userToken, bindingResult);
     }
 
 }
