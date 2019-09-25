@@ -86,7 +86,7 @@ public class Constants {
 
     public static final String ARGHYAM_USERS="arghyam-user";
 
-    public static final String MAP_MY_INDIA_LICENCE="286bdsg9s3n89e7fqgfb9m1grv4bqpar";
+    public static final String MAP_MY_INDIA_LICENCE="pbbz3fndw1kfwoa5ovzbeknxuziungmp";
 
     public static final String MAP_MY_INDIA_CODE="rev_geocode";
 

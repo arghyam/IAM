@@ -4,7 +4,6 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
@@ -55,6 +54,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyEditor;
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.text.ParseException;
@@ -2322,6 +2322,7 @@ public class UserServiceImpl implements UserService {
 
     public List<String> batch(ArrayList<String> images) throws IOException {
             List<String> batchResponse= new ArrayList<>();
+            try {
         for (int i = 0; i <images.size() ; i++) {
             URL url =new URL(images.get(i));
             BufferedImage image = ImageIO.read(url);
@@ -2331,22 +2332,25 @@ public class UserServiceImpl implements UserService {
             String fileName = RandomString.make() + new Date().getTime() + ".jpg";
             MultipartFile multipartFile = new MockMultipartFile(fileName, fileName, "image/jpg", byteArrayOutputStream.toByteArray());
             byteArrayOutputStream.close();
-           ResponseDTO a= updateProfilePicture(multipartFile);
-           log.info(a.getResponse().toString());
+            ResponseDTO a= updateProfilePicture(multipartFile);
+            log.info(a.getResponse().toString());
             JSONObject object = new JSONObject(a);
             JSONObject subObject = object.getJSONObject("response");
             String imageUrl = (String) subObject.get("imageUrl");
 
            batchResponse.add(imageUrl);
            log.info("************************");
-        }
+        }}
+            catch (MalformedURLException e){
+                e.printStackTrace();
+            }
 
         return batchResponse;
     }
 
     public String getRegistereUserIdByName(ArrayList<String> userName) throws IOException {
         String adminAccessToken = keycloakService.generateAccessToken(appContext.getAdminUserName(), appContext.getAdminUserpassword());
-        UserRepresentation userRepresentation = keycloakService.getUserByFirstname(adminAccessToken,"anirudh", appContext.getRealm());
+        UserRepresentation userRepresentation = keycloakService.getUserByFirstname(adminAccessToken,"Sreechand", appContext.getRealm());
         return userRepresentation.getId();
     }
 
