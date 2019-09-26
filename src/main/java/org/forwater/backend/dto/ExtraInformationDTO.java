@@ -55,6 +55,61 @@ public class ExtraInformationDTO {
     private String photo_centre;
     private String nos_sc_households;
 
+    private String surveyorName;
+    private String springOwner_Name;
+    private String springType;
+    private String springSeasonality;
+    private String flowPeriod;
+    private String springUse;
+
+    public String getSurveyorName() {
+        return surveyorName;
+    }
+
+    public void setSurveyorName(String surveyorName) {
+        this.surveyorName = surveyorName;
+    }
+
+    public String getSpringOwner_Name() {
+        return springOwner_Name;
+    }
+
+    public void setSpringOwner_Name(String springOwner_Name) {
+        this.springOwner_Name = springOwner_Name;
+    }
+
+    public String getSpringType() {
+        return springType;
+    }
+
+    public void setSpringType(String springType) {
+        this.springType = springType;
+    }
+
+    public String getSpringSeasonality() {
+        return springSeasonality;
+    }
+
+    public void setSpringSeasonality(String springSeasonality) {
+        this.springSeasonality = springSeasonality;
+    }
+
+    public String getFlowPeriod() {
+        return flowPeriod;
+    }
+
+    public void setFlowPeriod(String flowPeriod) {
+        this.flowPeriod = flowPeriod;
+    }
+
+    public String getSpringUse() {
+        return springUse;
+    }
+
+    public void setSpringUse(String springUse) {
+        this.springUse = springUse;
+    }
+
     public String getNos_sc_households() {
         return nos_sc_households;
     }
