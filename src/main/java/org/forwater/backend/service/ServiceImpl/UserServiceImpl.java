@@ -1006,7 +1006,12 @@ public class UserServiceImpl implements UserService {
         dischargeData.setUserId(dischargeData.getUserId());
         dischargeData.setTenantId("tenantId1");
         dischargeData.setOrgId("Organisation1");
-        dischargeData.setCreatedTimeStamp(new Date().toString());
+        if (dischargeData.getCreatedTimeStamp()!=null){
+            dischargeData.setCreatedTimeStamp(dischargeData.getCreatedTimeStamp());
+        }
+        else {
+            dischargeData.setCreatedTimeStamp(new Date().toString());
+        }
         dischargeData.setUpdatedTimeStamp("");
         dischargeData.setMonths(dischargeData.getMonths() == null ? Arrays.asList("") : dischargeData.getMonths());
         dischargeData.setSeasonality(dischargeData.getSeasonality() == null ? "" : dischargeData.getSeasonality());
@@ -1190,6 +1195,7 @@ public class UserServiceImpl implements UserService {
         LoginAndRegisterResponseMap loginAndRegisterResponseMap = new LoginAndRegisterResponseMap();
         springs.setSpringCode(getAlphaNumericString(6));
         springs.setUserId(springs.getUserId());
+        springs.setSpringName(springs.getSpringName());
         springs.setCreatedTimeStamp(springs.getCreatedTimeStamp() == null ? new Date().toString() : springs.getCreatedTimeStamp());
         springs.setUpdatedTimeStamp("");
         springs.setUsage(springs.getUsage() == null ? Arrays.asList("") : springs.getUsage());
@@ -2742,6 +2748,7 @@ public class UserServiceImpl implements UserService {
 
                     springs.put("dischargeTime",dischargeTime);
                     springs.put("litresPerSecond",lps);
+                    springs.put("createdTimeStamp",spring[1]);
                     springsRequest.put("dischargeData", springs);
                     requestDTO1.setRequest(springsRequest);
 
