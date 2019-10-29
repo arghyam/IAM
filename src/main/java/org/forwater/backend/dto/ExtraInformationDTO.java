@@ -46,7 +46,6 @@ public class ExtraInformationDTO {
     private String seasonality_DomesticWater;
     private String period_of_flow_DomesticWater;
     private String source_IrrigationWater;
-    private String location_IrrigationWater;
     private String seasonality_IrrigationWater;
     private String period_of_flow_IrrigationWater;
     private String waterSample;
@@ -54,6 +53,15 @@ public class ExtraInformationDTO {
     private String instanceId;
     private String photo_centre;
     private String nos_sc_households;
+    private String sampleNumber;
+
+    public String getSampleNumber() {
+        return sampleNumber;
+    }
+
+    public void setSampleNumber(String sampleNumber) {
+        this.sampleNumber = sampleNumber;
+    }
 
     private String surveyorName;
     private String springOwner_Name;
@@ -468,14 +476,6 @@ public class ExtraInformationDTO {
 
     public void setSource_IrrigationWater(String source_IrrigationWater) {
         this.source_IrrigationWater = source_IrrigationWater;
-    }
-
-    public String getLocation_IrrigationWater() {
-        return location_IrrigationWater;
-    }
-
-    public void setLocation_IrrigationWater(String location_IrrigationWater) {
-        this.location_IrrigationWater = location_IrrigationWater;
     }
 
     public String getSeasonality_IrrigationWater() {

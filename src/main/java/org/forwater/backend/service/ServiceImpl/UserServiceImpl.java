@@ -1254,13 +1254,12 @@ public class UserServiceImpl implements UserService {
         extraInfo.put("seasonality_DomesticWater", extraInformationDTO.getSeasonality_DomesticWater());
         extraInfo.put("period_of_flow_DomesticWater", extraInformationDTO.getPeriod_of_flow_DomesticWater());
         extraInfo.put("source_IrrigationWater", extraInformationDTO.getSource_IrrigationWater());
-        extraInfo.put("location_IrrigationWater", extraInformationDTO.getLocation_IrrigationWater());
         extraInfo.put("seasonality_IrrigationWater", extraInformationDTO.getSeasonality_IrrigationWater());
         extraInfo.put("period_of_flow_IrrigationWater", extraInformationDTO.getPeriod_of_flow_IrrigationWater());
         extraInfo.put("waterSample", extraInformationDTO.getWaterSample());
         extraInfo.put("testResult", extraInformationDTO.getTestResult());
         extraInfo.put("instanceId", extraInformationDTO.getInstanceId());
-
+        extraInfo.put("sampleNumber", extraInformationDTO.getSampleNumber());
         extraInfo.put("surveyorName", extraInformationDTO.getSurveyorName());
         extraInfo.put("springOwner_Name", extraInformationDTO.getSpringOwner_Name());
         extraInfo.put("springType", extraInformationDTO.getSpringType());
@@ -2435,6 +2434,7 @@ public class UserServiceImpl implements UserService {
 
                     springs.put("images", batchUploadResponse);
                     springs.put("ownershipType",spring[7]);
+                    extraInfo.put("surveyorName", spring[0]);
 
                     extraInfo.put("waterCollectionBox", spring[18]);
                     extraInfo.put("pipeline", spring[19]);
@@ -2483,14 +2483,14 @@ public class UserServiceImpl implements UserService {
                     extraInfo.put("seasonality_DomesticWater", spring[60]);
                     extraInfo.put("period_of_flow_DomesticWater", spring[61]);
                     extraInfo.put("source_IrrigationWater",spring[62]);
-                    extraInfo.put("location_IrrigationWater", spring[63]);
-                    extraInfo.put("seasonality_IrrigationWater", spring[64]);
-                    extraInfo.put("period_of_flow_IrrigationWater", spring[65]);
-                    extraInfo.put("waterSample", spring[66]);
+                    extraInfo.put("seasonality_IrrigationWater", spring[63]);
+                    extraInfo.put("period_of_flow_IrrigationWater", spring[64]);
+                    extraInfo.put("waterSample", spring[65]);
+                    extraInfo.put("sampleNumber", spring[66]);
+
                     extraInfo.put("testResult", spring[67]);
                     extraInfo.put("instanceId", spring[68]);
 
-                    extraInfo.put("surveyorName", spring[0]);
                     extraInfo.put("springOwner_Name", spring[8]);
                     extraInfo.put("springType", spring[14]);
                     extraInfo.put("springSeasonality", spring[15]);
@@ -2719,7 +2719,7 @@ public class UserServiceImpl implements UserService {
                     springsRequest.clear();
 
                     springs.put("userId",userNameResponse);
-                    springs.put("volumeOfContainer","1000");
+                    springs.put("volumeOfContainer","1");
                     springs.put("status","created");
                     springs.put("springCode", springCode);
                     springs.put("images", batchUploadResponse);
@@ -2749,6 +2749,8 @@ public class UserServiceImpl implements UserService {
                     springs.put("dischargeTime",dischargeTime);
                     springs.put("litresPerSecond",lps);
                     springs.put("createdTimeStamp",spring[1]);
+                    springs.put("seasonality",spring[15]);
+
                     springsRequest.put("dischargeData", springs);
                     requestDTO1.setRequest(springsRequest);
 
