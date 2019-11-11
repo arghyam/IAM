@@ -1494,7 +1494,13 @@ public class UserServiceImpl implements UserService {
         springsDetails = getSpringDetailsBySpringCode(additionalInfo.getSpringCode());
         activitiesRequestDTO.setUserId(additionalInfo.getUserId());
         activitiesRequestDTO.setAction("Additional info added");
-        activitiesRequestDTO.setCreatedAt(new Date().toString());
+        if (activitiesRequestDTO.getCreatedAt()!= null){
+            activitiesRequestDTO.setCreatedAt(springsDetails.getCreatedTimeStamp());
+        }
+        else{
+            activitiesRequestDTO.setCreatedAt(new Date().toString());
+
+        }
         activitiesRequestDTO.setLongitude(springsDetails.getLongitude());
         activitiesRequestDTO.setLatitude(springsDetails.getLatitude());
         activitiesRequestDTO.setSpringName(springsDetails.getSpringName());
@@ -2711,13 +2717,26 @@ public class UserServiceImpl implements UserService {
                         months.add(0);
                     springs.put("userId", userNameResponse);
                     springs.put("months", months);
+
+                    Date timestamp=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(spring[1]);
+
+                    SimpleDateFormat formatt = new SimpleDateFormat("E MMM dd HH:mm:ss z yyyy");
+                    String timestampDate = formatt.format(timestamp);
+                    springs.put("createdTimeStamp", timestampDate);
                     springsRequest.put("additionalInfo", springs);
+
                     requestDTO1.setRequest(springsRequest);
                     createAdditionalInfo(springCode,requestDTO1,bindingResult);
 
                     springs.clear();
                     springsRequest.clear();
 
+                    Date createdtimestamp=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(spring[1]);
+
+                    SimpleDateFormat formattr = new SimpleDateFormat("E MMM dd HH:mm:ss z yyyy");
+                    String createdTimeStampDate = formattr.format(createdtimestamp);
+                    springs.put("createdTimeStamp", createdTimeStampDate);
+                    springsRequest.put("additionalInfo", springs);
                     springs.put("userId",userNameResponse);
                     springs.put("volumeOfContainer","1");
                     springs.put("status","created");
@@ -2748,7 +2767,6 @@ public class UserServiceImpl implements UserService {
 
                     springs.put("dischargeTime",dischargeTime);
                     springs.put("litresPerSecond",lps);
-                    springs.put("createdTimeStamp",spring[1]);
                     springs.put("seasonality",spring[15]);
 
                     springsRequest.put("dischargeData", springs);
